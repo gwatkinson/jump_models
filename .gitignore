@@ -2,14 +2,14 @@
 .vscode/
 tmp/
 old/
-data/
-images/compressions/
-images/bray/compressions/
-test_jump/
-models/
-mnt/
-log_condor/
+/mnt/
 ignored/
+
+# Lightning-Hydra-Template
+configs/local/default.yaml
+/data/
+/logs/
+.env
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks,git,latex
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,jupyternotebooks,git,latex
