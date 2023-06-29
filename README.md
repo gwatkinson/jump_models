@@ -15,10 +15,6 @@
 
 This repository contains code used to launch Deep Learning experiments trained on the JUMP dataset.
 
-### Idées random
-
-- Minimiser la distance du Schrodinger Bridge pour apprendre conjointement les deux distributions
-
 ## :hammer_and_wrench: Installation
 
 This project uses conda to create a virtual environment with some main dependencies (Python, CUDA, Poetry), then uses Poetry to install the rest of the dependencies via pip.
