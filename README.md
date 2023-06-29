@@ -4,4 +4,4 @@ This repository contains code used to launch Deep Learning experiments trained o
 
 ## Idées random
 
-* Minimiser la distance du Schrodinger Bridge pour apprendre conjointement les deux distributions
+- Minimiser la distance du Schrodinger Bridge pour apprendre conjointement les deux distributions

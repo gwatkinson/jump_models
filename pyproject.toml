@@ -1,0 +1,121 @@
+[tool.poetry]
+name = "jump-models"
+version = "0.1.0"
+description = "Multimodal learning using the JUMP dataset"
+authors = ["Gabriel Watkinson <gabriel.watkinson@gmail.com>"]
+readme = "README.md"
+packages = [{include = "jump_models"}]
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+
+
+[tool.poetry.dependencies]
+python = "3.10.10"
+hydra-core = "^1.3.2"
+hydra-colorlog = "^1.2.0"
+hydra-optuna-sweeper = "^1.2.0"
+wandb = "^0.15.4"
+pyrootutils = "^1.0.4"
+rich = "^13.4.2"
+
+
+[tool.poetry.group.torch.dependencies]
+# Torch dependencies
+torch = "2.0.1"                 # { version = "2.0.1", url = "https://download.pytorch.org/whl/cu118/torch-2.0.1%2Bcu118-cp310-cp310-linux_x86_64.whl" }
+torchvision = "0.15.2"          # { version = "0.15.2", url = "https://download.pytorch.org/whl/cu118/torchvision-0.15.2%2Bcu118-cp310-cp310-linux_x86_64.whl" }
+torch_geometric = "2.3.0"
+# kornia = "^0.6.12"
+torchview = "^0.2.6"
+huggingface = "^0.0.1"
+transformers = "^4.30.1"
+pytorch-lightning = "2.0.4"
+
+
+[tool.poetry.group.data.dependencies]
+# Data manipulation dependencies
+numpy = "^1.24.3"
+pandas = "^2.0.1"
+tabulate = "^0.9.0"
+pyarrow = "^12.0.1"
+
+
+[tool.poetry.group.images.dependencies]
+# Image manipulation dependencies
+pillow = "^9.5.0"
+
+
+[tool.poetry.group.molecules.dependencies]
+# Molecular manipulation dependencies
+rdkit = "^2023.3.1"
+datamol = "^0.10.3"
+molfeat = "^0.8.9"
+# graphium = "2.0.2"
+
+
+
+
+
+[tool.poetry.group.dev.dependencies]
+# Dev dependencies
+pre-commit = "^3.1.1"
+poethepoet = "^0.18.1"
+pytest = "^7.2.2"
+pytest-cov = "^4.0.0"
+jupyter = "^1.0.0"
+notebook = "^6.5.4"
+ipykernel = "^6.23.1"
+ipywidgets = "^8.0.6"
+black = "^23.3.0"
+nbqa = {extras = ["toolchain"], version = "^1.7.0"}
+flake8 = "^6.0.0"
+pylama = "^8.4.1"
+flake8-bugbear = "^23.2.13"
+flake8-comprehensions = "^3.10.1"
+flake8-simplify = "^0.19.3"
+pep8-naming = "^0.13.3"
+
+
+
+
+# Tools configuration
+[tool.isort]
+profile = "black"
+line_length = 100
+float_to_top = true
+
+[tool.flake8]
+ignore = ['E203', 'E501', 'W503', 'N80']
+max-line-length = 100
+count = true
+docstring-convention = 'google'
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.ruff]
+line-length = 100
+
+[tool.pyupgrade]
+py38plus = true
+
+[tool.autoflake]
+check = true
+expand-star-imports = true
+ignore-pass-after-docstring = true
+
+[tool.bandit]
+skips = ['B101']
+
+[tool.mdformat]
+number = true
+
+[tool.docformatter]
+in_place = true
+wrap_summaries = 100
+wrap_descriptions = 100
