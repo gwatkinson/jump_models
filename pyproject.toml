@@ -85,21 +85,21 @@ pep8-naming = "^0.13.3"
 # Tools configuration
 [tool.isort]
 profile = "black"
-line_length = 100
+line_length = 120
 float_to_top = true
 
 [tool.flake8]
 ignore = ['E203', 'E501', 'W503', 'N80']
-max-line-length = 100
+max-line-length = 120
 count = true
 docstring-convention = 'google'
 
 [tool.black]
-line-length = 100
+line-length = 120
 target-version = ['py310']
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 
 [tool.pyupgrade]
 py38plus = true
@@ -117,5 +117,5 @@ number = true
 
 [tool.docformatter]
 in_place = true
-wrap_summaries = 100
-wrap_descriptions = 100
+wrap_summaries = 120
+wrap_descriptions = 120
