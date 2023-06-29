@@ -89,7 +89,7 @@ line_length = 120
 float_to_top = true
 
 [tool.flake8]
-ignore = ['E203', 'E501', 'W503', 'N80']
+ignore = ['E203', 'E501', 'W503', 'N80', 'N812']
 max-line-length = 120
 count = true
 docstring-convention = 'google'
