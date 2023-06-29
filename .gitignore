@@ -10,7 +10,6 @@ models/
 mnt/
 log_condor/
 ignored/
-notebooks/
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks,git,latex
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,jupyternotebooks,git,latex
