@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Multimodal learning using the JUMP dataset"
 authors = ["Gabriel Watkinson <gabriel.watkinson@gmail.com>"]
 readme = "README.md"
-packages = [{include = "jump_models"}]
+packages = [{include = "src"}]
 
 
 [build-system]
