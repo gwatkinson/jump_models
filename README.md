@@ -11,7 +11,58 @@
 
 </div>
 
-## Idées random
+## Description
 
-- This repository contains code used to launch Deep Learning experiments trained on the JUMP dataset.
+This repository contains code used to launch Deep Learning experiments trained on the JUMP dataset.
+
+### Idées random
+
 - Minimiser la distance du Schrodinger Bridge pour apprendre conjointement les deux distributions
+
+## :hammer_and_wrench: Installation
+
+This project uses conda to create a virtual environment with some main dependencies (Python, CUDA, Poetry), then uses Poetry to install the rest of the dependencies via pip.
+
+```bash
+# clone project
+git clone https://github.com/gwatkinson/jump_models
+cd jump_models
+
+# create conda environment and install dependencies
+conda create -n jump_models -f conda-linux-64.lock          # for linux
+# conda create -n jump_models -f conda-windows-64.lock      # for windows
+
+# activate conda environment
+conda activate jump_models
+
+# install other dependencies and current project with poetry
+poetry install
+
+# install pre-commit hooks if you want
+pre-commit install
+# pre-commit run -a # run all hooks on all files
+```
+
+## How to run
+
+Train model with default configuration
+
+```bash
+# train on CPU
+python src/train.py trainer=cpu
+
+# train on GPU
+python src/train.py trainer=gpu
+```
+
+Train model with chosen experiment configuration from [configs/experiment/](configs/experiment/)
+
+```bash
+python src/train.py experiment=experiment_name.yaml
+```
+
+You can override any parameter from command line like this
+
+```bash
+python src/train.py trainer.max_epochs=20 data.batch_size=64
+```
