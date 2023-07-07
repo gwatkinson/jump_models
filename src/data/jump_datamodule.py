@@ -236,10 +236,6 @@ class BasicJUMPDataModule(LightningDataModule):
             pd.Series(test_ids).to_csv(test_ids_path, index=False)
             pd.Series(val_ids).to_csv(val_ids_path, index=False)
 
-        py_logger.debug(f"Loading local load data df from {img_path} ...")
-        load_df_with_meta = load_load_df_from_parquet(img_path)
-        py_logger.debug(f"load_df_with_meta ids unique: {load_df_with_meta.index.is_unique}")
-
     def setup(self, stage: Optional[str] = None) -> None:
         """Load data. Set variables: `self.data_train`, `self.data_val`,
         `self.data_test`.
@@ -265,9 +261,9 @@ class BasicJUMPDataModule(LightningDataModule):
             py_logger.debug(
                 f"Loading train ids from {self.hparams.train_ids_path}, val ids from {self.hparams.val_ids_path} and test ids from {self.hparams.test_ids_path}"
             )
-            self.train_cpds = pd.read_csv(self.hparams.train_ids_path, header=None, squeeze=True).tolist()
-            self.val_cpds = pd.read_csv(self.hparams.val_ids_path, header=None, squeeze=True).tolist()
-            self.test_cpds = pd.read_csv(self.hparams.test_ids_path, header=None, squeeze=True).tolist()
+            self.train_cpds = pd.read_csv(self.hparams.train_ids_path, header=None).tolist()
+            self.val_cpds = pd.read_csv(self.hparams.val_ids_path, header=None).tolist()
+            self.test_cpds = pd.read_csv(self.hparams.test_ids_path, header=None).tolist()
 
         if stage == "fit" and self.data_train is None:
             train_load_df = self.load_df[self.load_df[self.compound_col].isin(self.train_cpds)]
