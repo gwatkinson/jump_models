@@ -26,14 +26,13 @@ lightning = "2.0.4"
 
 [tool.poetry.group.torch.dependencies]
 # Torch dependencies
-torch = "2.0.1"                 # { version = "2.0.1", url = "https://download.pytorch.org/whl/cu118/torch-2.0.1%2Bcu118-cp310-cp310-linux_x86_64.whl" }
-torchvision = "0.15.2"          # { version = "0.15.2", url = "https://download.pytorch.org/whl/cu118/torchvision-0.15.2%2Bcu118-cp310-cp310-linux_x86_64.whl" }
+torch = { url = "https://download.pytorch.org/whl/cu118/torch-2.0.0%2Bcu118-cp310-cp310-linux_x86_64.whl" }  # version = "2.0.0",
+torchvision = { url = "https://download.pytorch.org/whl/cu118/torchvision-0.15.0%2Bcu118-cp310-cp310-linux_x86_64.whl" }  # version = "0.15.0",
+torchaudio = { url = "https://download.pytorch.org/whl/cu118/torchaudio-2.0.0%2Bcu118-cp310-cp310-linux_x86_64.whl" }  # version = "2.0.0",
 torch_geometric = "2.3.0"
-# kornia = "^0.6.12"
 torchview = "^0.2.6"
-huggingface = "^0.0.1"
-transformers = "^4.30.1"
 pytorch-lightning = "2.0.4"
+torchmetrics = "^1.0.0"
 
 
 [tool.poetry.group.data.dependencies]
@@ -53,8 +52,8 @@ pillow = "^9.5.0"
 # Molecular manipulation dependencies
 rdkit = "^2023.3.1"
 datamol = "^0.10.3"
-molfeat = "^0.8.9"
 ogb = "^1.3.6"
+molfeat = {extras = ["all"], version = "^0.8.9"}
 # graphium = "2.0.2"
 
 
@@ -64,6 +63,7 @@ fairseq = "^0.12.2"
 huggingface = "^0.0.1"
 transformers = "^4.30.1"
 xgboost = "^1.7.6"
+# kornia = "^0.6.12"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -85,11 +85,6 @@ flake8-comprehensions = "^3.10.1"
 flake8-simplify = "^0.19.3"
 pep8-naming = "^0.13.3"
 
-
-
-
-[tool.poetry.group.molecule.dependencies]
-molfeat = {extras = ["all"], version = "^0.8.9"}
 
 [tool.isort]
 # Tools configuration

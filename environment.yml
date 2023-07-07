@@ -13,8 +13,9 @@ dependencies:
   - pip
   - conda-lock
   - poetry=1.4
-  - pytorch::pytorch=2.0.1
-  - pytorch::torchvision=0.15.2
+  - pytorch::pytorch=2.0.0
+  - pytorch::torchvision=0.15.0
+  - pytorch::torchaudio=2.0.0
   - pytorch::pytorch-cuda=11.8
   - pyg::pyg=2.3.0
   - lightning=2.0.4
