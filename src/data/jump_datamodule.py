@@ -6,10 +6,9 @@ import sys
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
-import OmegaConf
 import pandas as pd
 from lightning import LightningDataModule
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
 
 from src.data.image_smiles_dataset import MoleculeImageDataset
