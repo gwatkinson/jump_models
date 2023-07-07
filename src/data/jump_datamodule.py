@@ -169,11 +169,8 @@ class BasicJUMPDataModule(LightningDataModule):
             py_logger.debug(f"meta_df cols: {meta_df.columns.tolist()}")
 
             py_logger.info("Merging metadata and load data...")
-            load_df_with_meta = (
-                load_df.merge(meta_df, how="left", on=self.id_cols)
-                .assign(index=lambda x: f_string.format(**x))
-                .dropna(subset=[self.compound_col])
-            )
+            load_df_with_meta = load_df.merge(meta_df, how="left", on=self.id_cols).dropna(subset=[self.compound_col])
+            load_df_with_meta["index"] = load_df_with_meta.apply(lambda x: f_string.format(**x), axis=1)
 
             py_logger.debug(f"load_df_with_meta head:\n{load_df_with_meta.head().to_string()}")
 
