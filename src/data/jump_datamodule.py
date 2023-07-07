@@ -227,6 +227,11 @@ class BasicJUMPDataModule(LightningDataModule):
             py_logger.debug(
                 f"Saving train, test and val ids to {train_ids_path}, {test_ids_path} and {val_ids_path} respectively ..."
             )
+
+            train_ids_path.parent.mkdir(exist_ok=True)
+            test_ids_path.parent.mkdir(exist_ok=True)
+            val_ids_path.parent.mkdir(exist_ok=True)
+
             pd.Series(train_ids).to_csv(train_ids_path, index=False)
             pd.Series(test_ids).to_csv(test_ids_path, index=False)
             pd.Series(val_ids).to_csv(val_ids_path, index=False)
