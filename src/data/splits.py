@@ -24,10 +24,18 @@ class BaseSplitter(ABC):
         self.val = val
         self.test = test
         self.compound_list = compound_list
+        self.normalized = False
 
         if self.compound_list is not None:
             py_logger.debug("Checking train, val and test values in init.")
             self.normalize_train_val_test()
+
+    @property
+    def input_type(self):
+        if isinstance(self.train, int) and isinstance(self.val, int) and isinstance(self.test, int):
+            return "int"
+        elif isinstance(self.train, float) and isinstance(self.val, float) and isinstance(self.test, float):
+            return "float"
 
     def set_compound_list(self, compound_list: List[str]):
         """Set the compound list."""
@@ -39,7 +47,7 @@ class BaseSplitter(ABC):
     def normalize_train_val_test(self):
         """Normalize the train, val and test values."""
         total = self.train + self.val + self.test
-        if isinstance(self.train, int) and isinstance(self.val, int) and isinstance(self.test, int):
+        if self.input_type == "int":
             py_logger.debug("Train, val and test are integers.")
             if self.compound_list is not None and total > len(self.compound_list):
                 py_logger.warning(
@@ -49,15 +57,17 @@ class BaseSplitter(ABC):
                 self.train = self.train / total
                 self.val = self.val / total
                 self.test = self.test / total
-        if isinstance(self.train, float) and isinstance(self.val, float) and isinstance(self.test, float):
+                self.normalized = True
+        elif self.input_type == "float":
             py_logger.debug("Train, val and test are floats. Normalizing to 1.")
             self.train = self.train / total
             self.val = self.val / total
             self.test = self.test / total
+            self.normalized = True
         else:
             raise ValueError("Train, val and test must be either integers or floats.")
 
-        py_logger.debug(f"Train: {self.train:.2g}, val: {self.val:.2g}, test: {self.test:.2g}")
+        py_logger.debug(f"Train: {self.train}, val: {self.val}, test: {self.test}")
 
     @abstractmethod
     def split(self) -> Tuple[List[str], List[str], List[str]]:
@@ -85,13 +95,15 @@ class RandomSplitter(BaseSplitter):
 
     def split(self) -> Tuple[List[str], List[str], List[str]]:
         """Split the data into train, val and test sets."""
-        if isinstance(self.train, int) and isinstance(self.val, int) and isinstance(self.test, int):
+        if self.input_type == "int":
             train_val, test = train_test_split(
                 self.compound_list, test_size=self.test, train_size=self.train + self.val, random_state=42
             )
             train, val = train_test_split(train_val, test_size=self.val, train_size=self.train, random_state=42)
-        else:
+        elif self.normalized:
             train_val, test = train_test_split(self.compound_list, test_size=self.test, random_state=42)
             train, val = train_test_split(train_val, test_size=self.val / (self.train + self.val), random_state=42)
+        else:
+            raise ValueError("Error in the code.")
 
         return train, val, test
