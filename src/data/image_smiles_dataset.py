@@ -51,7 +51,9 @@ class MoleculeImageDataset(Dataset):
         py_logger.debug(f"compound_list head: {self.compound_list[:5]}")
         compound = self.compound_list[idx]  # An inchi or smiles string
         image_id = self.sampler(self.compound_dict[compound])  # An index into the load_df
-        image_paths = [str(self.load_df.loc[image_id, self.col_fstring.format(channel)]) for channel in self.channels]
+        image_paths = [
+            str(self.load_df.loc[image_id, self.col_fstring.format(channel=channel)]) for channel in self.channels
+        ]
 
         img_array = load_image_paths_to_array(image_paths)  # A numpy array: (5, 768, 768)
 
