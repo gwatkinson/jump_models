@@ -185,6 +185,7 @@ class BasicJUMPDataModule(LightningDataModule):
                 path=str(img_path),
                 engine="pyarrow",
                 compression="snappy",
+                index=True,
             )
 
         # Prepare compound metadata
@@ -198,7 +199,7 @@ class BasicJUMPDataModule(LightningDataModule):
 
             duplicates = load_df_with_meta.index[load_df_with_meta.index.duplicated()].tolist()
             py_logger.warning(f"Found {len(duplicates)} duplicates in the image metadata df.")
-            py_logger.debug(f"Duplicates: {duplicates}")
+            py_logger.debug(f"Duplicates: {duplicates[:5]}")
 
             py_logger.info("Creating the compound dictionary...")
             compound_df = load_df_with_meta.groupby(self.compound_col).apply(lambda x: x.index.tolist())
