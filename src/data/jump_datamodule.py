@@ -373,7 +373,7 @@ if __name__ == "__main__":
                 "train": DictConfig(
                     {
                         "batch_size": 32,
-                        "num_workers": 4,
+                        "num_workers": 0,
                         "pin_memory": False,
                         "shuffle": True,
                     }
@@ -381,7 +381,7 @@ if __name__ == "__main__":
                 "val": DictConfig(
                     {
                         "batch_size": 32,
-                        "num_workers": 4,
+                        "num_workers": 0,
                         "pin_memory": False,
                         "shuffle": False,
                     }
@@ -389,7 +389,7 @@ if __name__ == "__main__":
                 "test": DictConfig(
                     {
                         "batch_size": 32,
-                        "num_workers": 4,
+                        "num_workers": 0,
                         "pin_memory": False,
                         "shuffle": False,
                     }
