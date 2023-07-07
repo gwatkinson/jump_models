@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
+import OmegaConf
 import pandas as pd
 from lightning import LightningDataModule
 from omegaconf import DictConfig
@@ -307,9 +308,10 @@ class BasicJUMPDataModule(LightningDataModule):
             )
 
     def train_dataloader(self) -> DataLoader:
+        train_kwargs = OmegaConf.to_container(self.dataloader_config.train, resolve=True)
         return DataLoader(
             dataset=self.data_train,
-            **self.dataloader_config.train,
+            **train_kwargs,
         )
 
     def val_dataloader(self) -> DataLoader:
@@ -419,6 +421,10 @@ if __name__ == "__main__":
     dm.setup(stage="fit")
 
     py_logger.info("Getting a batch")
-    for batch in dm.train_dataloader():
+    py_logger.debug(f"Test dataloader: {dm.test_dataloader()}")
+
+    for batch in dm.test_dataloader():
         print(batch)
         break
+
+    py_logger.debug(f"Train dataloader: {dm.test_dataloader()}")
