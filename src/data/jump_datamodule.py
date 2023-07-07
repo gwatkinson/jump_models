@@ -345,7 +345,10 @@ class BasicJUMPDataModule(LightningDataModule):
 
 
 if __name__ == "__main__":
-    from datamol import from_inchi
+    from datamol import from_inchi, to_smiles
+
+    def compound_transform(x: str) -> str:
+        return to_smiles(from_inchi(x))
 
     file_handler = logging.FileHandler(filename="./logs/tmp.log")
     stdout_handler = logging.StreamHandler(stream=sys.stdout)
@@ -394,7 +397,7 @@ if __name__ == "__main__":
             }
         ),
         transform=None,
-        compound_transform=from_inchi,
+        compound_transform=compound_transform,
         image_sampler=None,
         metadata_dir="/projects/cpjump1/jump/metadata/complete_metadata.csv",
         local_load_data_dir="/projects/cpjump1/jump/load_data/final/",

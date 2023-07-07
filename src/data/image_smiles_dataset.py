@@ -48,7 +48,6 @@ class MoleculeImageDataset(Dataset):
         return f"{self.__class__.__name__}(n_compounds={self.n_compounds}, n_images={self.n_images})"
 
     def __getitem__(self, idx):
-        py_logger.debug(f"compound_list head: {self.compound_list[:5]}")
         compound = self.compound_list[idx]  # An inchi or smiles string
         image_id = self.sampler(self.compound_dict[compound])  # An index into the load_df
         image_paths = [
