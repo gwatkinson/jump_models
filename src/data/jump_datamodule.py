@@ -215,7 +215,7 @@ class BasicJUMPDataModule(LightningDataModule):
                 with open(comp_path) as handle:
                     compound_dict = json.load(handle)
 
-            compound_list = list(compound_dict.values())
+            compound_list = list(compound_dict.keys())
             compound_list.sort()
 
             py_logger.info("Creating the splitter...")
@@ -266,6 +266,7 @@ class BasicJUMPDataModule(LightningDataModule):
             self.test_cpds = pd.read_csv(self.hparams.test_ids_path, header=None)[0].tolist()
 
         if stage == "fit" and self.data_train is None:
+            py_logger.debug("=== Preparing train dataset ===")
             train_load_df = self.load_df[self.load_df[self.compound_col].isin(self.train_cpds)]
             train_compound_dict = {k: v for k, v in self.compound_dict.items() if k in self.train_cpds}
             self.data_train = self.dataset_cls(
