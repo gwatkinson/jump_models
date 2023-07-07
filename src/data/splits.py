@@ -85,10 +85,13 @@ class RandomSplitter(BaseSplitter):
 
     def split(self) -> Tuple[List[str], List[str], List[str]]:
         """Split the data into train, val and test sets."""
-        train_val, test = train_test_split(self.compound_list, test_size=self.test, random_state=42)
-        if isinstance(self.train, int) and isinstance(self.val, int):
-            train, val = train_test_split(train_val, test_size=self.val, random_state=42)
+        if isinstance(self.train, int) and isinstance(self.val, int) and isinstance(self.test, int):
+            train_val, test = train_test_split(
+                self.compound_list, test_size=self.test, train_size=self.train + self.val, random_state=42
+            )
+            train, val = train_test_split(train_val, test_size=self.val, train_size=self.train, random_state=42)
         else:
+            train_val, test = train_test_split(self.compound_list, test_size=self.test, random_state=42)
             train, val = train_test_split(train_val, test_size=self.val / (self.train + self.val), random_state=42)
 
         return train, val, test

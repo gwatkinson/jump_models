@@ -172,8 +172,6 @@ class BasicJUMPDataModule(LightningDataModule):
             load_df_with_meta = load_df.merge(meta_df, how="left", on=self.id_cols).dropna(subset=[self.compound_col])
             load_df_with_meta["index"] = load_df_with_meta.apply(lambda x: f_string.format(**x), axis=1)
 
-            py_logger.debug(f"load_df_with_meta head:\n{load_df_with_meta.head().to_string()}")
-
             load_df_with_meta = load_df_with_meta.set_index("index", drop=True).loc[:, cols_to_keep]
 
             py_logger.debug(f"load_df_with_meta ids unique: {load_df_with_meta.index.is_unique}")
@@ -195,10 +193,6 @@ class BasicJUMPDataModule(LightningDataModule):
             if "load_df_with_meta" not in locals():
                 py_logger.debug(f"Loading local load data df from {img_path} ...")
                 load_df_with_meta = load_load_df_from_parquet(img_path)
-
-            duplicates = load_df_with_meta.index[load_df_with_meta.index.duplicated()].tolist()
-            py_logger.warning(f"Found {len(duplicates)} duplicates in the image metadata df.")
-            py_logger.debug(f"Duplicates: {duplicates[:5]}")
 
             py_logger.info("Creating the compound dictionary...")
             compound_df = load_df_with_meta.groupby(self.compound_col).apply(lambda x: x.index.tolist())
