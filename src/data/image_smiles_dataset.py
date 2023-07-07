@@ -1,6 +1,7 @@
 """Module containing a torch Dataset that returns a molecule and an associated
 image."""
 
+import logging
 import random
 from typing import Callable, Dict, List, Optional
 
@@ -8,6 +9,8 @@ import pandas as pd
 from torch.utils.data import Dataset
 
 from src.data_utils.image_io import load_image_paths_to_array
+
+py_logger = logging.getLogger(__name__)
 
 default_channels = ["DNA", "AGP", "ER", "Mito", "RNA"]
 

@@ -419,11 +419,12 @@ if __name__ == "__main__":
 
     dm.setup(stage="fit")
 
-    py_logger.info("Getting a batch")
-    py_logger.debug(f"Test dataloader: {dm.test_dataloader()}")
+    py_logger.info(f"Testing dataset: {dm.data_train}")
+    py_logger.debug(f"Dataset obs: {dm.data_train[0]}")
 
-    for batch in dm.test_dataloader():
+    py_logger.info("Getting a batch")
+    py_logger.debug(f"Test dataloader: {dm.train_dataloader()}")
+
+    for batch in dm.train_dataloader():
         print(batch)
         break
-
-    py_logger.debug(f"Train dataloader: {dm.test_dataloader()}")
