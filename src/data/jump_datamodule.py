@@ -261,9 +261,7 @@ class BasicJUMPDataModule(LightningDataModule):
             py_logger.debug(
                 f"Loading train ids from {self.hparams.train_ids_path}, val ids from {self.hparams.val_ids_path} and test ids from {self.hparams.test_ids_path}"
             )
-            self.train_cpds = pd.read_csv(self.hparams.train_ids_path, header=None)
-            py_logger.debug(f"train_cpds: {self.train_cpds.head().to_string()}")
-            self.train_cpds = self.train_cpds[0].tolist()
+            self.train_cpds = pd.read_csv(self.hparams.train_ids_path, header=None)[0].tolist()
             self.val_cpds = pd.read_csv(self.hparams.val_ids_path, header=None)[0].tolist()
             self.test_cpds = pd.read_csv(self.hparams.test_ids_path, header=None)[0].tolist()
 
