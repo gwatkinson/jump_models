@@ -1,3 +1,5 @@
+# from https://github.com/grok-ai/nn-template/blob/main/%7B%7B%20cookiecutter.repository_name%20%7D%7D/src/%7B%7B%20cookiecutter.package_name%20%7D%7D/data/datamodule.py
+
 import logging
 from functools import cached_property, partial
 from pathlib import Path

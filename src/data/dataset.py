@@ -1,3 +1,5 @@
+# from https://github.com/grok-ai/nn-template/blob/main/%7B%7B%20cookiecutter.repository_name%20%7D%7D/src/%7B%7B%20cookiecutter.package_name%20%7D%7D/data/dataset.py
+
 import hydra
 import omegaconf
 from nn_core.common import PROJECT_ROOT
