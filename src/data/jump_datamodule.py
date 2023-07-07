@@ -350,9 +350,9 @@ if __name__ == "__main__":
     def compound_transform(x: str) -> str:
         return to_smiles(from_inchi(x))
 
-    file_handler = logging.FileHandler(filename="./logs/tmp.log")
+    # file_handler = logging.FileHandler(filename="./logs/tmp.log")
     stdout_handler = logging.StreamHandler(stream=sys.stdout)
-    handlers = [file_handler, stdout_handler]
+    handlers = [stdout_handler]
     logging.basicConfig(
         level=logging.DEBUG,
         format="[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s",
