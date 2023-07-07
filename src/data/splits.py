@@ -38,7 +38,7 @@ class BaseSplitter(ABC):
     def normalize_train_val_test(self):
         """Normalize the train, val and test values."""
         total = self.train + self.val + self.test
-        if (self.train, self.val, self.test) is Tuple[int, int, int]:
+        if isinstance(self.train, int) and isinstance(self.val, int) and isinstance(self.test, int):
             py_logger.debug("Train, val and test are integers.")
             if self.compound_list is not None and total > len(self.compound_list):
                 py_logger.warning(
@@ -48,7 +48,7 @@ class BaseSplitter(ABC):
                 self.train = self.train / total
                 self.val = self.val / total
                 self.test = self.test / total
-        elif (self.train, self.val, self.test) is Tuple[float, float, float]:
+        if isinstance(self.train, float) and isinstance(self.val, float) and isinstance(self.test, float):
             py_logger.debug("Train, val and test are floats. Normalizing to 1.")
             self.train = self.train / total
             self.val = self.val / total

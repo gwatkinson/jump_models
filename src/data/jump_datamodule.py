@@ -2,6 +2,7 @@
 
 import json
 import logging
+import sys
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
@@ -47,9 +48,9 @@ class BasicJUMPDataModule(LightningDataModule):
         self,
         image_metadata_path: str,
         compound_metadata_path: str,
-        train_ids: Optional[Union[str, Path]],
-        test_ids: Optional[Union[str, Path]],
-        val_ids: Optional[Union[str, Path]],
+        train_ids_path: Optional[Union[str, Path]],
+        test_ids_path: Optional[Union[str, Path]],
+        val_ids_path: Optional[Union[str, Path]],
         dataloader_config: DictConfig,
         compound_col: str = "Metadata_InChI",
         transform: Optional[Callable] = None,
@@ -68,9 +69,9 @@ class BasicJUMPDataModule(LightningDataModule):
             compound_metadata_path (str): Path to the compound dict json file.
                 This dict contains the compound names as keys and the list of indexes with the compound as values.
             compound_col (str): Name of the column containing the compound names in the image metadata df.
-            train_ids (Optional[Union[str, Path]]): Path to the train ids csv file.
-            test_ids (Optional[Union[str, Path]]): Path to the test ids csv file.
-            val_ids (Optional[Union[str, Path]]): Path to the val ids csv file.
+            train_ids_path (Optional[Union[str, Path]]): Path to the train ids csv file.
+            test_ids_path (Optional[Union[str, Path]]): Path to the test ids csv file.
+            val_ids_path (Optional[Union[str, Path]]): Path to the val ids csv file.
             dataloader_config (DictConfig): Config dict for the dataloaders.
                 Should contains the train, test, val keys with subkeys giving the dataloader parameters.
             transform (Optional[Callable]): Transform to apply to the images.
@@ -129,10 +130,8 @@ class BasicJUMPDataModule(LightningDataModule):
         self.splitter = kwargs.get("splitter", RandomSplitter)
         self.channels = kwargs.get("channels", ["DNA", "AGP", "ER", "Mito", "RNA"])
         self.col_fstring = kwargs.get("col_fstring", "FileName_Orig{channel}")
-        self.id_cols = kwargs.get(
-            "id_cols", ["Metadata_Source", "Metadata_Batch", "Metadata_Plate", "Metadata_Well", "Metadata_Site"]
-        )
-        self.extra_cols = kwargs.get("extra_cols", ["Metadata_PlateType"])
+        self.id_cols = kwargs.get("id_cols", ["Metadata_Source", "Metadata_Batch", "Metadata_Plate", "Metadata_Well"])
+        self.extra_cols = kwargs.get("extra_cols", ["Metadata_PlateType", "Metadata_Site"])
 
     def prepare_data(self) -> None:
         """Download data if needed.
@@ -144,9 +143,9 @@ class BasicJUMPDataModule(LightningDataModule):
         train_ids_path = Path(self.hparams.train_ids_path)
         test_ids_path = Path(self.hparams.test_ids_path)
         val_ids_path = Path(self.hparams.val_ids_path)
-        load_dir = Path(self.prepare_kwargs["local_load_data_dir"])
-        meta_dir = Path(self.prepare_kwargs["metadata_dir"])
-        f_string = self.prepare_kwargs["index_str"]
+        load_dir = Path(self.local_load_data_dir)
+        meta_dir = Path(self.metadata_dir)
+        f_string = self.index_str
         cols_to_keep = (
             self.id_cols
             + [self.col_fstring.format(channel=channel) for channel in self.channels]
@@ -158,19 +157,27 @@ class BasicJUMPDataModule(LightningDataModule):
         if not img_path.exists():
             py_logger.info("=== Preparing image metadata ===")
             py_logger.info(f"{img_path} does not exist.")
-            py_logger.debug(f"Creating it from {load_dir} ...")
+            py_logger.debug(f"Loading load data df from {load_dir} ...")
             load_df = load_load_df_from_parquet(load_dir)
 
             py_logger.debug(f"Loading metadata df from {meta_dir} ...")
             meta_df = load_metadata_df_from_csv(meta_dir)
 
+            py_logger.debug(f"ID cols: {self.id_cols}")
+            py_logger.debug(f"Extra cols: {self.extra_cols}")
+            py_logger.debug(f"load_df cols: {load_df.columns.tolist()}")
+            py_logger.debug(f"meta_df cols: {meta_df.columns.tolist()}")
+
             py_logger.info("Merging metadata and load data...")
             load_df_with_meta = (
                 load_df.merge(meta_df, how="left", on=self.id_cols)
                 .assign(index=lambda x: f_string.format(**x))
-                .set_index("index", drop=True, verify_integrity=True)
+                .dropna(subset=[self.compound_col])
+                .set_index("index", drop=True)
                 .loc[:, cols_to_keep]
             )
+
+            py_logger.debug(f"load_df_with_meta ids unique: {load_df_with_meta.index.is_unique}")
 
             py_logger.debug(f"Saving image metadata df to {img_path} ...")
             img_path.parent.mkdir(exist_ok=True, parents=True)
@@ -181,12 +188,16 @@ class BasicJUMPDataModule(LightningDataModule):
             )
 
         if not comp_path.exists():
-            py_logger.info("\n=== Preparing compound metadata ===")
+            py_logger.info("=== Preparing compound metadata ===")
             py_logger.info(f"{comp_path} does not exist.")
 
             if "load_df_with_meta" not in locals():
                 py_logger.debug(f"Loading local load data df from {img_path} ...")
                 load_df_with_meta = load_load_df_from_parquet(img_path)
+
+            duplicates = load_df_with_meta.index[load_df_with_meta.index.duplicated()].tolist()
+            py_logger.warning(f"Found {len(duplicates)} duplicates in the image metadata df.")
+            py_logger.debug(f"Duplicates: {duplicates}")
 
             py_logger.info("Creating the compound dictionary...")
             compound_dict = load_df_with_meta.groupby(self.compound_col).apply(lambda x: x.index.tolist()).to_dict()
@@ -197,7 +208,7 @@ class BasicJUMPDataModule(LightningDataModule):
 
         if not train_ids_path.exists() or not test_ids_path.exists() or not val_ids_path.exists():
             # ! To test
-            py_logger.info("\n=== Missing train, test or val ids ===")
+            py_logger.info("=== Missing train, test or val ids ===")
 
             if "compound_dict" not in locals():
                 py_logger.debug(f"Loading compound dictionary from {comp_path} ...")
@@ -208,11 +219,10 @@ class BasicJUMPDataModule(LightningDataModule):
             compound_list.sort()
 
             py_logger.info("Creating the splitter...")
-            splitter = self.prepare_kwargs["splitter"]
-            splitter.set_compound_list(compound_list)
-            py_logger.info(f"Creating them from {splitter}")
+            self.splitter.set_compound_list(compound_list)
+            py_logger.info(f"Creating them from {self.splitter}")
 
-            train_ids, test_ids, val_ids = splitter.split()
+            train_ids, test_ids, val_ids = self.splitter.split()
 
             py_logger.debug(
                 f"Saving train, test and val ids to {train_ids_path}, {test_ids_path} and {val_ids_path} respectively ..."
@@ -220,6 +230,10 @@ class BasicJUMPDataModule(LightningDataModule):
             pd.Series(train_ids).to_csv(train_ids_path, index=False)
             pd.Series(test_ids).to_csv(test_ids_path, index=False)
             pd.Series(val_ids).to_csv(val_ids_path, index=False)
+
+        py_logger.debug(f"Loading local load data df from {img_path} ...")
+        load_df_with_meta = load_load_df_from_parquet(img_path)
+        py_logger.debug(f"load_df_with_meta ids unique: {load_df_with_meta.index.is_unique}")
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Load data. Set variables: `self.data_train`, `self.data_val`,
@@ -290,8 +304,6 @@ class BasicJUMPDataModule(LightningDataModule):
             )
 
     def train_dataloader(self) -> DataLoader:
-        # TODO: maybe specify dataloader args in a kwargs instead
-        # TODO: even better, use a DictConfig with different objects for train, val and test
         return DataLoader(
             dataset=self.data_train,
             **self.dataloader_config.train,
@@ -332,13 +344,24 @@ class BasicJUMPDataModule(LightningDataModule):
 if __name__ == "__main__":
     from datamol import from_inchi
 
+    file_handler = logging.FileHandler(filename="./logs/tmp.log")
+    stdout_handler = logging.StreamHandler(stream=sys.stdout)
+    handlers = [file_handler, stdout_handler]
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s",
+        handlers=handlers,
+    )
+
+    py_logger.info("Creating data module")
+
     dm = BasicJUMPDataModule(
         image_metadata_path="/projects/cpjump1/jump/models/metadata/images_metadata.parquet",
         compound_metadata_path="/projects/cpjump1/jump/models/metadata/compound_dict.json",
         compound_col="Metadata_InChI",
-        train_ids="/projects/cpjump1/jump/models/splits/small_test/train_ids.csv",
-        test_ids="/projects/cpjump1/jump/models/splits/small_test/test_ids.csv",
-        val_ids="/projects/cpjump1/jump/models/splits/small_test/val_ids.csv",
+        train_ids_path="/projects/cpjump1/jump/models/splits/small_test/train_ids.csv",
+        test_ids_path="/projects/cpjump1/jump/models/splits/small_test/test_ids.csv",
+        val_ids_path="/projects/cpjump1/jump/models/splits/small_test/val_ids.csv",
         dataloader_config=DictConfig(
             {
                 "train": DictConfig(
@@ -380,8 +403,19 @@ if __name__ == "__main__":
         index_str="{Metadata_Source}__{Metadata_Batch}__{Metadata_Plate}__{Metadata_Well}__{Metadata_Site}",
         channels=["DNA", "AGP", "ER", "Mito", "RNA"],
         col_fstring="FileName_Orig{channel}",
-        id_cols=["Metadata_Source", "Metadata_Batch", "Metadata_Plate", "Metadata_Well", "Metadata_Site"],
-        extra_cols=["Metadata_PlateType"],
+        id_cols=["Metadata_Source", "Metadata_Batch", "Metadata_Plate", "Metadata_Well"],
+        extra_cols=["Metadata_PlateType", "Metadata_Site"],
     )
 
+    py_logger.info("Preparing data")
+
     dm.prepare_data()
+
+    py_logger.info("Setting up data")
+
+    dm.setup(stage="fit")
+
+    py_logger.info("Getting a batch")
+    for batch in dm.train_dataloader():
+        print(batch)
+        break
