@@ -16,12 +16,12 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
 python = "3.10.10"
-hydra-core = "^1.3.2"
-hydra-colorlog = "^1.2.0"
-hydra-optuna-sweeper = "^1.2.0"
+hydra-core = "^1.0"
+hydra-colorlog = "^1.0"
 wandb = "^0.15.4"
 pyrootutils = "^1.0.4"
 rich = "^13.4.2"
+lightning = "2.0.4"
 
 
 [tool.poetry.group.torch.dependencies]
@@ -54,10 +54,16 @@ pillow = "^9.5.0"
 rdkit = "^2023.3.1"
 datamol = "^0.10.3"
 molfeat = "^0.8.9"
+ogb = "^1.3.6"
 # graphium = "2.0.2"
 
 
-
+[tool.poetry.group.models.dependencies]
+# Model libraries
+fairseq = "^0.12.2"
+huggingface = "^0.0.1"
+transformers = "^4.30.1"
+xgboost = "^1.7.6"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -82,8 +88,11 @@ pep8-naming = "^0.13.3"
 
 
 
-# Tools configuration
+[tool.poetry.group.molecule.dependencies]
+molfeat = {extras = ["all"], version = "^0.8.9"}
+
 [tool.isort]
+# Tools configuration
 profile = "black"
 line_length = 120
 float_to_top = true
