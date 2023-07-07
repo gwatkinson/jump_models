@@ -173,9 +173,11 @@ class BasicJUMPDataModule(LightningDataModule):
                 load_df.merge(meta_df, how="left", on=self.id_cols)
                 .assign(index=lambda x: f_string.format(**x))
                 .dropna(subset=[self.compound_col])
-                .set_index("index", drop=True)
-                .loc[:, cols_to_keep]
             )
+
+            py_logger.debug(f"load_df_with_meta head:\n{load_df_with_meta.head().to_string()}")
+
+            load_df_with_meta = load_df_with_meta.set_index("index", drop=True).loc[:, cols_to_keep]
 
             py_logger.debug(f"load_df_with_meta ids unique: {load_df_with_meta.index.is_unique}")
 
