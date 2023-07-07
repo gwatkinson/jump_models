@@ -187,6 +187,7 @@ class BasicJUMPDataModule(LightningDataModule):
                 compression="snappy",
             )
 
+        # Prepare compound metadata
         if not comp_path.exists():
             py_logger.info("=== Preparing compound metadata ===")
             py_logger.info(f"{comp_path} does not exist.")
@@ -200,12 +201,17 @@ class BasicJUMPDataModule(LightningDataModule):
             py_logger.debug(f"Duplicates: {duplicates}")
 
             py_logger.info("Creating the compound dictionary...")
-            compound_dict = load_df_with_meta.groupby(self.compound_col).apply(lambda x: x.index.tolist()).to_dict()
+            compound_df = load_df_with_meta.groupby(self.compound_col).apply(lambda x: x.index.tolist())
+
+            py_logger.debug(f"compound_df ex: \n{compound_df.head().to_string()}")
+
+            compound_dict = compound_df.to_dict()
 
             py_logger.debug(f"Saving compound dictionary to {comp_path} ...")
             with open(comp_path, "w") as handle:
                 json.dump(compound_dict, handle)
 
+        # Prepare train, test and val ids
         if not train_ids_path.exists() or not test_ids_path.exists() or not val_ids_path.exists():
             # ! To test
             py_logger.info("=== Missing train, test or val ids ===")
