@@ -36,25 +36,16 @@ class MoleculeImageDataset(Dataset):
         self.sampler = sampler or random.choice
         self.channels = channels
         self.col_fstring = col_fstring
-
-    @property
-    def compound_list(self):
-        return list(self.compound_dict.keys())
-
-    @property
-    def n_compounds(self):
-        return len(self.compound_list)
-
-    @property
-    def image_list(self):
-        return self.load_df.index.tolist()
-
-    @property
-    def n_images(self):
-        return len(self.image_list)
+        self.compound_list = list(self.compound_dict.keys())
+        self.n_compounds = len(self.compound_list)
+        self.image_list = self.load_df.index.tolist()
+        self.n_images = len(self.image_list)
 
     def __len__(self):
         return self.n_compounds
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(n_compounds={self.n_compounds}, n_images={self.n_images})"
 
     def __getitem__(self, idx):
         py_logger.debug(f"compound_list head: {self.compound_list[:5]}")
