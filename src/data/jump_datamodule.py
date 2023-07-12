@@ -262,7 +262,7 @@ class BasicJUMPDataModule(LightningDataModule):
             self.val_cpds = pd.read_csv(self.val_ids_path, header=None)[0].tolist()
             self.test_cpds = pd.read_csv(self.test_ids_path, header=None)[0].tolist()
 
-        if stage == "fit" and self.data_train is None:
+        if self.data_train is None:
             py_logger.debug("=== Preparing train dataset ===")
             train_load_df = self.load_df[self.load_df[self.compound_col].isin(self.train_cpds)]
             train_compound_dict = {k: v for k, v in self.compound_dict.items() if k in self.train_cpds}
@@ -276,7 +276,7 @@ class BasicJUMPDataModule(LightningDataModule):
                 col_fstring=self.col_fstring,
             )
 
-        if stage == "validate" and self.data_val is None:
+        if self.data_val is None:
             val_load_df = self.load_df[self.load_df[self.compound_col].isin(self.val_cpds)]
             val_compound_dict = {k: v for k, v in self.compound_dict.items() if k in self.val_cpds}
             self.data_val = self.dataset_cls(
@@ -289,7 +289,7 @@ class BasicJUMPDataModule(LightningDataModule):
                 col_fstring=self.col_fstring,
             )
 
-        if stage == "test" and self.data_test is None:
+        if self.data_test is None:
             test_load_df = self.load_df[self.load_df[self.compound_col].isin(self.test_cpds)]
             test_compound_dict = {k: v for k, v in self.compound_dict.items() if k in self.test_cpds}
             self.data_test = self.dataset_cls(
