@@ -1,8 +1,18 @@
 import json
+from io import BytesIO
 from typing import Any, Dict, Optional
+from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
+import requests
+
+
+def download_and_extract_zip(url: str, path: str) -> None:
+    """Download a zip file from a url and extract it to a path."""
+    resp = requests.get(url)
+    zipfile = ZipFile(BytesIO(resp.content))
+    zipfile.extractall(path)
 
 
 def load_load_df_from_parquet(path: str, job_dtypes: Optional[Dict[str, Any]] = None, **kwargs) -> pd.DataFrame:

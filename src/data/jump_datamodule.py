@@ -2,12 +2,13 @@
 
 import json
 import logging
+import os.path as osp
 import sys
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 import pandas as pd
-from lightning import LightningDataModule
+from lightning.pytorch import LightningDataModule
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
 
@@ -48,9 +49,7 @@ class BasicJUMPDataModule(LightningDataModule):
         self,
         image_metadata_path: str,
         compound_metadata_path: str,
-        train_ids_path: Optional[Union[str, Path]],
-        test_ids_path: Optional[Union[str, Path]],
-        val_ids_path: Optional[Union[str, Path]],
+        split_path: str,
         dataloader_config: DictConfig,
         compound_col: str = "Metadata_InChI",
         transform: Optional[Callable] = None,
@@ -68,12 +67,10 @@ class BasicJUMPDataModule(LightningDataModule):
                 This df contains the path to the images, and the index should be the same as the index_str.
             compound_metadata_path (str): Path to the compound dict json file.
                 This dict contains the compound names as keys and the list of indexes with the compound as values.
-            compound_col (str): Name of the column containing the compound names in the image metadata df.
-            train_ids_path (Optional[Union[str, Path]]): Path to the train ids csv file.
-            test_ids_path (Optional[Union[str, Path]]): Path to the test ids csv file.
-            val_ids_path (Optional[Union[str, Path]]): Path to the val ids csv file.
+            split_path (str): Path to the directory containing the train, test and val split csvs.
             dataloader_config (DictConfig): Config dict for the dataloaders.
                 Should contains the train, test, val keys with subkeys giving the dataloader parameters.
+            compound_col (str): Name of the column containing the compound names in the image metadata df.
             transform (Optional[Callable]): Transform to apply to the images.
             compound_transform (Optional[Callable]): Transform to apply to the compounds.
             image_sampler (Optional[Callable[[List[str]], str]]): Function to use to sample images from a list of images.
@@ -120,6 +117,9 @@ class BasicJUMPDataModule(LightningDataModule):
 
         # other
         self.compound_col = compound_col
+        self.train_ids_path = osp.join(self.hparams.split_path, "train_ids.csv")
+        self.val_ids_path = osp.join(self.hparams.split_path, "val_ids.csv")
+        self.test_ids_path = osp.join(self.hparams.split_path, "test_ids.csv")
 
         # kwargs
         self.index_str = kwargs.get(
@@ -140,9 +140,9 @@ class BasicJUMPDataModule(LightningDataModule):
         """
         img_path = Path(self.hparams.image_metadata_path)
         comp_path = Path(self.hparams.compound_metadata_path)
-        train_ids_path = Path(self.hparams.train_ids_path)
-        test_ids_path = Path(self.hparams.test_ids_path)
-        val_ids_path = Path(self.hparams.val_ids_path)
+        train_ids_path = Path(self.train_ids_path)
+        test_ids_path = Path(self.test_ids_path)
+        val_ids_path = Path(self.val_ids_path)
         load_dir = Path(self.local_load_data_dir)
         meta_dir = Path(self.metadata_dir)
         f_string = self.index_str
@@ -256,11 +256,11 @@ class BasicJUMPDataModule(LightningDataModule):
 
         if self.train_cpds is None or self.val_cpds is None or self.test_cpds is None:
             py_logger.debug(
-                f"Loading train ids from {self.hparams.train_ids_path}, val ids from {self.hparams.val_ids_path} and test ids from {self.hparams.test_ids_path}"
+                f"Loading train ids from {self.train_ids_path}, val ids from {self.val_ids_path} and test ids from {self.test_ids_path}"
             )
-            self.train_cpds = pd.read_csv(self.hparams.train_ids_path, header=None)[0].tolist()
-            self.val_cpds = pd.read_csv(self.hparams.val_ids_path, header=None)[0].tolist()
-            self.test_cpds = pd.read_csv(self.hparams.test_ids_path, header=None)[0].tolist()
+            self.train_cpds = pd.read_csv(self.train_ids_path, header=None)[0].tolist()
+            self.val_cpds = pd.read_csv(self.val_ids_path, header=None)[0].tolist()
+            self.test_cpds = pd.read_csv(self.test_ids_path, header=None)[0].tolist()
 
         if stage == "fit" and self.data_train is None:
             py_logger.debug("=== Preparing train dataset ===")
@@ -357,9 +357,7 @@ if __name__ == "__main__":
         image_metadata_path="/projects/cpjump1/jump/models/metadata/images_metadata.parquet",
         compound_metadata_path="/projects/cpjump1/jump/models/metadata/compound_dict.json",
         compound_col="Metadata_InChI",
-        train_ids_path="/projects/cpjump1/jump/models/splits/small_test/train_ids.csv",
-        test_ids_path="/projects/cpjump1/jump/models/splits/small_test/test_ids.csv",
-        val_ids_path="/projects/cpjump1/jump/models/splits/small_test/val_ids.csv",
+        split_path="/projects/cpjump1/jump/models/splits/small_test/",
         dataloader_config=DictConfig(
             {
                 "train": DictConfig(
