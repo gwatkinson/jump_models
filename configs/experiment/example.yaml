@@ -3,6 +3,8 @@
 # to execute this experiment run:
 # python train.py experiment=example
 
+#TODO
+
 defaults:
   - override /data: mnist.yaml
   - override /model: mnist.yaml

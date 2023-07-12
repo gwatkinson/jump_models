@@ -3,6 +3,8 @@
 # example hyperparameter optimization of some experiment with Optuna:
 # python train.py -m hparams_search=mnist_optuna experiment=example
 
+#TODO
+
 defaults:
   - override /hydra/sweeper: optuna
 
