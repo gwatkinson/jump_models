@@ -1,3 +1,5 @@
+# from other template
+
 import logging
 from typing import Any, Mapping, Optional, Sequence, Tuple, Union
 
@@ -7,11 +9,11 @@ import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 import torchmetrics
+from archs.module import CNN
 from nn_core.common import PROJECT_ROOT
 from nn_core.model_logging import NNLogger
 from torch.optim import Optimizer
 
-from archs.module import CNN
 from data.datamodule import MetaData
 
 pylogger = logging.getLogger(__name__)
