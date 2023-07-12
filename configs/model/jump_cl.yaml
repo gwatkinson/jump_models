@@ -21,6 +21,6 @@ image_encoder:
   pretrained: True
 
 molecule_encoder:
-  _target_: molfeat.trans.pretrained.PretrainedDGLTransformer
+  _target_: molfeat.trans.pretrained.dgl_pretrained.PretrainedDGLTransformer
   kind: gin_supervised_infomax
   dtype: float
