@@ -21,6 +21,7 @@ dataloader_config:
     shuffle: False
 transform:
   _target_: src.data_utils.transforms.DefaultJUMPTransform
+  _convert_: object
   size: 256
   dim: [-2, -1]
 compound_transform:
