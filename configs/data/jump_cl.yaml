@@ -2,7 +2,7 @@ _target_: src.data.jump_datamodule.BasicJUMPDataModule
 image_metadata_path: ${paths.metadata_path}/images_metadata.parquet
 compound_metadata_path: ${paths.metadata_path}/compound_dict.json
 compound_col: Metadata_InChI
-split_path: ${split_path}/small_test/
+split_path: ${paths.split_path}/small_test/
 dataloader_config:
   train:
     batch_size: 32
