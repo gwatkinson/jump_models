@@ -1,12 +1,11 @@
 # @package _global_
-#TODO
 
 defaults:
   - _self_
-  - data: mnist.yaml # choose datamodule with `test_dataloader()` for evaluation
-  - model: mnist.yaml
-  - logger: null
-  - trainer: default.yaml
+  - data: jump_cl.yaml # choose datamodule with `test_dataloader()` for evaluation
+  - model: jump_cl.yaml
+  - logger: wandb
+  - trainer: gpu.yaml
   - paths: default.yaml
   - extras: default.yaml
   - hydra: default.yaml
