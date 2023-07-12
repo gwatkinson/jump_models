@@ -4,8 +4,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from utils.tensor_operator import force_fp32
-
 
 def symmetric_loss_wrapper(func):
     @wraps(func)
@@ -35,7 +33,6 @@ def dualModalityInfoNCE_loss(X, Y, temperature, normalize=False):
 
 
 @symmetric_loss_wrapper
-@force_fp32()
 def cdist_loss(X, Y, margin):
     dist = torch.cdist(X, Y, p=2)
     pos = torch.diag(dist)

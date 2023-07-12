@@ -31,7 +31,8 @@ class DefaultJUMPTransform(torch.nn.Module):
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(),
             transforms.RandomCrop(size),
-            transforms.ToTensor(),
+            transforms.ToImageTensor(),
+            transforms.ConvertImageDtype(),
             ImageNormalization(dim=dim),
         )
 
