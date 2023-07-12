@@ -6,17 +6,17 @@ split_path: ${paths.split_path}/small_test/
 dataloader_config:
   train:
     batch_size: 32
-    num_workers: 0
+    num_workers: 1
     pin_memory: False
     shuffle: True
   val:
     batch_size: 32
-    num_workers: 0
+    num_workers: 1
     pin_memory: False
     shuffle: False
   test:
     batch_size: 32
-    num_workers: 0
+    num_workers: 1
     pin_memory: False
     shuffle: False
 transform:
