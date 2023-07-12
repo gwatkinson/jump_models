@@ -25,6 +25,7 @@ transform:
   dim: [-2, -1]
 compound_transform:
   _target_: src.data_utils.mol_utils.inchi_to_smiles
+  _partial_: true
 image_sampler: null
 metadata_dir: /projects/cpjump1/jump/metadata/complete_metadata.csv
 local_load_data_dir: /projects/cpjump1/jump/load_data/final/
