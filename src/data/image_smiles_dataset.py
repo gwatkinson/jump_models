@@ -62,4 +62,4 @@ class MoleculeImageDataset(Dataset):
         if self.compound_transform:
             compound = self.compound_transform(compound)
 
-        return img_array, compound
+        return {"image": img_array, "compound": compound}

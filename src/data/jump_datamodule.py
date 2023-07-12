@@ -12,7 +12,7 @@ from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
 
 from src.data.image_smiles_dataset import MoleculeImageDataset
-from src.data.splits import RandomSplitter
+from src.data.splits import RandomSplitter, ScaffoldSplitter
 from src.data_utils.utils import load_load_df_from_parquet, load_metadata_df_from_csv
 
 py_logger = logging.getLogger(__name__)
@@ -196,9 +196,6 @@ class BasicJUMPDataModule(LightningDataModule):
 
             py_logger.info("Creating the compound dictionary...")
             compound_df = load_df_with_meta.groupby(self.compound_col).apply(lambda x: x.index.tolist())
-
-            py_logger.debug(f"compound_df ex: \n{compound_df.head().to_string()}")
-
             compound_dict = compound_df.to_dict()
 
             py_logger.debug(f"Saving compound dictionary to {comp_path} ...")
@@ -313,22 +310,17 @@ class BasicJUMPDataModule(LightningDataModule):
         )
 
     def val_dataloader(self) -> DataLoader:
+        val_kwargs = OmegaConf.to_container(self.dataloader_config.val, resolve=True)
         return DataLoader(
             dataset=self.data_val,
-            batch_size=self.dataloader_config.val.batch_size,
-            num_workers=self.dataloader_config.val.num_workers,
-            pin_memory=self.dataloader_config.val.pin_memory,
-            shuffle=self.dataloader_config.val.get("shuffle", False),
+            **val_kwargs,
         )
 
     def test_dataloader(self) -> DataLoader:
-        # TODO: multiple test dataloaders for different test sets ?
+        test_kwargs = OmegaConf.to_container(self.dataloader_config.test, resolve=True)
         return DataLoader(
             dataset=self.data_test,
-            batch_size=self.dataloader_config.test.batch_size,
-            num_workers=self.dataloader_config.test.num_workers,
-            pin_memory=self.dataloader_config.test.pin_memory,
-            shuffle=self.dataloader_config.test.get("shuffle", False),
+            **test_kwargs,
         )
 
     def teardown(self, stage: Optional[str] = None):
@@ -401,7 +393,7 @@ if __name__ == "__main__":
         image_sampler=None,
         metadata_dir="/projects/cpjump1/jump/metadata/complete_metadata.csv",
         local_load_data_dir="/projects/cpjump1/jump/load_data/final/",
-        splitter=RandomSplitter(
+        splitter=ScaffoldSplitter(
             train=800,
             test=200,
             val=100,
@@ -427,6 +419,12 @@ if __name__ == "__main__":
     py_logger.info("Getting a batch")
     py_logger.debug(f"Test dataloader: {dm.train_dataloader()}")
 
+    print("len(train_cpds): ", len(dm.train_cpds))
+    print("len(test_cpds): ", len(dm.test_cpds))
+    print("len(val_cpds): ", len(dm.val_cpds))
+
     for batch in dm.train_dataloader():
         print(batch)
+        print(batch["image"].shape)
+        print(batch["compound"])
         break
