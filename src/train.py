@@ -123,4 +123,16 @@ def main(cfg: DictConfig) -> Optional[float]:
 
 
 if __name__ == "__main__":
+    import logging
+    import sys
+
+    stdout_handler = logging.StreamHandler(stream=sys.stdout)
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s",
+        handlers=[stdout_handler],
+    )
+
+    log.info("Starting training...")
+
     main()
