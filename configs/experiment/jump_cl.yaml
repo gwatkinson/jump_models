@@ -3,18 +3,16 @@
 # to execute this experiment run:
 # python train.py experiment=example
 
-#TODO
-
 defaults:
-  - override /data: mnist.yaml
-  - override /model: mnist.yaml
+  - override /data: jump_cl.yaml
+  - override /model: jump_cl.yaml
   - override /callbacks: default.yaml
-  - override /trainer: default.yaml
+  - override /trainer: gpu.yaml
 
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-tags: ["mnist", "simple_dense_net"]
+tags: ["jump", "simple_comtrastive_training", "first_try"]
 
 seed: 12345
 
@@ -25,18 +23,13 @@ trainer:
 
 model:
   optimizer:
-    lr: 0.002
-  net:
-    lin1_size: 128
-    lin2_size: 256
-    lin3_size: 64
+    lr: 0.001
 
 data:
-  batch_size: 64
+  batch_size: 16
+  split_path: ${paths.split_path}/${task_name}
 
 logger:
   wandb:
     tags: ${tags}
-    group: "mnist"
-  aim:
-    experiment: "mnist"
+    group: "jump_models"

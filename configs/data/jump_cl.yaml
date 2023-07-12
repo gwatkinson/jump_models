@@ -1,0 +1,37 @@
+_target_: src.data.jump_datamodule.BasicJUMPDataModule
+image_metadata_path: ${paths.metadata_path}/images_metadata.parquet
+compound_metadata_path: ${paths.metadata_path}/compound_dict.json
+compound_col: Metadata_InChI
+split_path: ${split_path}/small_test/
+dataloader_config:
+  train:
+    batch_size: 32
+    num_workers: 0
+    pin_memory: False
+    shuffle: True
+  val:
+    batch_size: 32
+    num_workers: 0
+    pin_memory: False
+    shuffle: False
+  test:
+    batch_size: 32
+    num_workers: 0
+    pin_memory: False
+    shuffle: False
+transform: null
+compound_transform:
+  _target_: src.data_utils.mol_utils.inchi_to_smiles
+image_sampler: null
+metadata_dir: /projects/cpjump1/jump/metadata/complete_metadata.csv
+local_load_data_dir: /projects/cpjump1/jump/load_data/final/
+splitter:
+  _target_: src.data.splits.ScaffoldSplitter
+  train: 800
+  test: 200
+  val: 100
+index_str: "{Metadata_Source}__{Metadata_Batch}__{Metadata_Plate}__{Metadata_Well}__{Metadata_Site}"
+channels: [DNA,AGP,ER,Mito,RNA]
+col_fstring: "FileName_Orig{channel}"
+id_cols: [Metadata_Source,Metadata_Batch,Metadata_Plate,Metadata_Well]
+extra_cols: [Metadata_PlateType,Metadata_Site]

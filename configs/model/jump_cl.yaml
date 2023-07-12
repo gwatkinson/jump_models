@@ -1,0 +1,26 @@
+_target_: src.models.jump_module.BasicJUMPModule
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 0.001
+  weight_decay: 0.0
+
+scheduler:
+  _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+  _partial_: true
+  mode: min
+  factor: 0.1
+  patience: 10
+
+image_encoder:
+  _target_: src.images.image_encoder.CNNEncoder
+  instance_model_name: resnet50
+  target_num: 2
+  n_channels: 5
+  pretrained: True
+
+molecule_encoder:
+  _target_: molfeat.trans.pretrained.GraphormerTransformer
+  kind: pcqm4mv2_graphormer_base
+  dtype: float
