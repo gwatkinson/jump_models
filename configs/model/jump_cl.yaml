@@ -21,6 +21,6 @@ image_encoder:
   pretrained: True
 
 molecule_encoder:
-  _target_: molfeat.trans.pretrained.GraphormerTransformer
-  kind: pcqm4mv2_graphormer_base
+  _target_: molfeat.trans.pretrained.PretrainedDGLTransformer
+  kind: gin_supervised_infomax
   dtype: float
