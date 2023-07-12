@@ -19,7 +19,10 @@ dataloader_config:
     num_workers: 0
     pin_memory: False
     shuffle: False
-transform: null
+transform:
+  _target_: src.data_utils.transforms.DefaultJUMPTransform
+  size: 256
+  dim: [-2, -1]
 compound_transform:
   _target_: src.data_utils.mol_utils.inchi_to_smiles
 image_sampler: null
