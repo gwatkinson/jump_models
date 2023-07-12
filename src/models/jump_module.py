@@ -54,7 +54,8 @@ class BasicJUMPModule(LightningModule):
 
     def forward(self, x: Dict[str, Any]):
         image_emb = self.image_encoder(x["image"])  # BxE
-        compound_emb = self.molecule_encoder(x["compound"])  # BxE
+        compound_emb = self.molecule_encoder(x["compound"])  # BxE np array
+        compound_emb = torch.from_numpy(compound_emb).float()
 
         return {"image_emb": image_emb, "compound_emb": compound_emb}
 
@@ -72,12 +73,6 @@ class BasicJUMPModule(LightningModule):
         return loss
 
     def training_step(self, batch: Any, batch_idx: int):
-        if batch_idx == 0:
-            logger.debug(f"train batch 0: {batch}")
-            logger.debug(f"batch keys: {batch.keys()}")
-            logger.debug(f"image dtype: {batch['image'].dtype}")
-            logger.debug(f"compounds: {batch['compound']}")
-
         loss = self.model_step(batch)
 
         # update and log metrics
@@ -90,12 +85,6 @@ class BasicJUMPModule(LightningModule):
         pass
 
     def validation_step(self, batch: Any, batch_idx: int):
-        if batch_idx == 0:
-            logger.debug(f"train batch 0: {batch}")
-            logger.debug(f"batch keys: {batch.keys()}")
-            logger.debug(f"image dtype: {batch['image'].dtype}")
-            logger.debug(f"compounds: {batch['compound']}")
-
         loss = self.model_step(batch)
 
         # update and log metrics
