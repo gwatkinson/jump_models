@@ -29,7 +29,7 @@ trainer:
   accelerator: cpu # debuggers don't like gpus
   devices: 1 # debuggers don't like multiprocessing
   detect_anomaly: true # raise exception if NaN or +/-inf is detected in any tensor
-  precision: null
+  precision: 32
 
 data:
   train:

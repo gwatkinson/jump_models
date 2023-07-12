@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict
 
 import torch
@@ -5,6 +6,8 @@ from lightning import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
 
 from src.losses.loss import dualModalityInfoNCE_loss
+
+logger = logging.getLogger(__name__)
 
 
 class BasicJUMPModule(LightningModule):
@@ -69,6 +72,12 @@ class BasicJUMPModule(LightningModule):
         return loss
 
     def training_step(self, batch: Any, batch_idx: int):
+        if batch_idx == 0:
+            logger.debug(f"train batch 0: {batch}")
+            logger.debug(f"batch keys: {batch.keys()}")
+            logger.debug(f"image dtype: {batch['image'].dtype}")
+            logger.debug(f"compounds: {batch['compound']}")
+
         loss = self.model_step(batch)
 
         # update and log metrics
@@ -81,6 +90,12 @@ class BasicJUMPModule(LightningModule):
         pass
 
     def validation_step(self, batch: Any, batch_idx: int):
+        if batch_idx == 0:
+            logger.debug(f"train batch 0: {batch}")
+            logger.debug(f"batch keys: {batch.keys()}")
+            logger.debug(f"image dtype: {batch['image'].dtype}")
+            logger.debug(f"compounds: {batch['compound']}")
+
         loss = self.model_step(batch)
 
         # update and log metrics
