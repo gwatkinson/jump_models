@@ -6,6 +6,7 @@ import random
 from typing import Callable, Dict, List, Optional
 
 import pandas as pd
+import torch
 from torch.utils.data import Dataset
 
 from src.data_utils.image_io import load_image_paths_to_array
@@ -55,6 +56,7 @@ class MoleculeImageDataset(Dataset):
         ]
 
         img_array = load_image_paths_to_array(image_paths)  # A numpy array: (5, 768, 768)
+        img_array = torch.from_numpy(img_array)
 
         if self.transform:
             img_array = self.transform(img_array)
