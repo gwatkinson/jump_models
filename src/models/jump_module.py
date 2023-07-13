@@ -1,6 +1,7 @@
 import logging
 from typing import Any, Dict
 
+import numpy as np
 import torch
 from lightning import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
@@ -55,7 +56,9 @@ class BasicJUMPModule(LightningModule):
     def forward(self, x: Dict[str, Any]):
         image_emb = self.image_encoder(x["image"])  # BxE
         compound_emb = self.molecule_encoder(x["compound"])  # BxE np array
-        compound_emb = torch.from_numpy(compound_emb).float()
+
+        if isinstance(compound_emb, np.ndarray):
+            compound_emb = torch.from_numpy(compound_emb).float()
 
         return {"image_emb": image_emb, "compound_emb": compound_emb}
 
@@ -67,6 +70,9 @@ class BasicJUMPModule(LightningModule):
     def model_step(self, batch: Any):
         image_emb = self.image_encoder(batch["image"])
         compound_emb = self.molecule_encoder(batch["compound"])
+
+        if isinstance(compound_emb, np.ndarray):
+            compound_emb = torch.from_numpy(compound_emb).float()
 
         loss = self.criterion(image_emb, compound_emb)
 

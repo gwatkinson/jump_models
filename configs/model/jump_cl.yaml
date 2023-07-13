@@ -20,7 +20,14 @@ image_encoder:
   n_channels: 5
   pretrained: True
 
+# molecule_encoder:
+#   _target_: molfeat.trans.pretrained.dgl_pretrained.PretrainedDGLTransformer
+#   kind: gin_supervised_infomax
+#   dtype:
+#     _target_: numpy.float32
+
 molecule_encoder:
-  _target_: molfeat.trans.pretrained.dgl_pretrained.PretrainedDGLTransformer
-  kind: gin_supervised_infomax
-  dtype: float
+  _target_: molfeat.trans.fp.FPVecTransformer
+  kind: "ecfp:4"
+  dtype:
+    _target_: numpy.float32
