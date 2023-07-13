@@ -29,5 +29,3 @@ image_encoder:
 molecule_encoder:
   _target_: molfeat.trans.fp.FPVecTransformer
   kind: "ecfp:4"
-  dtype:
-    _target_: numpy.float32
