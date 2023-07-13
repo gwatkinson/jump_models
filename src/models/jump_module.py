@@ -81,8 +81,11 @@ class BasicJUMPModule(LightningModule):
         loss = self.model_step(batch)
 
         if batch_idx == 0:
+            logger.info(f"batch: {batch}")
             logger.info(f"compounds: {batch['compound']}")
             logger.info(f"encoder: {self.molecule_encoder}")
+            logger.info(f"image dtype: {batch['image']}")
+            logger.info(f"mol dtype: {self.molecule_encoder(batch['compound'])}")
 
         # update and log metrics
         self.train_loss(loss)

@@ -22,7 +22,7 @@ def dualModalityInfoNCE_loss(X, Y, temperature, normalize=False):
         Y = F.normalize(Y, dim=-1)
 
     criterion = nn.CrossEntropyLoss()
-    B = X.size()[0]
+    B = Y.size()[0]
     logits = torch.mm(X, Y.transpose(1, 0))  # B*B
     logits = torch.div(logits, temperature)
     labels = torch.arange(B).long().to(logits.device)  # B*1
