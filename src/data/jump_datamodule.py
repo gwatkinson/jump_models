@@ -205,7 +205,7 @@ class BasicJUMPDataModule(LightningDataModule):
 
         # Prepare train, test and val ids
         split_not_exists = not train_ids_path.exists() or not test_ids_path.exists() or not val_ids_path.exists()
-        split_empty = (
+        split_empty = split_not_exists or (
             len(pd.read_csv(train_ids_path)) == 0
             or len(pd.read_csv(test_ids_path)) == 0
             or len(pd.read_csv(val_ids_path)) == 0
