@@ -88,6 +88,7 @@ flake8-comprehensions = "^3.10.1"
 flake8-simplify = "^0.19.3"
 pep8-naming = "^0.13.3"
 pipdeptree = "^2.9.5"
+nvitop = "^1.1.2"
 
 
 [tool.isort]
