@@ -12,13 +12,15 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-tags: ["jump", "simple_comtrastive_training", "first_try"]
+tags: ["jump", "simple_contrastive_training", "first_try", "pretrained_gin", "pretrained_resnet50"]
 
 seed: 12345
 
+compile: False
+
 trainer:
   min_epochs: 10
-  max_epochs: 10
+  max_epochs: 25
   gradient_clip_val: 0.5
 
 model:
@@ -26,7 +28,7 @@ model:
     lr: 0.001
 
 data:
-  batch_size: 16
+  batch_size: 32
   split_path: ${paths.split_path}/${task_name}
 
 logger:

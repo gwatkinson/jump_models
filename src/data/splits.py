@@ -151,6 +151,10 @@ def _generate_scaffold(smiles: str, include_chirality: bool = False) -> str:
         raise ImportError("This function requires RDKit to be installed.")
 
     mol = Chem.MolFromSmiles(smiles)
+
+    if mol is None:
+        return None
+
     scaffold = MurckoScaffoldSmiles(mol=mol, includeChirality=include_chirality)
     return scaffold
 
@@ -172,6 +176,8 @@ class ScaffoldSplitter(BaseSplitter):
         py_logger.info("About to generate scaffolds")
         for smiles in self.compound_list:
             scaffold = _generate_scaffold(smiles, include_chirality=False)
+            if scaffold is None:
+                continue
             if scaffold not in scaffolds:
                 scaffolds[scaffold] = [smiles]
             else:

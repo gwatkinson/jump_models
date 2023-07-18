@@ -97,6 +97,3 @@ class CNNEncoder(nn.Module):
         x = self.extract(x)
         re = self.myfc(x)
         return re
-
-    def __call__(self, x):
-        return self.model(x)

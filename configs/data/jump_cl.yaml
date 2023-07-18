@@ -10,22 +10,26 @@ collate_fn:
 batch_size: 32
 num_workers: 8
 pin_memory: True
+prefetch_factor: 2
 
 dataloader_config:
   train:
     batch_size: ${data.batch_size}
     num_workers: ${data.num_workers}
     pin_memory: ${data.pin_memory}
+    prefetch_factor: ${data.prefetch_factor}
     shuffle: True
   val:
     batch_size: ${data.batch_size}
     num_workers: ${data.num_workers}
     pin_memory: ${data.pin_memory}
+    prefetch_factor: ${data.prefetch_factor}
     shuffle: False
   test:
     batch_size: ${data.batch_size}
     num_workers: ${data.num_workers}
     pin_memory: ${data.pin_memory}
+    prefetch_factor: ${data.prefetch_factor}
     shuffle: False
 
 transform:

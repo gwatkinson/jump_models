@@ -256,9 +256,7 @@ class BasicJUMPDataModule(LightningDataModule):
             self.n_compounds = len(self.compound_list)
 
         if self.train_cpds is None or self.val_cpds is None or self.test_cpds is None:
-            py_logger.debug(
-                f"Loading train ids from {self.train_ids_path}, val ids from {self.val_ids_path} and test ids from {self.test_ids_path}"
-            )
+            py_logger.debug(f"Loading train ids from {self.train_ids_path}")
             self.train_cpds = pd.read_csv(self.train_ids_path, header=None)[0].tolist()
             self.val_cpds = pd.read_csv(self.val_ids_path, header=None)[0].tolist()
             self.test_cpds = pd.read_csv(self.test_ids_path, header=None)[0].tolist()

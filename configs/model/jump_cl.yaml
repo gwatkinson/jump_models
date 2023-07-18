@@ -16,7 +16,7 @@ scheduler:
 image_encoder:
   _target_: src.images.image_encoder.CNNEncoder
   instance_model_name: resnet50
-  target_num: 2
+  target_num: 256
   n_channels: 5
   pretrained: True
 
@@ -29,7 +29,7 @@ image_encoder:
 molecule_encoder:
   _target_: src.models.simple_jump_cl.molecule_encoder.GINPretrainedWithLinearHead
   pretrained_name: "gin_supervised_infomax"
-  out_dim: 2048
+  out_dim: 256
   pretrained_dim: 300
   preload: True
 
