@@ -21,7 +21,7 @@ class GINPretrainedWithLinearHead(nn.Module):
         self.pretrained_dim = pretrained_dim
         self.out_dim = out_dim
 
-        self.pretrained = PretrainedDGLTransformer(kind=self.pretrained_name, dtype=torch.Tensor, **kwargs)
+        self.pretrained = PretrainedDGLTransformer(kind=self.pretrained_name, dtype=torch.float32, **kwargs)
         self.head = nn.Linear(self.pretrained_dim, self.out_dim)
 
     def forward(self, x):
