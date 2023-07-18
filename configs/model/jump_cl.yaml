@@ -29,3 +29,6 @@ image_encoder:
 molecule_encoder:
   _target_: molfeat.trans.fp.FPVecTransformer
   kind: "ecfp:4"
+
+criterion:
+  _target_: src.losses.contrastive_loss_with_temperature.ContrastiveLossWithTemperature

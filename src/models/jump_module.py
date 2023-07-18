@@ -5,8 +5,6 @@ import torch
 from lightning import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
 
-from src.losses.loss import dualModalityInfoNCE_loss
-
 logger = logging.getLogger(__name__)
 
 logging.getLogger("PIL.PngImagePlugin").setLevel(logging.CRITICAL + 1)
@@ -27,12 +25,11 @@ class BasicJUMPModule(LightningModule):
         https://lightning.ai/docs/pytorch/latest/common/lightning_module.html
     """
 
-    criterion = dualModalityInfoNCE_loss
-
     def __init__(
         self,
         image_encoder: torch.nn.Module,
         molecule_encoder: torch.nn.Module,
+        criterion: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
     ):
@@ -45,6 +42,7 @@ class BasicJUMPModule(LightningModule):
         # encoders
         self.image_encoder = image_encoder
         self.molecule_encoder = molecule_encoder
+        self.criterion = criterion
 
         # for averaging loss across batches
         self.train_loss = MeanMetric()
@@ -73,12 +71,17 @@ class BasicJUMPModule(LightningModule):
         compound_emb = self.molecule_encoder(batch["compound"])
 
         if not isinstance(compound_emb, torch.Tensor):
+            logger.debug("compound not tensor, converting to tensor")
             compound_emb = torch.tensor(compound_emb)
 
         logger.debug(f"type(image_emb): {type(image_emb)}")
         logger.debug(f"type(compound_emb): {type(compound_emb)}")
 
-        loss = self.criterion(image_emb, compound_emb)
+        loss = self.criterion(
+            embeddings_a=image_emb,
+            embeddings_b=compound_emb,
+            mask=None,
+        )
 
         return loss
 
