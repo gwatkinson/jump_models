@@ -7,7 +7,7 @@ import random
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple, Union
 
-from rdkit import Chem
+import datamol as dm
 from rdkit.Chem.Scaffolds.MurckoScaffold import MurckoScaffoldSmiles
 from sklearn.model_selection import train_test_split
 
@@ -211,9 +211,10 @@ class ScaffoldSplitter(BaseSplitter):
         This function requires RDKit to be installed.
         """
 
-        mol = Chem.MolFromSmiles(smiles)
+        mol = dm.to_mol(smiles)
 
         if mol is None:
+            py_logger.debug(f"Couldn't convert compound: {smiles}")
             return None
 
         scaffold = MurckoScaffoldSmiles(mol=mol, includeChirality=include_chirality)
