@@ -9,6 +9,8 @@ from src.losses.loss import dualModalityInfoNCE_loss
 
 logger = logging.getLogger(__name__)
 
+logging.getLogger("PIL.PngImagePlugin").setLevel(logging.CRITICAL + 1)
+
 
 class BasicJUMPModule(LightningModule):
     """Basic Jump LightningModule to run a simple contrastive training.
