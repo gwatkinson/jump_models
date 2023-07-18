@@ -4,6 +4,7 @@ tmp/
 old/
 /mnt/
 ignored/
+debug.py
 
 # Lightning-Hydra-Template
 configs/local/default.yaml

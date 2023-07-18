@@ -7,6 +7,8 @@ import random
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple, Union
 
+from rdkit import Chem
+from rdkit.Chem.Scaffolds.MurckoScaffold import MurckoScaffoldSmiles
 from sklearn.model_selection import train_test_split
 
 # See https://github.com/deepchem/deepchem/blob/master/deepchem/splits/tests/test_scaffold_splitter.py to use the scaffold splitter
@@ -116,49 +118,6 @@ class RandomSplitter(BaseSplitter):
         return train, val, test
 
 
-def _generate_scaffold(smiles: str, include_chirality: bool = False) -> str:
-    """Compute the Bemis-Murcko scaffold for a SMILES string.
-
-    Bemis-Murcko scaffolds are described in DOI: 10.1021/jm9602928.
-    They are essentially that part of the molecule consisting of
-    rings and the linker atoms between them.
-
-    Paramters
-    ---------
-    smiles: str
-        SMILES
-    include_chirality: bool, default False
-        Whether to include chirality in scaffolds or not.
-
-    Returns
-    -------
-    str
-        The MurckScaffold SMILES from the original SMILES
-
-    References
-    ----------
-    .. [1] Bemis, Guy W., and Mark A. Murcko. "The properties of known drugs.
-        1. Molecular frameworks." Journal of medicinal chemistry 39.15 (1996): 2887-2893.
-
-    Note
-    ----
-    This function requires RDKit to be installed.
-    """
-    try:
-        from rdkit import Chem
-        from rdkit.Chem.Scaffolds.MurckoScaffold import MurckoScaffoldSmiles
-    except ModuleNotFoundError:
-        raise ImportError("This function requires RDKit to be installed.")
-
-    mol = Chem.MolFromSmiles(smiles)
-
-    if mol is None:
-        return None
-
-    scaffold = MurckoScaffoldSmiles(mol=mol, includeChirality=include_chirality)
-    return scaffold
-
-
 class ScaffoldSplitter(BaseSplitter):
     """Split the data into train, val and test sets using the scaffold
     splitting method."""
@@ -175,7 +134,7 @@ class ScaffoldSplitter(BaseSplitter):
 
         py_logger.info("About to generate scaffolds")
         for smiles in self.compound_list:
-            scaffold = _generate_scaffold(smiles, include_chirality=False)
+            scaffold = self._generate_scaffold(smiles, include_chirality=False)
             if scaffold is None:
                 continue
             if scaffold not in scaffolds:
@@ -221,3 +180,41 @@ class ScaffoldSplitter(BaseSplitter):
                 test_cpds += scaffold_set
 
         return train_cpds, val_cpds, test_cpds
+
+    @staticmethod
+    def _generate_scaffold(smiles: str, include_chirality: bool = False) -> str:
+        """Compute the Bemis-Murcko scaffold for a SMILES string.
+
+        Bemis-Murcko scaffolds are described in DOI: 10.1021/jm9602928.
+        They are essentially that part of the molecule consisting of
+        rings and the linker atoms between them.
+
+        Paramters
+        ---------
+        smiles: str
+            SMILES
+        include_chirality: bool, default False
+            Whether to include chirality in scaffolds or not.
+
+        Returns
+        -------
+        str
+            The MurckScaffold SMILES from the original SMILES
+
+        References
+        ----------
+        .. [1] Bemis, Guy W., and Mark A. Murcko. "The properties of known drugs.
+            1. Molecular frameworks." Journal of medicinal chemistry 39.15 (1996): 2887-2893.
+
+        Note
+        ----
+        This function requires RDKit to be installed.
+        """
+
+        mol = Chem.MolFromSmiles(smiles)
+
+        if mol is None:
+            return None
+
+        scaffold = MurckoScaffoldSmiles(mol=mol, includeChirality=include_chirality)
+        return scaffold

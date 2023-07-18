@@ -205,8 +205,9 @@ class BasicJUMPDataModule(LightningDataModule):
 
         # Prepare train, test and val ids
         split_not_exists = not train_ids_path.exists() or not test_ids_path.exists() or not val_ids_path.exists()
-        split_empty = split_not_exists or (
-            len(pd.read_csv(train_ids_path)) == 0
+        split_empty = (
+            split_not_exists
+            or len(pd.read_csv(train_ids_path)) == 0
             or len(pd.read_csv(test_ids_path)) == 0
             or len(pd.read_csv(val_ids_path)) == 0
         )
@@ -221,11 +222,12 @@ class BasicJUMPDataModule(LightningDataModule):
             compound_list = list(compound_dict.keys())
             compound_list.sort()
             py_logger.debug(f"len(compound_list): {len(compound_list)}")
+            py_logger.debug(f"Exemple compound: {compound_list[:2]}")
 
             py_logger.info("Creating the splitter...")
             self.splitter.set_compound_list(compound_list)
-            py_logger.info(f"Creating them from {self.splitter}")
 
+            py_logger.info(f"Creating the splits from {self.splitter}")
             train_ids, test_ids, val_ids = self.splitter.split()
 
             py_logger.debug(f"len(train_ids): {len(train_ids)}")

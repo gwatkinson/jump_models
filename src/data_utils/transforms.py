@@ -1,7 +1,10 @@
 """Contains custom transforms and default Compose for easy access."""
 
 import torch
+import torchvision
 import torchvision.transforms.v2 as transforms
+
+torchvision.disable_beta_transforms_warning()
 
 
 class ImageNormalization(torch.nn.Module):
