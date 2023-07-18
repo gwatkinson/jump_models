@@ -70,7 +70,7 @@ class MoleculeImageDataset(Dataset):
         return {"image": img_array, "compound": compound}
 
 
-def image_batch_collate_function(data):
+def image_graph_collate_function(data):
     """Collate function for the MoleculeImageDataset.
 
     Args:
