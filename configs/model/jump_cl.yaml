@@ -27,8 +27,10 @@ image_encoder:
 #     _target_: numpy.float32
 
 molecule_encoder:
-  _target_: molfeat.trans.fp.FPVecTransformer
-  kind: "ecfp:4"
+  _target_: src.models.simple_jump_cl.molecule_encoder.GINPretrainedWithLinearHead
+  pretrained_name: "gin_supervised_infomax"
+  out_dim: 2048
+  pretrained_dim: 300
 
 criterion:
   _target_: src.losses.contrastive_loss_with_temperature.ContrastiveLossWithTemperature
