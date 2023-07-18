@@ -31,14 +31,31 @@ class GINPretrainedWithLinearHead(nn.Module):
         self.out_dim = out_dim
         self.pooling = pooling
 
-        self.model = dgllife.model.load_pretrained(self.pretrained_name)
+        self.base_model = dgllife.model.load_pretrained(self.pretrained_name)
         self.pooler = self.get_pooling(pooling)
         self.head = nn.Linear(self.pretrained_dim, self.out_dim)
 
+        logger.debug(f"Using pretrained model: {self.pretrained_name}")
+        logger.debug(f"On device: {self.base_model.device}")
+        logger.debug(f"Pooling device: {self.pooling.device}")
+
     def forward(self, x):
         bg = self.graph_featurizer(x)
+
+        try:
+            logger.debug(f"Graph device: {bg.device}")
+        except Exception:
+            logger.warning("Could not get device for batched graph")
+
         nfeats, efeats = self.get_n_e_feats(bg)
-        node_feats = self.model(bg, nfeats, efeats)
+
+        try:
+            logger.debug(f"Node feats device: {nfeats.device}")
+            logger.debug(f"Edge feats device: {efeats.device}")
+        except Exception:
+            logger.warning("Could not get device for node and edge features")
+
+        node_feats = self.base_model(bg, nfeats, efeats)
         z = self.pooler(bg, node_feats)
         z = self.head(z)
         return z
