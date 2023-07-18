@@ -37,14 +37,6 @@ class GINPretrainedWithLinearHead(nn.Module):
     def forward(self, x):
         # x is a batch of DGLGraphs created in the custom collate_fn of the dataloader
         nfeats, efeats = self.get_nodes_edges_feats(x)
-
-        try:
-            logger.debug(f"Model device: {next(self.parameters()).device}")
-            logger.debug(f"Node feats device: {nfeats[0].device}")
-            logger.debug(f"Edge feats device: {efeats[0].device}")
-        except Exception:
-            logger.warning("Could not get device for node and edge features")
-
         node_feats = self.base_model(x, nfeats, efeats)
         z = self.pooler(x, node_feats)
         z = self.head(z)
