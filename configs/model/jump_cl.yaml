@@ -31,6 +31,7 @@ molecule_encoder:
   pretrained_name: "gin_supervised_infomax"
   out_dim: 2048
   pretrained_dim: 300
+  preload: True
 
 criterion:
   _target_: src.losses.contrastive_loss_with_temperature.ContrastiveLossWithTemperature

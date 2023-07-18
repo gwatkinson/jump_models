@@ -54,10 +54,7 @@ class BasicJUMPModule(LightningModule):
 
     def forward(self, x: Dict[str, Any]):
         image_emb = self.image_encoder(x["image"])  # BxE
-        compound_emb = self.molecule_encoder(x["compound"])  # BxE np array
-
-        if not isinstance(compound_emb, torch.Tensor):
-            compound_emb = torch.tensor(compound_emb)
+        compound_emb = self.molecule_encoder(x["compound"])  # BxE
 
         return {"image_emb": image_emb, "compound_emb": compound_emb}
 
@@ -70,13 +67,6 @@ class BasicJUMPModule(LightningModule):
         image_emb = self.image_encoder(batch["image"])
         compound_emb = self.molecule_encoder(batch["compound"])
 
-        if not isinstance(compound_emb, torch.Tensor):
-            logger.debug("compound not tensor, converting to tensor")
-            compound_emb = torch.tensor(compound_emb)
-
-        logger.debug(f"type(image_emb): {type(image_emb)}")
-        logger.debug(f"type(compound_emb): {type(compound_emb)}")
-
         loss = self.criterion(
             embeddings_a=image_emb,
             embeddings_b=compound_emb,
@@ -87,13 +77,6 @@ class BasicJUMPModule(LightningModule):
 
     def training_step(self, batch: Any, batch_idx: int):
         loss = self.model_step(batch)
-
-        if batch_idx == 0:
-            logger.info(f"batch: {batch}")
-            logger.info(f"compounds: {batch['compound']}")
-            logger.info(f"encoder: {self.molecule_encoder}")
-            logger.info(f"image dtype: {batch['image']}")
-            logger.info(f"mol dtype: {self.molecule_encoder(batch['compound'])}")
 
         # update and log metrics
         self.train_loss(loss)
