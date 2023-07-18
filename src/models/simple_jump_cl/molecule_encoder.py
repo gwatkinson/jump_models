@@ -3,9 +3,9 @@
 import logging
 from typing import List
 
+import datamol as dm
 import dgl
 import dgllife
-import dm
 import torch.nn as nn
 from dgl.nn.pytorch.glob import AvgPooling, MaxPooling, SumPooling
 from dgllife.utils import PretrainAtomFeaturizer, PretrainBondFeaturizer, mol_to_bigraph
