@@ -28,6 +28,8 @@ pydantic = "<2.0"
 torch = { url = "https://download.pytorch.org/whl/cu118/torch-2.0.0%2Bcu118-cp310-cp310-linux_x86_64.whl" }  # version = "2.0.0",
 torchvision = { url = "https://download.pytorch.org/whl/cu118/torchvision-0.15.0%2Bcu118-cp310-cp310-linux_x86_64.whl" }  # version = "0.15.0",
 torchaudio = { url = "https://download.pytorch.org/whl/cu118/torchaudio-2.0.0%2Bcu118-cp310-cp310-linux_x86_64.whl" }  # version = "2.0.0",
+dgl = { url = "https://data.dgl.ai/wheels/cu118/dgl-1.1.1%2Bcu118-cp310-cp310-manylinux1_x86_64.whl" }  # version = "1.1.1",
+dgllife = "^0.3.2"
 torch_geometric = "2.3.0"
 torchview = "^0.2.6"
 pytorch-lightning = "2.0.4"

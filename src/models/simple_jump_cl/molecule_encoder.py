@@ -39,6 +39,7 @@ class GINPretrainedWithLinearHead(nn.Module):
         nfeats, efeats = self.get_nodes_edges_feats(x)
 
         try:
+            logger.debug(f"Model device: {next(self.parameters()).device}")
             logger.debug(f"Node feats device: {nfeats[0].device}")
             logger.debug(f"Edge feats device: {efeats[0].device}")
         except Exception:
