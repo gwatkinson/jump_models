@@ -26,5 +26,10 @@ class GINPretrainedWithLinearHead(nn.Module):
 
     def forward(self, x):
         x = self.pretrained(x)
+
+        if self.device is None:
+            self.device = x.device
+            self.head = self.head.to(self.device)
+
         x = self.head(x)
         return x

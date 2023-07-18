@@ -204,7 +204,6 @@ class BasicJUMPDataModule(LightningDataModule):
 
         # Prepare train, test and val ids
         if not train_ids_path.exists() or not test_ids_path.exists() or not val_ids_path.exists():
-            # ! To test
             py_logger.info("=== Missing train, test or val ids ===")
 
             if "compound_dict" not in locals():

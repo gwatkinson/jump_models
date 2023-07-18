@@ -4,13 +4,13 @@
 root_dir: ${oc.env:PROJECT_ROOT}
 
 # metadata path
-metadata_path: /projects/cpjump1/jump/models/metadata/
+metadata_path: /projects/cpjump1/jump/models/metadata
 
 # path to split folders
-split_path: /projects/cpjump1/jump/models/splits/
+split_path: /projects/cpjump1/jump/models/splits
 
 # path to logging directory
-log_dir: /projects/cpjump1/jump/logs/
+log_dir: /projects/cpjump1/jump/logs
 
 # path to output directory, created dynamically by hydra
 # path generation pattern is specified in `configs/hydra/default.yaml`
