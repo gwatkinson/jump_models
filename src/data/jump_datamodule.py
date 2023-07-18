@@ -3,7 +3,6 @@
 import json
 import logging
 import os.path as osp
-import sys
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
@@ -13,7 +12,7 @@ from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
 
 from src.data.image_smiles_dataset import MoleculeImageDataset
-from src.data.splits import RandomSplitter, ScaffoldSplitter
+from src.data.splits import RandomSplitter
 from src.data_utils.utils import load_load_df_from_parquet, load_metadata_df_from_csv
 
 py_logger = logging.getLogger(__name__)
@@ -157,8 +156,8 @@ class BasicJUMPDataModule(LightningDataModule):
 
         # Prepare image metadata
         if not img_path.exists():
-            py_logger.info("=== Preparing image metadata ===")
-            py_logger.info(f"{img_path} does not exist.")
+            py_logger.info("Preparing image metadata")
+            py_logger.debug(f"{img_path} does not exist.")
             py_logger.debug(f"Loading load data df from {load_dir} ...")
             load_df = load_load_df_from_parquet(load_dir)
 
@@ -189,8 +188,8 @@ class BasicJUMPDataModule(LightningDataModule):
 
         # Prepare compound metadata
         if not comp_path.exists():
-            py_logger.info("=== Preparing compound metadata ===")
-            py_logger.info(f"{comp_path} does not exist.")
+            py_logger.info("Preparing compound metadata")
+            py_logger.debug(f"{comp_path} does not exist.")
 
             if "load_df_with_meta" not in locals():
                 py_logger.debug(f"Loading local load data df from {img_path} ...")
@@ -206,7 +205,7 @@ class BasicJUMPDataModule(LightningDataModule):
 
         # Prepare train, test and val ids
         if not train_ids_path.exists() or not test_ids_path.exists() or not val_ids_path.exists():
-            py_logger.info("=== Missing train, test or val ids ===")
+            py_logger.info("Missing train, test or val ids")
 
             if "compound_dict" not in locals():
                 py_logger.debug(f"Loading compound dictionary from {comp_path} ...")
@@ -242,6 +241,8 @@ class BasicJUMPDataModule(LightningDataModule):
         `trainer.test()`, so be careful not to execute things like
         random split twice!
         """
+        py_logger.info("Setting up datasets and metadata")
+
         if self.load_df is None:
             py_logger.debug(f"Loading image metadata df from {self.hparams.image_metadata_path}")
             self.load_df = load_load_df_from_parquet(self.hparams.image_metadata_path)
@@ -262,7 +263,7 @@ class BasicJUMPDataModule(LightningDataModule):
             self.test_cpds = pd.read_csv(self.test_ids_path, header=None)[0].tolist()
 
         if self.data_train is None:
-            py_logger.debug("=== Preparing train dataset ===")
+            py_logger.debug("Preparing train dataset")
             train_load_df = self.load_df[self.load_df[self.compound_col].isin(self.train_cpds)]
             train_compound_dict = {k: v for k, v in self.compound_dict.items() if k in self.train_cpds}
             self.data_train = self.dataset_cls(
@@ -276,6 +277,7 @@ class BasicJUMPDataModule(LightningDataModule):
             )
 
         if self.data_val is None:
+            py_logger.debug("Preparing validation dataset")
             val_load_df = self.load_df[self.load_df[self.compound_col].isin(self.val_cpds)]
             val_compound_dict = {k: v for k, v in self.compound_dict.items() if k in self.val_cpds}
             self.data_val = self.dataset_cls(
@@ -289,6 +291,7 @@ class BasicJUMPDataModule(LightningDataModule):
             )
 
         if self.data_test is None:
+            py_logger.debug("Preparing test dataset")
             test_load_df = self.load_df[self.load_df[self.compound_col].isin(self.test_cpds)]
             test_compound_dict = {k: v for k, v in self.compound_dict.items() if k in self.test_cpds}
             self.data_test = self.dataset_cls(
@@ -336,95 +339,3 @@ class BasicJUMPDataModule(LightningDataModule):
     def load_state_dict(self, state_dict: Dict[str, Any]):
         """Things to do when loading checkpoint."""
         pass
-
-
-if __name__ == "__main__":
-    from datamol import from_inchi, to_smiles
-
-    def compound_transform(x: str) -> str:
-        return to_smiles(from_inchi(x))
-
-    # file_handler = logging.FileHandler(filename="./logs/tmp.log")
-    stdout_handler = logging.StreamHandler(stream=sys.stdout)
-    handlers = [stdout_handler]
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s",
-        handlers=handlers,
-    )
-
-    py_logger.info("Creating data module")
-
-    dm = BasicJUMPDataModule(
-        image_metadata_path="/projects/cpjump1/jump/models/metadata/images_metadata.parquet",
-        compound_metadata_path="/projects/cpjump1/jump/models/metadata/compound_dict.json",
-        compound_col="Metadata_InChI",
-        split_path="/projects/cpjump1/jump/models/splits/small_test/",
-        dataloader_config=DictConfig(
-            {
-                "train": DictConfig(
-                    {
-                        "batch_size": 32,
-                        "num_workers": 0,
-                        "pin_memory": False,
-                        "shuffle": True,
-                    }
-                ),
-                "val": DictConfig(
-                    {
-                        "batch_size": 32,
-                        "num_workers": 0,
-                        "pin_memory": False,
-                        "shuffle": False,
-                    }
-                ),
-                "test": DictConfig(
-                    {
-                        "batch_size": 32,
-                        "num_workers": 0,
-                        "pin_memory": False,
-                        "shuffle": False,
-                    }
-                ),
-            }
-        ),
-        transform=None,
-        compound_transform=compound_transform,
-        image_sampler=None,
-        metadata_dir="/projects/cpjump1/jump/metadata/complete_metadata.csv",
-        local_load_data_dir="/projects/cpjump1/jump/load_data/final/",
-        splitter=ScaffoldSplitter(
-            train=800,
-            test=200,
-            val=100,
-        ),
-        index_str="{Metadata_Source}__{Metadata_Batch}__{Metadata_Plate}__{Metadata_Well}__{Metadata_Site}",
-        channels=["DNA", "AGP", "ER", "Mito", "RNA"],
-        col_fstring="FileName_Orig{channel}",
-        id_cols=["Metadata_Source", "Metadata_Batch", "Metadata_Plate", "Metadata_Well"],
-        extra_cols=["Metadata_PlateType", "Metadata_Site"],
-    )
-
-    py_logger.info("Preparing data")
-
-    dm.prepare_data()
-
-    py_logger.info("Setting up data")
-
-    dm.setup(stage="fit")
-
-    py_logger.info(f"Testing dataset: {dm.data_train}")
-    py_logger.debug(f"Dataset obs: {dm.data_train[0]}")
-
-    py_logger.info("Getting a batch")
-    py_logger.debug(f"Test dataloader: {dm.train_dataloader()}")
-
-    print("len(train_cpds): ", len(dm.train_cpds))
-    print("len(test_cpds): ", len(dm.test_cpds))
-    print("len(val_cpds): ", len(dm.val_cpds))
-
-    for batch in dm.train_dataloader():
-        print(batch)
-        print(batch["image"].shape)
-        print(batch["compound"])
-        break
