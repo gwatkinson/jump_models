@@ -5,8 +5,11 @@ import logging
 import random
 from typing import Callable, Dict, List, Optional
 
+import datamol as dm
+import dgl
 import pandas as pd
 import torch
+from dgllife.utils import PretrainAtomFeaturizer, PretrainBondFeaturizer, mol_to_bigraph
 from torch.utils.data import Dataset
 
 from src.data_utils.image_io import load_image_paths_to_array
@@ -65,3 +68,40 @@ class MoleculeImageDataset(Dataset):
             compound = self.compound_transform(compound)
 
         return {"image": img_array, "compound": compound}
+
+
+def image_batch_collate_function(data):
+    """Collate function for the MoleculeImageDataset.
+
+    Args:
+        data: list of dicts with keys 'image' and 'compound'
+
+    Returns:
+        dict with keys 'image' and 'compound'
+    """
+    image = torch.stack([d["image"] for d in data])
+    compound = dgl.batch([d["compound"] for d in data])
+
+    return {"image": image, "compound": compound}
+
+
+def graph_featurizer(mol):
+    if isinstance(mol, str):
+        mol = dm.to_mol(mol)
+
+    g = mol_to_bigraph(
+        mol,
+        add_self_loop=True,
+        node_featurizer=PretrainAtomFeaturizer(),
+        edge_featurizer=PretrainBondFeaturizer(),
+        canonical_atom_order=False,
+    )
+
+    return g
+
+
+def molecule_transform(inchi):
+    mol = dm.from_inchi(inchi)
+    g = graph_featurizer(mol)
+
+    return g

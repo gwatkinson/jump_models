@@ -32,7 +32,7 @@ transform:
   dim: [-2, -1]
 
 compound_transform:
-  _target_: src.data_utils.mol_utils.inchi_to_smiles
+  _target_: src.models.simple_jump_cl.molecule_encoder.molecule_transform
   _partial_: true
 
 image_sampler: null

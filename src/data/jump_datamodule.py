@@ -54,6 +54,7 @@ class BasicJUMPDataModule(LightningDataModule):
         compound_col: str = "Metadata_InChI",
         transform: Optional[Callable] = None,
         compound_transform: Optional[Callable] = None,
+        collate_fn: Optional[Callable] = None,
         image_sampler: Optional[Callable[[List[str]], str]] = None,
         **kwargs,
     ):
@@ -106,6 +107,7 @@ class BasicJUMPDataModule(LightningDataModule):
         # data transformations
         self.transform = transform
         self.compound_transform = compound_transform
+        self.collate_fn = collate_fn
 
         # datasets
         self.data_train: Optional[Dataset] = None
@@ -305,6 +307,7 @@ class BasicJUMPDataModule(LightningDataModule):
         train_kwargs = OmegaConf.to_container(self.dataloader_config.train, resolve=True)
         return DataLoader(
             dataset=self.data_train,
+            collate_fn=self.collate_fn,
             **train_kwargs,
         )
 
@@ -312,6 +315,7 @@ class BasicJUMPDataModule(LightningDataModule):
         val_kwargs = OmegaConf.to_container(self.dataloader_config.val, resolve=True)
         return DataLoader(
             dataset=self.data_val,
+            collate_fn=self.collate_fn,
             **val_kwargs,
         )
 
@@ -319,6 +323,7 @@ class BasicJUMPDataModule(LightningDataModule):
         test_kwargs = OmegaConf.to_container(self.dataloader_config.test, resolve=True)
         return DataLoader(
             dataset=self.data_test,
+            collate_fn=self.collate_fn,
             **test_kwargs,
         )
 
