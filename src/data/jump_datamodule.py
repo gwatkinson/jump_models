@@ -92,7 +92,7 @@ class BasicJUMPDataModule(LightningDataModule):
 
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
-        self.save_hyperparameters(logger=False)
+        self.save_hyperparameters(logger=False, ignore=["transform", "compound_transform", "collate_fn"])
 
         # metadata
         self.load_df: Optional[pd.DataFrame] = None
@@ -204,7 +204,13 @@ class BasicJUMPDataModule(LightningDataModule):
                 json.dump(compound_dict, handle)
 
         # Prepare train, test and val ids
-        if not train_ids_path.exists() or not test_ids_path.exists() or not val_ids_path.exists():
+        split_not_exists = not train_ids_path.exists() or not test_ids_path.exists() or not val_ids_path.exists()
+        split_empty = (
+            len(pd.read_csv(train_ids_path)) == 0
+            or len(pd.read_csv(test_ids_path)) == 0
+            or len(pd.read_csv(val_ids_path)) == 0
+        )
+        if split_not_exists or split_empty:
             py_logger.info("Missing train, test or val ids")
 
             if "compound_dict" not in locals():
@@ -214,12 +220,20 @@ class BasicJUMPDataModule(LightningDataModule):
 
             compound_list = list(compound_dict.keys())
             compound_list.sort()
+            py_logger.debug(f"len(compound_list): {len(compound_list)}")
 
             py_logger.info("Creating the splitter...")
             self.splitter.set_compound_list(compound_list)
             py_logger.info(f"Creating them from {self.splitter}")
 
             train_ids, test_ids, val_ids = self.splitter.split()
+
+            py_logger.debug(f"len(train_ids): {len(train_ids)}")
+            py_logger.debug(f"len(test_ids): {len(test_ids)}")
+            py_logger.debug(f"len(val_ids): {len(val_ids)}")
+
+            if len(train_ids) == 0 or len(test_ids) == 0 or len(val_ids) == 0:
+                raise ValueError("One of the splits is empty.")
 
             py_logger.debug(
                 f"Saving train, test and val ids to {train_ids_path}, {test_ids_path} and {val_ids_path} respectively ..."

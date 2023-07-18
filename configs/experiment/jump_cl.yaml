@@ -12,7 +12,7 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-tags: ["jump", "simple_contrastive_training", "first_try", "pretrained_gin", "pretrained_resnet50"]
+tags: ["small_jump_cl", "jump", "simple_contrastive_training", "first_try", "pretrained_gin", "pretrained_resnet50"]
 
 seed: 12345
 
@@ -21,7 +21,6 @@ compile: False
 trainer:
   min_epochs: 10
   max_epochs: 25
-  gradient_clip_val: 0.5
 
 model:
   optimizer:
@@ -29,7 +28,7 @@ model:
 
 data:
   batch_size: 32
-  split_path: ${paths.split_path}/${task_name}
+  split_path: ${paths.split_path}/small_jump_cl/
 
 logger:
   wandb:
