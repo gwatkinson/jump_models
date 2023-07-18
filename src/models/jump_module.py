@@ -73,6 +73,9 @@ class BasicJUMPModule(LightningModule):
         if not isinstance(compound_emb, torch.Tensor):
             compound_emb = torch.tensor(compound_emb)
 
+        logger.debug(f"type(image_emb): {type(image_emb)}")
+        logger.debug(f"type(compound_emb): {type(compound_emb)}")
+
         loss = self.criterion(image_emb, compound_emb)
 
         return loss
