@@ -3,7 +3,7 @@ from typing import Any, Dict
 
 import torch
 from lightning import LightningModule
-from torchmetrics import MaxMetric, MeanMetric
+from torchmetrics import MeanMetric, MinMetric
 
 logger = logging.getLogger(__name__)
 
@@ -48,9 +48,10 @@ class BasicJUMPModule(LightningModule):
         self.train_loss = MeanMetric()
         self.val_loss = MeanMetric()
         self.test_loss = MeanMetric()
+        self.val_loss_min = MinMetric()
 
         # for tracking best so far validation accuracy
-        self.val_acc_best = MaxMetric()
+        # self.val_acc_best = MaxMetric()
 
     def forward(self, x: Dict[str, Any]):
         image_emb = self.image_encoder(x["image"])  # BxE
@@ -95,12 +96,14 @@ class BasicJUMPModule(LightningModule):
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_validation_epoch_end(self):
+        loss = self.val_loss.compute()  # get current val loss
+        self.val_loss_min(loss)  # update min so far val loss
+        self.log("val/loss_min", self.val_loss_min.compute(), sync_dist=True, prog_bar=True)
         # acc = self.val_acc.compute()  # get current val acc
         # self.val_acc_best(acc)  # update best so far val acc
         # # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # # otherwise metric would be reset by lightning after each epoch
         # self.log("val/acc_best", self.val_acc_best.compute(), sync_dist=True, prog_bar=True)
-        pass
 
     def test_step(self, batch: Any, batch_idx: int):
         loss = self.model_step(batch)
