@@ -22,9 +22,9 @@ trainer:
   min_epochs: 10
   max_epochs: 25
 
-model:
-  optimizer:
-    lr: 0.001
+# model:
+#   optimizer:
+#     lr: 0.001
 
 data:
   batch_size: 32

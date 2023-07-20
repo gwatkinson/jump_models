@@ -94,6 +94,8 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
         losses = []
 
+        datamodule.setup("fit")
+
         pbar = tqdm(range(max_epochs))
         for epoch in pbar:
             optimizer.zero_grad()
