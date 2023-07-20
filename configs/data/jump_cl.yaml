@@ -8,7 +8,7 @@ collate_fn:
   _partial_: true
 
 batch_size: 32
-num_workers: 8
+num_workers: 2
 pin_memory: True
 prefetch_factor: 2
 

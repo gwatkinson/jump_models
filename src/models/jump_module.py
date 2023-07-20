@@ -63,21 +63,28 @@ class BasicJUMPModule(LightningModule):
         self.val_loss.reset()
 
     def model_step(self, batch: Any):
+        logger.debug("Run model step on batch")
+
+        logger.debug("Get image embeddings")
         image_emb = self.image_encoder(batch["image"])
+
+        logger.debug("Get compound embeddings")
         compound_emb = self.molecule_encoder(batch["compound"])
 
+        logger.debug("Compute loss")
         loss = self.criterion(
             embeddings_a=image_emb,
             embeddings_b=compound_emb,
-            mask=None,
         )
 
         return loss
 
     def training_step(self, batch: Any, batch_idx: int):
+        logger.debug("Run training step from training_step()")
         loss = self.model_step(batch)
 
         # update and log metrics
+        logger.debug("Log training loss")
         self.train_loss(loss)
         self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
 
@@ -87,9 +94,11 @@ class BasicJUMPModule(LightningModule):
         pass
 
     def validation_step(self, batch: Any, batch_idx: int):
+        logger.debug("Run training step from validation_step()")
         loss = self.model_step(batch)
 
         # update and log metrics
+        logger.debug("Log validation loss")
         self.val_loss(loss)
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
 
