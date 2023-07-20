@@ -1,0 +1,7 @@
+# https://lifesci.dgl.ai/api/model.pretrain.html
+
+_target_: src.models.simple_jump_cl.molecule_encoder.GINPretrainedWithLinearHead
+pretrained_name: "gin_supervised_infomax"
+out_dim: 512
+pretrained_dim: 300
+preload: True

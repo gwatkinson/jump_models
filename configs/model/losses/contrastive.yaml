@@ -1,0 +1,1 @@
+_target_: src.losses.contrastive_loss_with_temperature.ContrastiveLossWithTemperature

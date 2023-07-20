@@ -1,15 +1,15 @@
 defaults:
   - basic_jump.yaml
 
-batch_size: 32
+batch_size: 256
 num_workers: 4
 pin_memory: True
 prefetch_factor: 2
 
 splitter:
   _target_: src.data.splits.ScaffoldSplitter
-  train: 800
-  test: 200
-  val: 100
+  train: 25_000
+  test: 3000
+  val: 2000
 
-split_path: ${paths.split_path}/jump_cl/
+split_path: ${paths.split_path}/bigger_jump_cl/

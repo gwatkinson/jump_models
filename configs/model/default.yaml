@@ -1,0 +1,13 @@
+defaults:
+  - _self_
+  - image_encoder: resnet50
+  - molecule_encoder: gin_supervised_infomax
+  - losses: contrastive
+  - optimizer: adam
+  - scheduler: exponential
+
+optimizer:
+  lr: 1e-3
+
+scheduler:
+  gamma: 0.9

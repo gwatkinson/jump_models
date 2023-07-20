@@ -1,0 +1,7 @@
+# https://huggingface.co/timm
+
+_target_: src.images.image_encoder.CNNEncoder
+instance_model_name: resnet50
+target_num: 512
+n_channels: 5
+pretrained: True
