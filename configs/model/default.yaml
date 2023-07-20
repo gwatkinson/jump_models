@@ -1,10 +1,12 @@
+_target_: src.models.jump_module.BasicJUMPModule
+
 defaults:
-  - _self_
   - image_encoder: resnet50
   - molecule_encoder: gin_supervised_infomax
   - losses: contrastive
   - optimizer: adam
   - scheduler: exponential
+  - _self_
 
 optimizer:
   lr: 1e-3
