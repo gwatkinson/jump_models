@@ -3,8 +3,7 @@ from typing import Any, Dict
 
 import torch
 from lightning import LightningModule
-
-# from torchmetrics import MeanMetric, MinMetric
+from torchmetrics import MeanMetric, MinMetric
 
 logger = logging.getLogger(__name__)
 
@@ -46,10 +45,10 @@ class BasicJUMPModule(LightningModule):
         self.criterion = criterion
 
         # for averaging loss across batches
-        # self.train_loss = MeanMetric()
-        # self.val_loss = MeanMetric()
-        # self.test_loss = MeanMetric()
-        # self.val_loss_min = MinMetric()
+        self.train_loss = MeanMetric()
+        self.val_loss = MeanMetric()
+        self.test_loss = MeanMetric()
+        self.val_loss_min = MinMetric()
 
         # for tracking best so far validation accuracy
         # self.val_acc_best = MaxMetric()
@@ -63,8 +62,7 @@ class BasicJUMPModule(LightningModule):
     def on_train_start(self):
         # by default lightning executes validation step sanity checks before training starts,
         # so it's worth to make sure validation metrics don't store results from these checks
-        # self.val_loss.reset()
-        pass
+        self.val_loss.reset()
 
     def model_step(self, batch: Any):
         image_emb = self.image_encoder(batch["image"])
@@ -82,8 +80,8 @@ class BasicJUMPModule(LightningModule):
         loss = self.model_step(batch)
 
         # update and log metrics
-        # self.train_loss(loss)
-        self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.train_loss(loss)
+        self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
 
         return loss
 
@@ -94,26 +92,25 @@ class BasicJUMPModule(LightningModule):
         loss = self.model_step(batch)
 
         # update and log metrics
-        # self.val_loss(loss)
-        self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.val_loss(loss)
+        self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_validation_epoch_end(self):
-        # loss = self.val_loss.compute()  # get current val loss
-        # self.val_loss_min(loss)  # update min so far val loss
-        # self.log("val/loss_min", self.val_loss_min.compute(), sync_dist=True, prog_bar=True)
+        loss = self.val_loss.compute()  # get current val loss
+        self.val_loss_min(loss)  # update min so far val loss
+        self.log("val/loss_min", self.val_loss_min.compute(), sync_dist=True, prog_bar=True)
         # acc = self.val_acc.compute()  # get current val acc
         # self.val_acc_best(acc)  # update best so far val acc
         # # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # # otherwise metric would be reset by lightning after each epoch
         # self.log("val/acc_best", self.val_acc_best.compute(), sync_dist=True, prog_bar=True)
-        pass
 
     def test_step(self, batch: Any, batch_idx: int):
         loss = self.model_step(batch)
 
         # update and log metrics
-        # self.test_loss(loss)
-        self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.test_loss(loss)
+        self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_test_epoch_end(self):
         pass
