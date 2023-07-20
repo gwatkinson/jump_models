@@ -16,7 +16,7 @@ tags: ["small_jump_cl", "jump", "simple_contrastive_training", "first_try", "pre
 
 seed: 12345
 
-compile: True
+compile: False
 
 trainer:
   min_epochs: 20
