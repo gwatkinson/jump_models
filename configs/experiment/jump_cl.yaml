@@ -19,6 +19,8 @@ seed: 12345
 compile: False
 
 trainer:
+  optimizer:
+    lr: 5e-3
   min_epochs: 20
   max_epochs: 50
   log_every_n_steps: 2
