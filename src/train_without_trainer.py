@@ -82,6 +82,7 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
         max_epochs: int = cfg.trainer.max_epochs
         device = torch.device("cuda" if cfg.trainer.accelerator == "gpu" else "cpu")
+        log.info(f"Device: {device}")
 
         model.train()
 
@@ -103,8 +104,8 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
             epoch_loss = []
 
             for batch in tqdm(train_dl):
-                c_emb = molecule_encoder(batch["compound"].to(device))
                 i_emb = image_encoder(batch["image"].to(device))
+                c_emb = molecule_encoder(batch["compound"].to(device))
 
                 loss = criterion(c_emb, i_emb)
 
