@@ -38,7 +38,8 @@ def print_config_tree(
         save_to_file (bool, optional): Whether to export config to the hydra output folder.
     """
 
-    style = "dim"
+    # style = "dim"
+    style = None
     tree = rich.tree.Tree("CONFIG", style=style, guide_style=style)
 
     queue = []
