@@ -18,9 +18,8 @@ seed: 12345
 
 compile: False
 
+
 trainer:
-  optimizer:
-    lr: 5e-3
   min_epochs: 20
   max_epochs: 50
   log_every_n_steps: 2
@@ -28,6 +27,8 @@ trainer:
   num_sanity_val_steps: 2
 
 model:
+  optimizer:
+    lr: 5e-3
   example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
 
 data:
