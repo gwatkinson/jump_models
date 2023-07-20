@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import torch
 from lightning import LightningModule
@@ -50,14 +50,15 @@ class BasicJUMPModule(LightningModule):
         self.val_loss_min = MinMetric()
 
         if example_input_path is not None:
+            logger.debug(f"Loading example input from: {example_input_path}")
             self.example_input_array = torch.load(example_input_path)
 
         # for tracking best so far validation accuracy
         # self.val_acc_best = MaxMetric()
 
-    def forward(self, x: Dict[str, Any]):
-        image_emb = self.image_encoder(x["image"])  # BxE
-        compound_emb = self.molecule_encoder(x["compound"])  # BxE
+    def forward(self, image, compound):
+        image_emb = self.image_encoder(image)  # BxE
+        compound_emb = self.molecule_encoder(compound)  # BxE
 
         return {"image_emb": image_emb, "compound_emb": compound_emb}
 
