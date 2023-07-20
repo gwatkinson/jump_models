@@ -18,9 +18,9 @@ seed: 12345
 
 compile: False
 
-trainer:
-  min_epochs: 10
-  max_epochs: 25
+# trainer:
+#   min_epochs: 10
+#   max_epochs: 25
 
 # model:
 #   optimizer:
