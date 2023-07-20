@@ -32,7 +32,6 @@ class GINPretrainedWithLinearHead(nn.Module):
         self.head = nn.Linear(self.pretrained_dim, self.out_dim)
 
         logger.info(f"Using pretrained model: {self.pretrained_name}")
-        logger.info(f"On device: {next(self.parameters()).device}")
 
     def forward(self, x):
         # x is a batch of DGLGraphs created in the custom collate_fn of the dataloader
