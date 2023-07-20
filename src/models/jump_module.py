@@ -61,12 +61,11 @@ class BasicJUMPModule(LightningModule):
         # by default lightning executes validation step sanity checks before training starts,
         # so it's worth to make sure validation metrics don't store results from these checks
         self.val_loss.reset()
+        super().on_train_start()
 
-    def transfer_batch_to_device(self, batch: Any, device, dataloader_idx: int) -> Any:
-        logger.debug("Transfer batch to device")
-        new_batch = {k: v.to(device) for k, v in batch.items()}
-
-        return new_batch
+    def on_fit_start(self):
+        logger.info("Starting fit from train_on_device()")
+        return super().on_fit_start()
 
     def model_step(self, batch: Any):
         logger.debug("Run model step on batch")

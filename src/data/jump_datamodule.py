@@ -344,6 +344,12 @@ class BasicJUMPDataModule(LightningDataModule):
             **test_kwargs,
         )
 
+    def transfer_batch_to_device(self, batch: Any, device, dataloader_idx: int) -> Any:
+        py_logger.debug("Transfer batch to device")
+        new_batch = {k: v.to(device) for k, v in batch.items()}
+
+        return new_batch
+
     def teardown(self, stage: Optional[str] = None):
         """Clean up after fit or test."""
         pass
