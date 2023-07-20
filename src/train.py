@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional, Tuple
 
 import hydra
@@ -28,6 +29,8 @@ pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 # more info: https://github.com/ashleve/pyrootutils
 # ------------------------------------------------------------------------------------ #
 
+
+logging.getLogger("PIL.PngImagePlugin").setLevel(logging.CRITICAL + 1)
 
 log = utils.get_pylogger(__name__)
 
