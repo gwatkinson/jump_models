@@ -5,20 +5,12 @@ optimizer:
   _partial_: true
   lr: 1e-3
 
-scheduler:
-  _target_: torch.optim.lr_scheduler.OneCycleLR
-  _partial_: true
-  epochs: ${trainer.max_epochs}
-  steps_per_epoch: 7
-  max_lr: 5e-3
+# scheduler: null
 
-# scheduler:
-  # _target_: pl_bolts.optimizers.lr_scheduler.LinearWarmupCosineAnnealingLR
-  # _partial_: true
-  # warmup_epochs: 15
-  # max_epochs: ${trainer.max_epochs}
-  # warmup_start_lr: 1e-5
-  # eta_min: 1e-7
+scheduler:
+  _target_: torch.optim.lr_scheduler.ExponentialLR
+  _partial_: true
+  gamma: 0.9
 
 image_encoder:
   _target_: src.images.image_encoder.CNNEncoder

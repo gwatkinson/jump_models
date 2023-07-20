@@ -68,10 +68,6 @@ class BasicJUMPModule(LightningModule):
         self.val_loss.reset()
         super().on_train_start()
 
-    def on_fit_start(self):
-        logger.info("Starting fit from train_on_device()")
-        return super().on_fit_start()
-
     def model_step(self, batch: Any):
         logger.debug("Run model step on batch")
 

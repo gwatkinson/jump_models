@@ -1,0 +1,6 @@
+# https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.OneCycleLR.html#torch.optim.lr_scheduler.OneCycleLR
+_target_: torch.optim.lr_scheduler.OneCycleLR
+_partial_: true
+epochs: ${trainer.max_epochs}
+steps_per_epoch: 7
+max_lr: 5e-3
