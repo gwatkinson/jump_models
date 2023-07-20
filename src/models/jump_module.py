@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import torch
 from lightning import LightningModule
@@ -30,6 +30,7 @@ class BasicJUMPModule(LightningModule):
         criterion: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
+        example_input_path: Optional[str] = None,
     ):
         super().__init__()
 
@@ -47,6 +48,9 @@ class BasicJUMPModule(LightningModule):
         self.val_loss = MeanMetric()
         self.test_loss = MeanMetric()
         self.val_loss_min = MinMetric()
+
+        if example_input_path is not None:
+            self.example_input_array = torch.load(example_input_path)
 
         # for tracking best so far validation accuracy
         # self.val_acc_best = MaxMetric()
