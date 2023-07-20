@@ -22,14 +22,14 @@ trainer:
   min_epochs: 20
   max_epochs: 50
   log_every_n_steps: 2
-  gradient_clip_val: 0.5
+  # gradient_clip_val: 0.5
   num_sanity_val_steps: 2
 
 model:
   example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
 
 data:
-  batch_size: 128
+  batch_size: 64
   split_path: ${paths.split_path}/small_jump_cl/
 
 logger:
