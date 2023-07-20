@@ -62,13 +62,21 @@ class BasicJUMPModule(LightningModule):
         # so it's worth to make sure validation metrics don't store results from these checks
         self.val_loss.reset()
 
+    def transfer_batch_to_device(self, batch: Any, device, dataloader_idx: int) -> Any:
+        logger.debug("Transfer batch to device")
+        new_batch = {k: v.to(device) for k, v in batch.items()}
+
+        return new_batch
+
     def model_step(self, batch: Any):
         logger.debug("Run model step on batch")
 
         logger.debug("Get image embeddings")
+        # image_emb = self.image_encoder(batch["image"].to(self.device))
         image_emb = self.image_encoder(batch["image"])
 
         logger.debug("Get compound embeddings")
+        # compound_emb = self.molecule_encoder(batch["compound"].to(self.device))
         compound_emb = self.molecule_encoder(batch["compound"])
 
         logger.debug("Compute loss")

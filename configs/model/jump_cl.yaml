@@ -1,16 +1,15 @@
 _target_: src.models.jump_module.BasicJUMPModule
 
 optimizer:
-  _target_: torch.optim.AdamW
+  _target_: torch.optim.Adam
   _partial_: true
   lr: 1e-3
-  weight_decay: 0.02
 
 scheduler:
   _target_: torch.optim.lr_scheduler.OneCycleLR
   _partial_: true
   epochs: ${trainer.max_epochs}
-  steps_per_epoch: 25
+  steps_per_epoch: 7
   max_lr: 5e-3
 
 # scheduler:

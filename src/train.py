@@ -70,7 +70,7 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=callbacks, logger=logger)
 
     if cfg.trainer.accelerator == "gpu" and trainer.num_devices == 1:
-        log.info("Moving model to selected GPU manually")
+        log.info(f"Moving model to selected GPU manually: cuda:{trainer.device_ids[0]}")
         device = torch.device(f"cuda:{trainer.device_ids[0]}")
         model.to(device)
 
@@ -118,15 +118,12 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 def main(cfg: DictConfig) -> Optional[float]:
     # apply extra utilities
     # (e.g. ask for tags if none are provided in cfg, print cfg tree, etc.)
-    log.info("Applying extra utilities...")
     utils.extras(cfg)
 
     # train the model
-    log.info("Starting training from main()...")
     metric_dict, _ = train(cfg)
 
     # safely retrieve metric value for hydra-based hyperparameter optimization
-    log.info("Retrieving optimized metric value...")
     metric_value = utils.get_metric_value(metric_dict=metric_dict, metric_name=cfg.get("optimized_metric"))
 
     # return optimized metric
