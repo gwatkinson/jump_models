@@ -1,35 +1,30 @@
 _target_: src.models.jump_module.BasicJUMPModule
 
 optimizer:
-  _target_: torch.optim.Adam
+  _target_: torch.optim.AdamW
   _partial_: true
-  lr: 0.001
-  weight_decay: 0.0
+  lr: 1e-3
+  weight_decay: 0.02
 
-scheduler: null
-  # _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
-  # _partial_: true
-  # mode: min
-  # factor: 0.1
-  # patience: 10
+scheduler:
+  _target_: pl_bolts.optimizers.lr_scheduler.LinearWarmupCosineAnnealingLR
+  _partial_: true
+  warmup_epochs: 15
+  max_epochs: ${trainer.max_epochs}
+  warmup_start_lr: 1e-5
+  eta_min: 1e-7
 
 image_encoder:
   _target_: src.images.image_encoder.CNNEncoder
   instance_model_name: resnet50
-  target_num: 256
+  target_num: 512
   n_channels: 5
   pretrained: True
-
-# molecule_encoder:
-#   _target_: molfeat.trans.pretrained.dgl_pretrained.PretrainedDGLTransformer
-#   kind: gin_supervised_infomax
-#   dtype:
-#     _target_: numpy.float32
 
 molecule_encoder:
   _target_: src.models.simple_jump_cl.molecule_encoder.GINPretrainedWithLinearHead
   pretrained_name: "gin_supervised_infomax"
-  out_dim: 256
+  out_dim: 512
   pretrained_dim: 300
   preload: True
 

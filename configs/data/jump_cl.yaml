@@ -3,14 +3,15 @@ image_metadata_path: ${paths.metadata_path}/images_metadata.parquet
 compound_metadata_path: ${paths.metadata_path}/compound_dict.json
 compound_col: Metadata_InChI
 split_path: ${paths.split_path}/small_test/
+
 collate_fn:
   _target_: src.data.image_smiles_dataset.image_graph_collate_function
   _partial_: true
 
 batch_size: 32
 num_workers: 4
-pin_memory: False
-prefetch_factor: 2
+pin_memory: True
+prefetch_factor: 4
 
 dataloader_config:
   train:
