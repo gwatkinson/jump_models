@@ -69,6 +69,11 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
     trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=callbacks, logger=logger)
 
+    if cfg.trainer.accelerator == "gpu" and trainer.num_devices == 1:
+        log.info("Moving model to selected GPU manually")
+        device = torch.device(f"cuda:{trainer.device_ids[0]}")
+        model.to(device)
+
     object_dict = {
         "cfg": cfg,
         "datamodule": datamodule,

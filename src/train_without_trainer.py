@@ -1,13 +1,12 @@
 import logging
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 import hydra
 import lightning as L
 import pyrootutils
 import torch
 import torch.nn as nn
-from lightning import Callback, LightningDataModule, LightningModule, Trainer
-from lightning.pytorch.loggers import Logger
+from lightning import LightningDataModule, LightningModule
 from omegaconf import DictConfig
 from torchvision import disable_beta_transforms_warning
 from tqdm.auto import tqdm
@@ -81,7 +80,7 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
         log.info("Starting training!")
 
         max_epochs: int = cfg.trainer.max_epochs
-        device = torch.device("cuda" if cfg.trainer.accelerator == "gpu" else "cpu")
+        device = torch.device("cuda:0" if cfg.trainer.accelerator == "gpu" else "cpu")
         log.info(f"Device: {device}")
 
         model.train()
