@@ -277,6 +277,9 @@ class BasicJUMPDataModule(LightningDataModule):
             self.train_cpds = pd.read_csv(self.train_ids_path, header=None)[0].tolist()
             self.val_cpds = pd.read_csv(self.val_ids_path, header=None)[0].tolist()
             self.test_cpds = pd.read_csv(self.test_ids_path, header=None)[0].tolist()
+            py_logger.info(
+                f"Train, test, val lengths: {len(self.train_cpds)}, {len(self.test_cpds)}, {len(self.val_cpds)}"
+            )
 
         if self.data_train is None:
             py_logger.debug("Preparing train dataset")

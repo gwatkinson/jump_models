@@ -6,7 +6,7 @@
 defaults:
   - override /data: bigger_jump_cl.yaml
   - override /model: bigger_jump_cl.yaml
-  - override /callbacks: default.yaml
+  - override /callbacks: not_rich_default.yaml
   - override /trainer: gpu.yaml
 
 # all parameters below will be merged with parameters from default configurations set above
@@ -28,4 +28,7 @@ trainer:
 logger:
   wandb:
     tags: ${tags}
+    project: "jump_models"
     group: "jump_models"
+    job_type: ""
+    log_model: True

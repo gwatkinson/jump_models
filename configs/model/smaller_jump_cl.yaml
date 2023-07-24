@@ -1,0 +1,17 @@
+_target_: src.models.jump_module.BasicJUMPModule
+
+defaults:
+  - image_encoder: resnet50
+  - molecule_encoder: gin_supervised_infomax
+  - criterion: contrastive
+  - optimizer: adam
+  - scheduler: exponential
+  - _self_
+
+optimizer:
+  lr: 1e-4
+
+scheduler:
+  gamma: 0.97
+
+example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth

@@ -6,7 +6,7 @@
 defaults:
   - override /data: jump_cl.yaml
   - override /model: jump_cl.yaml
-  - override /callbacks: default.yaml
+  - override /callbacks: not_rich_default.yaml
   - override /trainer: gpu.yaml
 
 # all parameters below will be merged with parameters from default configurations set above
@@ -18,7 +18,6 @@ seed: 12345
 
 compile: False
 
-
 trainer:
   min_epochs: 20
   max_epochs: 50
@@ -26,16 +25,10 @@ trainer:
   # gradient_clip_val: 0.5
   num_sanity_val_steps: 2
 
-model:
-  optimizer:
-    lr: 5e-3
-  example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
-
-data:
-  batch_size: 64
-  split_path: ${paths.split_path}/small_jump_cl/
-
 logger:
   wandb:
     tags: ${tags}
+    project: "jump_models"
     group: "jump_models"
+    job_type: ""
+    log_model: True
