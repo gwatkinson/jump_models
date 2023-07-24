@@ -1,4 +1,5 @@
 import logging
+from multiprocessing import util
 from typing import List, Optional, Tuple
 
 import hydra
@@ -69,10 +70,7 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
     trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=callbacks, logger=logger)
 
-    # if cfg.trainer.accelerator == "gpu" and trainer.num_devices == 1:
-    #     log.info(f"Moving model to selected GPU manually: cuda:{trainer.device_ids[0]}")
-    #     device = torch.device(f"cuda:{trainer.device_ids[0]}")
-    #     model.to(device)
+    log.info(f"Current multiprocessor temp dir: {util.get_temp_dir()}")
 
     object_dict = {
         "cfg": cfg,

@@ -1,6 +1,9 @@
 # disable python warnings if they annoy you
 ignore_warnings: True
 
+# rich style
+style: dim
+
 # ask user for tags if none are provided in the config
 enforce_tags: True
 

@@ -212,7 +212,7 @@ class BasicJUMPDataModule(LightningDataModule):
             or len(pd.read_csv(val_ids_path)) == 0
         )
         if split_not_exists or split_empty:
-            py_logger.info("Missing train, test or val ids")
+            py_logger.info(f"Missing train, test or val ids from {self.hparams.split_path}")
 
             if "compound_dict" not in locals():
                 py_logger.debug(f"Loading compound dictionary from {comp_path} ...")

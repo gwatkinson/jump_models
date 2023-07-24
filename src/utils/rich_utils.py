@@ -5,6 +5,7 @@ import rich
 import rich.syntax
 import rich.tree
 from hydra.core.hydra_config import HydraConfig
+from hydra.utils import instantiate
 from lightning.pytorch.utilities import rank_zero_only
 from omegaconf import DictConfig, OmegaConf, open_dict
 from rich.prompt import Prompt
@@ -38,8 +39,13 @@ def print_config_tree(
         save_to_file (bool, optional): Whether to export config to the hydra output folder.
     """
 
-    # style = "dim"
-    style = "dim"
+    if cfg.extras.style.target is not None:
+        style = instantiate(cfg.extras.style)
+    elif isinstance(cfg.extras.style, str):
+        style = cfg.extras.style
+    else:
+        style = "dim"
+
     tree = rich.tree.Tree("CONFIG", style=style, guide_style=style)
 
     queue = []
