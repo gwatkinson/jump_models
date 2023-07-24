@@ -1,0 +1,14 @@
+defaults:
+  - jump.yaml
+
+batch_size: 32
+num_workers: 4
+pin_memory: True
+prefetch_factor: 2
+
+splitter:
+  train: 800
+  test: 200
+  val: 100
+
+split_path: ${paths.split_path}/jump_cl/

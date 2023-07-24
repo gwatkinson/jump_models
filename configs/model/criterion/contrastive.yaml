@@ -1,1 +1,1 @@
-_target_: src.losses.contrastive_loss_with_temperature.ContrastiveLossWithTemperature
+_target_: src.modules.losses.contrastive_loss_with_temperature.ContrastiveLossWithTemperature

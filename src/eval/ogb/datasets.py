@@ -11,7 +11,7 @@ from lightning import LightningDataModule
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
 
-from src.data_utils.utils import download_and_extract_zip
+from src.utils.utils import download_and_extract_zip
 
 OGB_DATASETS = ["bbbp", "esol", "hiv", "lipophilicity", "tox21", "toxcast"]
 
