@@ -39,7 +39,7 @@ def print_config_tree(
     """
 
     # style = "dim"
-    style = "reverse red on black"
+    style = "dim reverse"
     tree = rich.tree.Tree("CONFIG", style=style, guide_style=style)
 
     queue = []

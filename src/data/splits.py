@@ -133,7 +133,7 @@ class ScaffoldSplitter(BaseSplitter):
 
         scaffolds = defaultdict(list)
 
-        py_logger.info("About to generate scaffolds")
+        py_logger.info("Generating scaffolds ...")
         for inchi in self.compound_list:
             scaffold = self._generate_scaffold(inchi, include_chirality=False)
             if scaffold is None:
@@ -156,6 +156,7 @@ class ScaffoldSplitter(BaseSplitter):
         scaffold_sets = self.generate_scaffolds()
         random.shuffle(scaffold_sets)
 
+        py_logger.info("Generating sets ...")
         if self.input_type == "float":
             train_cutoff = int(self.train * self.n_compounds)
             val_cutoff = int(self.val * self.n_compounds)
