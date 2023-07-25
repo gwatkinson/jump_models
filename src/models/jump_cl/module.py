@@ -31,6 +31,7 @@ class BasicJUMPModule(LightningModule):
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
         example_input_path: Optional[str] = None,
+        **kwargs,
     ):
         super().__init__()
 
