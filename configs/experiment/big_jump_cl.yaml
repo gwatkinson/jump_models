@@ -1,11 +1,16 @@
 # @package _global_
 
 # to execute this experiment run:
-# python train.py experiment=jump_cl_bigger
+# python train.py experiment=big_jump_cl
 
 defaults:
   - override /data: jump_cl.yaml
+  - override /data/compound_transform: dgllife_gin.yaml
   - override /model: jump_cl.yaml
+  - override /model/image_encoder: resnet50.yaml
+  - override /model/molecule_encoder: gin_masking.yaml
+  - override /model/optimizer: adam.yaml
+  - override /model/scheduler: exponential.yaml
   - override /callbacks: default.yaml
   - override /trainer: ddp.yaml
   - override /logger: many_loggers.yaml

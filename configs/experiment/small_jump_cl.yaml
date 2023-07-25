@@ -1,13 +1,19 @@
 # @package _global_
 
 # to execute this experiment run:
-# python train.py experiment=jump_cl
+# python train.py experiment=small_jump_cl
 
 defaults:
   - override /data: jump_cl.yaml
+  - override /data/compound_transform: dgllife_gin.yaml
   - override /model: jump_cl.yaml
+  - override /model/image_encoder: resnet18.yaml
+  - override /model/molecule_encoder: gin_masking.yaml
+  - override /model/optimizer: adam.yaml
+  - override /model/scheduler: exponential.yaml
   - override /callbacks: default.yaml
   - override /trainer: gpu.yaml
+  - override /logger: many_loggers.yaml
 
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
@@ -37,27 +43,17 @@ data:
     train: 800
     test: 200
     val: 100
-
   split_path: ${paths.split_path}/small_jump_cl/
-
-  defaults:
-    compound_transform: dgllife_gin
 
 
 model:
-  defaults:
-    - override model/image_encoder: resnet18
-    - override model/molecule_encoder: gin_masking
-    - override model/optimizer: adam
-    - override model/scheduler: exponential
-
-  embedding_dim: 128
-
   optimizer:
     lr: 1e-3
 
   scheduler:
     gamma: 0.9
+
+  embedding_dim: 128
 
   example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
 

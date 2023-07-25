@@ -1,11 +1,14 @@
 _target_: src.models.jump_cl.datamodule.BasicJUMPDataModule
 
+defaults:
+  - compound_transform: ???
+  - _self_
+
 batch_size: ???
 num_workers: ???
 pin_memory: null
 prefetch_factor: null
 
-compound_transform: ???
 
 collate_fn:
   _target_: src.modules.collate_fn.dgl_image.image_graph_collate_function
