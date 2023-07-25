@@ -1,4 +1,4 @@
-_target_: src.models.jump_module.BasicJUMPModule
+_target_: src.models.jump_cl.module.BasicJUMPModule
 
 defaults:
   - image_encoder: ???
