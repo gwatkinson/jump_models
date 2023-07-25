@@ -30,23 +30,46 @@ class MoleculeImageDataset(Dataset):
         channels: List[str] = default_channels,
         col_fstring: str = "FileName_Orig{channel}",
     ):
+        """Initializes the dataset."""
+
+        # data
         self.load_df = load_df
         self.compound_dict = compound_dict
-        self.transform = transform
-        self.compound_transform = compound_transform
-        self.sampler = sampler or random.choice
-        self.channels = channels
-        self.col_fstring = col_fstring
         self.compound_list = list(self.compound_dict.keys())
         self.n_compounds = len(self.compound_list)
         self.image_list = self.load_df.index.tolist()
         self.n_images = len(self.image_list)
+
+        # transforms
+        self.transform = transform
+        self.compound_transform = compound_transform
+
+        # sampler
+        if sampler is None:
+            self.sampler = random.choice
+        else:
+            self.sampler = sampler
+
+        # string properties
+        self.channels = channels
+        self.col_fstring = col_fstring
+
+        # caching
+        self.cached_compound = {}
 
     def __len__(self):
         return self.n_compounds
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(n_compounds={self.n_compounds}, n_images={self.n_images})"
+
+    def transform_compound(self, compound):
+        if compound in self.cached_compound:
+            return self.cached_compound[compound]
+        else:
+            tr_compound = self.compound_transform(compound)
+            self.cached_compound[compound] = tr_compound
+            return tr_compound
 
     def __getitem__(self, idx):
         compound = self.compound_list[idx]  # An inchi or smiles string
@@ -62,6 +85,6 @@ class MoleculeImageDataset(Dataset):
             img_array = self.transform(img_array)
 
         if self.compound_transform:
-            compound = self.compound_transform(compound)
+            tr_compound = self.transform_compound(compound)
 
-        return {"image": img_array, "compound": compound}
+        return {"image": img_array, "compound": tr_compound}

@@ -22,12 +22,14 @@ tags: ["small_jump_cl", "simple_contrastive_training", "pretrained_gin_infomax",
 
 seed: 12345
 
+optimized_metric: val/loss_min
+
 compile: False
 
 trainer:
   min_epochs: 20
   max_epochs: 50
-  log_every_n_steps: 10
+  log_every_n_steps: 25
   gradient_clip_val: 0.5
   num_sanity_val_steps: 2
 
