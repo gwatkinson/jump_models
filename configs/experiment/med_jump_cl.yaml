@@ -47,7 +47,7 @@ data:
 model:
   defaults:
     image_encoder: resnet18
-    molecule_encoder: gin_supervised_masking
+    molecule_encoder: gin_masking
     optimizer: adam
     scheduler: exponential
 
