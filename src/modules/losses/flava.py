@@ -22,7 +22,7 @@ from torchmultimodal.utils.common import ModelOutput
 
 
 def assert_labels_are_present(labels: Optional[Tensor], category: str = "labels") -> None:
-    assert labels is not None, f"Model is in training model but {category} are not passed"
+    assert labels is not None, f"Model is in training model but {category} are not passed"  # nosec
 
 
 @dataclass
