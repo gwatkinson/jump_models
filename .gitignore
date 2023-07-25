@@ -5,6 +5,8 @@ old/
 /mnt/
 ignored/
 debug.py
+/models/
+/*.pth
 
 # Lightning-Hydra-Template
 configs/local/default.yaml
