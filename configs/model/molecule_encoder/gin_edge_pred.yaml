@@ -1,0 +1,7 @@
+# https://lifesci.dgl.ai/api/model.pretrain.html
+
+_target_: src.modules.molecules.dgllife_gin.GINPretrainedWithLinearHead
+pretrained_name: "gin_supervised_edgepred"
+out_dim: ${model.embedding_dim}
+pooling: mean
+preload: True

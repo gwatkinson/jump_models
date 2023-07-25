@@ -2,8 +2,10 @@ _target_: src.models.jump_cl.datamodule.BasicJUMPDataModule
 
 batch_size: ???
 num_workers: ???
-pin_memory: False
-prefetch_factor: 2
+pin_memory: null
+prefetch_factor: null
+
+compound_transform: ???
 
 collate_fn:
   _target_: src.modules.collate_fn.dgl_image.image_graph_collate_function
@@ -12,12 +14,9 @@ collate_fn:
 transform:
   _target_: src.modules.transforms.DefaultJUMPTransform
   _convert_: object
-  size: 256
+  size: ???
   dim: [-2, -1]
 
-compound_transform:
-  _target_: src.modules.dgllife_pretrained.molecules.dgl_mol_featurizer
-  _partial_: true
 
 splitter:
   _target_: src.splitters.ScaffoldSplitter
@@ -27,7 +26,6 @@ splitter:
 
 # example: ${paths.split_path}/small_test/
 split_path: ???
-
 
 dataloader_config:
   train:

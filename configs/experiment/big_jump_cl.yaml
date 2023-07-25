@@ -1,0 +1,76 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=jump_cl_bigger
+
+defaults:
+  - override /data: jump_cl.yaml
+  - override /model: jump_cl.yaml
+  - override /callbacks: default.yaml
+  - override /trainer: ddp.yaml
+  - override /logger: many_loggers.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags: ["big_jump_cl", "simple_contrastive_training", "pretrained_gin_infomax", "pretrained_resnet50"]
+
+seed: 12345
+
+compile: False
+
+trainer:
+  min_epochs: 35
+  max_epochs: 100
+  log_every_n_steps: 2
+  gradient_clip_val: 0.5
+  num_sanity_val_steps: 2
+
+  devices: 2
+
+
+data:
+  batch_size: 256
+  num_workers: 24
+  pin_memory: False
+  prefetch_factor: 2
+
+  transform:
+    size: 256
+
+  splitter:
+    train: 90_000
+    test: 10_000
+    val: 5_000
+    # retrieval: 3_000
+
+  split_path: ${paths.split_path}/big_jump_cl/
+
+  compound_transform: dgllife_gin
+
+
+model:
+  defaults:
+    image_encoder: resnet50
+    molecule_encoder: gin_supervised_masking
+    optimizer: adam
+    scheduler: exponential
+
+  embedding_dim: 256
+
+  optimizer:
+    lr: 5e-3
+
+  scheduler:
+    gamma: 0.9
+
+  example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
+
+
+logger:
+  wandb:
+    tags: ${tags}
+    project: "jump_models"
+    group: "jump_models"
+    job_type: ""
+    log_model: True

@@ -1,0 +1,2 @@
+_target_: src.modules.dgllife_gin.molecules.dgl_pretrained_featurizer
+_partial_: true
