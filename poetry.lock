@@ -5735,6 +5735,22 @@ files = [
 doc = ["reno", "sphinx", "tornado (>=4.5)"]
 
 [[package]]
+name = "tensorboardx"
+version = "2.6.1"
+description = "TensorBoardX lets you watch Tensors Flow without Tensorflow"
+optional = false
+python-versions = "*"
+files = [
+    {file = "tensorboardX-2.6.1-py2.py3-none-any.whl", hash = "sha256:4960feb79b1b84fd2b020885b09fd70962caec277d4bc194f338a6c203cd78ca"},
+    {file = "tensorboardX-2.6.1.tar.gz", hash = "sha256:02e2b84d7dc102edb7a052c77041db30fd6ba9b990635178919b8e9cfa157e96"},
+]
+
+[package.dependencies]
+numpy = "*"
+packaging = "*"
+protobuf = ">=4.22.3"
+
+[[package]]
 name = "termcolor"
 version = "2.3.0"
 description = "ANSI color formatting for output in terminal"
@@ -6708,4 +6724,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "3.10.10"
-content-hash = "3de1227a9b44636307634218e6ff753f221521d3547b6736651f5350bbf6e48b"
+content-hash = "f903d1bc3ec204e5597a65444b256085bcc42d5e494dc253a820b4970508edf9"
