@@ -4,8 +4,8 @@
 # order of defaults determines the order in which configs override each other
 defaults:
   - _self_
-  - data: med_jump_cl.yaml
-  - model: med_jump_cl.yaml
+  - data: jump_cl.yaml
+  - model: jump_cl.yaml
   - callbacks: default.yaml
   - logger: wandb # set logger here or use command line (e.g. `python train.py logger=tensorboard`)
   - trainer: gpu.yaml
@@ -15,7 +15,7 @@ defaults:
 
   # experiment configs allow for version control of specific hyperparameters
   # e.g. best hyperparameters for given model and datamodule
-  - experiment: null
+  - experiment: med_jump_cl.yaml
 
   # config for hyperparameter optimization
   - hparams_search: null
