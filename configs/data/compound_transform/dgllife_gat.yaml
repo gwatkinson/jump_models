@@ -1,2 +1,2 @@
-_target_: src.modules.dgllife_gat.molecules.dgl_canonical_featurizer
+_target_: src.modules.molecules.dgllife_gat.dgl_canonical_featurizer
 _partial_: true

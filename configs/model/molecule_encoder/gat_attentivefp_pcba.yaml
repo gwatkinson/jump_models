@@ -5,9 +5,3 @@ pretrained_name: "GAT_canonical_PCBA"
 out_dim: ${model.embedding_dim}
 pooling: mean
 preload: True
-
-
-
-compound_transform:
-  _target_: src.modules.dgllife_gin.molecules.dgl_pretrained_featurizer
-  _partial_: true
