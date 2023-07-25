@@ -46,10 +46,10 @@ data:
 
 model:
   defaults:
-    image_encoder: resnet18
-    molecule_encoder: gin_masking
-    optimizer: adam
-    scheduler: exponential
+    - override /image_encoder: resnet18
+    - override /molecule_encoder: gin_masking
+    - override /optimizer: adam
+    - override /scheduler: exponential
 
   embedding_dim: 128
 
