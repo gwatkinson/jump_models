@@ -1,7 +1,7 @@
 import torch
 import torchvision.transforms.v2 as transforms
 
-from src.modules.transforms import ImageNormalization
+from src.modules.transforms.image_normalization import ImageNormalization
 
 
 class DefaultJUMPTransform(torch.nn.Module):
