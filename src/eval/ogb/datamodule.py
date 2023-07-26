@@ -3,7 +3,7 @@
 import logging
 import os.path as osp
 import shutil
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 import pandas as pd
 import torch
@@ -11,7 +11,7 @@ from lightning import LightningDataModule
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
 
-from src.utils.utils import download_and_extract_zip
+from src.utils.io import download_and_extract_zip
 
 OGB_DATASETS = ["bbbp", "esol", "hiv", "lipophilicity", "tox21", "toxcast"]
 
@@ -25,6 +25,7 @@ class OGBDataset(Dataset):
         targets: List[str],
         ids: List[str],
         smiles_col: str = "smiles",
+        compound_transform: Optional[Callable] = None,
     ):
         """Initializes the dataset.
 
@@ -37,15 +38,31 @@ class OGBDataset(Dataset):
                 The list of ids.
             smiles_col (str, optional):
                 The name of the column containing the smiles.
+                Defaults to "smiles".
+            compound_transform (Optional[Callable], optional):
+                The compound transform to apply to the compounds.
+                Defaults to None.
         """
         self.mapping = mapping
         self.targets = targets
         self.ids = ids
+        self.smiles_col = smiles_col
+
+        self.compound_transform = compound_transform
+        self.cached_smiles = {}
 
     def __len__(self):
         return len(self.ids)
 
-    def __getitem__(self, idx: int) -> Tuple[str, torch.Tensor]:
+    def transform_compound(self, compound):
+        if compound in self.cached_smiles:
+            return self.cached_compound[compound]
+        else:
+            tr_compound = self.compound_transform(compound)
+            self.cached_smiles[compound] = tr_compound
+            return tr_compound
+
+    def __getitem__(self, idx: int):
         """Returns the data at the given index.
 
         Args:
@@ -59,10 +76,16 @@ class OGBDataset(Dataset):
         id_ = self.ids[idx]
 
         smile = self.mapping.loc[id_, self.smiles_col]
+
+        if self.compound_transform:
+            tr_compound = self.transform_compound(smile)
+        else:
+            tr_compound = smile
+
         y = self.mapping.loc[id_, self.targets].values
         y = torch.tensor(y)
 
-        return smile, y
+        return {"compound": tr_compound, "label": y}
 
 
 class OGBDataModule(LightningDataModule):
@@ -203,7 +226,7 @@ class OGBDataModule(LightningDataModule):
         if self.targets is None:
             self.targets = self.mapping.columns.drop([self.smiles_col, "mol_id"]).tolist()
 
-        if (stage == "fit" or stage is None) and self.data_train is None:
+        if self.data_train is None:
             self.train_ids = pd.read_csv(self.train_ids_file, header=None).values.flatten().tolist()
             self.data_train = OGBDataset(
                 mapping=self.mapping,
@@ -212,7 +235,7 @@ class OGBDataModule(LightningDataModule):
                 smiles_col=self.smiles_col,
             )
 
-        if stage == "validate" and self.data_val is None:
+        if self.data_val is None:
             self.val_ids = pd.read_csv(self.val_ids_file, header=None).values.flatten().tolist()
             self.data_val = OGBDataset(
                 mapping=self.mapping,
@@ -221,7 +244,7 @@ class OGBDataModule(LightningDataModule):
                 smiles_col=self.smiles_col,
             )
 
-        if stage == "test" and self.data_test is None:
+        if self.data_test is None:
             self.test_ids = pd.read_csv(self.test_ids_file, header=None).values.flatten().tolist()
             self.data_test = OGBDataset(
                 mapping=self.mapping,
