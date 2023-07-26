@@ -12,6 +12,8 @@ debug.py
 configs/local/default.yaml
 /data/
 /logs/
+/wandb/
+/lightning_logs/
 .env
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks,git,latex
