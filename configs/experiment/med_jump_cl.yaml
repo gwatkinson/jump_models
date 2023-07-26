@@ -18,7 +18,7 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-tags: ["med_jump_cl", "simple_contrastive_training", "pretrained_gin_infomax", "pretrained_resnet18"]
+tags: ["med_jump_cl", "simple_contrastive_training", "${model.molecule_encoder.pretrained_name}", "${model.image_encoder.instance_model_name}"]
 
 seed: 12345
 
