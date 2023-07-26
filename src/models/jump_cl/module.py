@@ -30,6 +30,7 @@ class BasicJUMPModule(LightningModule):
         criterion: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
+        embedding_dim: int,
         example_input_path: Optional[str] = None,
         **kwargs,
     ):
@@ -43,6 +44,13 @@ class BasicJUMPModule(LightningModule):
         self.image_encoder = image_encoder
         self.molecule_encoder = molecule_encoder
         self.criterion = criterion
+
+        # embedding dim
+        self.embedding_dim = embedding_dim
+
+        # training
+        self.optimizer = optimizer
+        self.scheduler = scheduler
 
         # for averaging loss across batches
         self.train_loss = MeanMetric()
@@ -130,9 +138,9 @@ class BasicJUMPModule(LightningModule):
         Examples:
             https://lightning.ai/docs/pytorch/latest/common/lightning_module.html#configure-optimizers
         """
-        optimizer = self.hparams.optimizer(params=self.parameters())
-        if self.hparams.scheduler is not None:
-            scheduler = self.hparams.scheduler(optimizer=optimizer)
+        optimizer = self.optimizer(params=self.parameters())
+        if self.scheduler is not None:
+            scheduler = self.scheduler(optimizer=optimizer)
             return {
                 "optimizer": optimizer,
                 "lr_scheduler": {
