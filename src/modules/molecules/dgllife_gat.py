@@ -2,30 +2,10 @@
 
 import logging
 
-import datamol as dm
 import dgllife
 import torch.nn as nn
-from dgllife.utils import CanonicalAtomFeaturizer, CanonicalBondFeaturizer, mol_to_bigraph
 
 logger = logging.getLogger(__name__)
-
-
-def dgl_canonical_featurizer(
-    inchi, add_self_loop=True, canonical_atom_order=True, num_virtual_nodes=0, explicit_hydrogens=False
-):
-    mol = dm.from_inchi(inchi)
-
-    graph = mol_to_bigraph(
-        mol,
-        add_self_loop=add_self_loop,
-        node_featurizer=CanonicalAtomFeaturizer(),
-        edge_featurizer=CanonicalBondFeaturizer(self_loop=add_self_loop),
-        canonical_atom_order=canonical_atom_order,
-        num_virtual_nodes=num_virtual_nodes,
-        explicit_hydrogens=explicit_hydrogens,
-    )
-
-    return graph
 
 
 class GATPretrainedWithLinearHead(nn.Module):
