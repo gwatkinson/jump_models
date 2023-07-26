@@ -22,8 +22,6 @@ tags: ["small_jump_cl", "simple_contrastive_training", "pretrained_gin_infomax",
 
 seed: 12345
 
-optimized_metric: val/loss_min
-
 compile: False
 
 trainer:
