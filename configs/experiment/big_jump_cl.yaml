@@ -9,10 +9,10 @@ defaults:
   - override /model: jump_cl.yaml
   - override /model/image_encoder: resnet50.yaml
   - override /model/molecule_encoder: gin_masking.yaml
-  - override /model/optimizer: adam.yaml
-  - override /model/scheduler: exponential.yaml
+  - override /model/optimizer: sgd.yaml
+  - override /model/scheduler: onplateau.yaml
   - override /callbacks: default.yaml
-  - override /trainer: ddp.yaml
+  - override /trainer: ddp2.yaml
   - override /logger: many_loggers.yaml
 
 # all parameters below will be merged with parameters from default configurations set above
@@ -31,14 +31,14 @@ trainer:
   gradient_clip_val: 0.5
   num_sanity_val_steps: 2
 
-  devices: 2
+  devices: 3
 
 
 data:
   batch_size: 256
-  num_workers: 24
+  num_workers: 32
   pin_memory: False
-  prefetch_factor: 2
+  prefetch_factor: 4
 
   transform:
     size: 256
@@ -53,19 +53,13 @@ data:
 
 
 model:
-  defaults:
-    image_encoder: resnet50
-    molecule_encoder: gin_masking
-    optimizer: adam
-    scheduler: exponential
-
-  embedding_dim: 256
+  embedding_dim: 512
 
   optimizer:
-    lr: 5e-3
+    lr: 1e-4
 
-  scheduler:
-    gamma: 0.9
+  # scheduler:
+  #   gamma: 0.9
 
   example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
 
@@ -74,6 +68,6 @@ logger:
   wandb:
     tags: ${tags}
     project: "jump_models"
-    group: "jump_models"
+    group: "big_jump_cl"
     job_type: ""
     log_model: True
