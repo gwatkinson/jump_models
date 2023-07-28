@@ -51,8 +51,6 @@ data:
 
   split_path: ${paths.split_path}/big_jump_cl/
 
-  compound_transform: dgllife_gin
-
 
 model:
   defaults:
