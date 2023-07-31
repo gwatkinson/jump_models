@@ -138,7 +138,7 @@ class JUMPCLFreezer(BaseFinetuning):
             self.freeze(self._get_backbone(pl_module, self.image_backbone))
 
         if self.unfreeze_molecule_encoder_at_epoch > 0:
-            logger.info("Freezing image encoder")
+            logger.info("Freezing molecule encoder")
             self.freeze(self._get_backbone(pl_module, self.molecule_backbone))
 
     def finetune_function(self, pl_module, current_epoch, optimizer):

@@ -10,7 +10,7 @@ defaults:
   - override /model/image_encoder: resnet18.yaml
   - override /model/molecule_encoder: gin_context_pred.yaml
   - override /model/optimizer: sgd.yaml
-  - override /model/scheduler: onplateau.yaml
+  - override /model/scheduler: cosine_annealing_warm_restart.yaml
   - override /callbacks: default_jump_swa.yaml
   - override /trainer: gpu.yaml
   - override /logger: many_loggers.yaml
@@ -58,12 +58,11 @@ data:
 
 model:
   embedding_dim: 256
-  lr: 4e-2
+  lr: 5e-3
 
   scheduler:
-    factor: 0.3
-    patience: 4
-    cooldown: 3
+    T_0: 10
+    T_mult: 1
 
   example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
 
