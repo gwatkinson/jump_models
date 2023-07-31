@@ -126,7 +126,10 @@ class JUMPCLFreezer(BaseFinetuning):
         except AttributeError:
             raise MisconfigurationException("The LightningModule does not have a valid molecule backbone")
 
-        return super().on_fit_start(trainer, pl_module)
+        # named_parameters = dict(pl_module.named_parameters())
+        # logger.debug(f"Named parameters: {named_parameters.keys()}")
+
+        # return super().on_fit_start(trainer, pl_module)
 
     def freeze_before_training(self, pl_module):
         """Freeze layers before training."""
