@@ -61,8 +61,9 @@ model:
   lr: 4e-2
 
   scheduler:
-    T_0: 15
-    T_mult: 1
+    factor: 0.3
+    patience: 4
+    cooldown: 3
 
   example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
 
