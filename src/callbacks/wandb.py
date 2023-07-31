@@ -13,11 +13,12 @@ logger = logging.getLogger(__name__)
 
 
 class WandbTrainingCallback(Callback):
-    def __init__(self, watch=True, watch_log="all", log_freq=100):
+    def __init__(self, watch=True, watch_log="all", log_freq=100, log_graph=True):
         super().__init__()
         self.watch = watch
         self.log_freq = log_freq
         self.watch_log = watch_log
+        self.log_graph = log_graph
 
         self.logger = None
 
@@ -36,7 +37,7 @@ class WandbTrainingCallback(Callback):
 
     def on_train_start(self, trainer, pl_module):
         if self.watch:
-            self.logger.watch(pl_module, log=self.watch_log, log_freq=self.log_freq)
+            self.logger.watch(pl_module, log=self.watch_log, log_freq=self.log_freq, log_graph=self.log_graph)
 
     def on_train_end(self, trainer, pl_module):
         if self.watch:
@@ -44,12 +45,8 @@ class WandbTrainingCallback(Callback):
 
 
 class WandbOGBTrainingCallback(Callback):
-    def __init__(self, watch=True, watch_log="all", log_freq=100):
-        super().__init__(
-            watch=watch,
-            watch_log=watch_log,
-            log_freq=log_freq,
-        )
+    def __init__(self, watch=True, watch_log="all", log_freq=100, log_graph=True):
+        super().__init__(watch=watch, watch_log=watch_log, log_freq=log_freq, log_graph=log_graph)
         self.tables = None
         self.num_figs = None
 
