@@ -1,8 +1,10 @@
+import io
 import json
 from io import BytesIO
 from typing import Any, Dict, List, Optional
 from zipfile import ZipFile
 
+import cv2
 import numpy as np
 import pandas as pd
 import requests
@@ -74,3 +76,15 @@ def load_image_paths_to_array(image_paths: List[str]):
     for image_path in image_paths:
         images.append(np.array(Image.open(image_path)))
     return np.stack(images)
+
+
+def get_img_from_fig(fig, dpi=60):
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=dpi)
+    buf.seek(0)
+    img_arr = np.frombuffer(buf.getvalue(), dtype=np.uint8)
+    buf.close()
+    img = cv2.imdecode(img_arr, 1)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+    return img
