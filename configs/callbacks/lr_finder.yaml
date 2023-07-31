@@ -6,6 +6,6 @@ lr_finder:
   max_lr: 1
   num_training_steps: 100
   mode: exponential
-  early_stopping_threshold: 4.0
+  early_stop_threshold: 4.0
   update_attr: True
   attr_name: lr
