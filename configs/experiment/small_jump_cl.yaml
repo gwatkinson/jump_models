@@ -58,8 +58,8 @@ model:
   lr: 4e-2
 
   scheduler:
-    T_0: 10
-    T_mult: 2
+    T_0: 15
+    T_mult: 1
 
   example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
 

@@ -4,7 +4,7 @@ defaults:
   - model_summary.yaml
   - rich_progress_bar.yaml
   - lr_monitor.yaml
-  - lr_finder.yaml
+  # - lr_finder.yaml
   - jump_cl_freezer.yaml
   - wandb_watcher.yaml
   - _self_
