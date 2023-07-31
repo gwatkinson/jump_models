@@ -4,15 +4,11 @@ jump_cl_freezer:
   _target_: src.callbacks.freeze.JUMPCLFreezer
 
   unfreeze_image_encoder_at_epoch: ???
+  image_backbone: [image_encoder, model]
   image_encoder_lr: null  # if null, uses the same as the first param group
   image_initial_denom_lr: null  # if image_encoder_lr is null, divides the first param group's lr by this
-  image_encoder_name: image_encoder
-  image_base_model_name: model
-  image_head_name: myfc
 
   unfreeze_molecule_encoder_at_epoch: ???
+  molecule_backbone: [molecule_encoder, base_model]
   molecule_encoder_lr: null
   molecule_initial_denom_lr: null
-  molecule_encoder_name: molecule_encoder
-  molecule_base_model_name: base_model
-  molecule_head_name: head
