@@ -139,7 +139,7 @@ class BasicJUMPModule(LightningModule):
         Examples:
             https://lightning.ai/docs/pytorch/latest/common/lightning_module.html#configure-optimizers
         """
-        optimizer = self.optimizer({"params": filter(lambda p: p.requires_grad, self.parameters())})
+        optimizer = self.optimizer(filter(lambda p: p.requires_grad, self.parameters()))
         if self.scheduler is not None:
             scheduler = self.scheduler(optimizer=optimizer)
             return {
