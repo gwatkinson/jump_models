@@ -58,9 +58,11 @@ data:
 
 model:
   embedding_dim: 512
+  lr: 1e-4
+  batch_size: ${data.batch_size}
 
   optimizer:
-    lr: 1e-4
+    lr: ${model.lr}
 
   scheduler:
     T_0: 7
