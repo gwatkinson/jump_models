@@ -58,13 +58,14 @@ data:
 
 model:
   embedding_dim: 512
-  lr: 1e-4
+  lr: 5e-3
 
   scheduler:
     T_0: 7
     T_mult: 2
 
   example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
+
 
 callbacks:
   jump_cl_freezer:
@@ -74,7 +75,7 @@ callbacks:
     molecule_encoder_lr: 0.001
 
   wandb_watcher:
-    log_freq: 500
+    log_freq: 50
     watch_log: all
 
 
