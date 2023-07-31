@@ -10,7 +10,7 @@ defaults:
   - override /model/image_encoder: resnet34.yaml
   - override /model/molecule_encoder: gin_context_pred.yaml
   - override /model/optimizer: adam.yaml
-  - override /model/scheduler: cosine_annealing.yaml
+  - override /model/scheduler: cosine_annealing_warm_restart.yaml
   - override /callbacks: default_jump.yaml
   - override /trainer: ddp.yaml
   - override /logger: many_loggers.yaml
@@ -62,10 +62,22 @@ model:
   optimizer:
     lr: 1e-4
 
-  # scheduler:
-  #   gamma: 0.9
+  scheduler:
+    T_0: 7
+    T_mult: 2
 
   example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
+
+callbacks:
+  jump_cl_freezer:
+    unfreeze_image_encoder_at_epoch: 5
+    image_encoder_lr: 0.0001
+    unfreeze_molecule_encoder_at_epoch: 3
+    molecule_encoder_lr: 0.001
+
+  wandb_watcher:
+    log_freq: 500
+    watch_log: all
 
 
 logger:
