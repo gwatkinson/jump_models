@@ -152,16 +152,16 @@ class JUMPCLFreezer(BaseFinetuning):
 
         # Get the image and molecule backbones
         if image_model:
-            self.image_backbone = pl_module.image_encoder.model
+            self.image_backbone = self.image_base_model_name
         elif image_encoder:
-            self.image_backbone = pl_module.image_encoder
+            self.image_backbone = self.image_encoder_name
         else:
             self.image_backbone = None
 
         if molecule_model:
-            self.molecule_backbone = pl_module.molecule_encoder.base_model
+            self.molecule_backbone = self.molecule_base_model_name
         elif molecule_encoder:
-            self.molecule_backbone = pl_module.molecule_encoder
+            self.molecule_backbone = self.molecule_encoder_name
         else:
             self.molecule_backbone = None
 
@@ -173,10 +173,10 @@ class JUMPCLFreezer(BaseFinetuning):
     def freeze_before_training(self, pl_module):
         """Freeze layers before training."""
         if self.unfreeze_image_encoder_at_epoch > 0:
-            self.freeze(pl_module.image_backbone)
+            self.freeze(getattr(pl_module, self.image_backbone))
 
         if self.unfreeze_molecule_encoder_at_epoch > 0:
-            self.freeze(pl_module.molecule_backbone)
+            self.freeze(getattr(pl_module, self.molecule_backbone))
 
     def finetune_function(self, pl_module, current_epoch, optimizer):
         """When unfreeze epoch is reached, unfreeze the layers and add the
@@ -184,7 +184,7 @@ class JUMPCLFreezer(BaseFinetuning):
         if current_epoch == self.unfreeze_image_encoder_at_epoch:
             # Unfreezes the image encoder and adds the param group to the optimizer
             self.unfreeze_and_add_param_group(
-                modules=pl_module.image_backbone,
+                modules=getattr(pl_module, self.image_backbone),
                 optimizer=optimizer,
                 train_bn=True,
                 lr=self.image_encoder_lr,
@@ -194,7 +194,7 @@ class JUMPCLFreezer(BaseFinetuning):
         if current_epoch == self.unfreeze_molecule_encoder_at_epoch:
             # Unfreezes the molecule encoder and adds the param group to the optimizer
             self.unfreeze_and_add_param_group(
-                modules=pl_module.molecule_backbone,
+                modules=getattr(pl_module, self.molecule_backbone),
                 optimizer=optimizer,
                 train_bn=True,
                 lr=self.molecule_encoder_lr,
