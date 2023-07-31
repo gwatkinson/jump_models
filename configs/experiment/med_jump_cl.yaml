@@ -9,7 +9,7 @@ defaults:
   - override /model: jump_cl.yaml
   - override /model/image_encoder: resnet18.yaml
   - override /model/molecule_encoder: gin_context_pred.yaml
-  - override /model/optimizer: nesterov_sgd.yaml
+  - override /model/optimizer: adamax.yaml
   - override /model/scheduler: cosine_annealing_warm_restart.yaml
   - override /callbacks: default_jump_swa.yaml
   - override /trainer: gpu.yaml
