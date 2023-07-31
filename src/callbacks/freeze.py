@@ -129,7 +129,7 @@ class JUMPCLFreezer(BaseFinetuning):
         # named_parameters = dict(pl_module.named_parameters())
         # logger.debug(f"Named parameters: {named_parameters.keys()}")
 
-        # return super().on_fit_start(trainer, pl_module)
+        return super().on_fit_start(trainer, pl_module)  # TODO: check if this is needed and debug
 
     def freeze_before_training(self, pl_module):
         """Freeze layers before training."""
