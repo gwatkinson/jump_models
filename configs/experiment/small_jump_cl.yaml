@@ -39,7 +39,8 @@ trainer:
 
 data:
   batch_size: 32
-  num_workers: 8
+  num_workers: 24
+  prefetch_factor: 3
 
   transform:
     size: 128

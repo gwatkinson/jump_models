@@ -114,12 +114,14 @@ class JUMPCLFreezer(BaseFinetuning):
     def on_fit_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         # Check if the model has an image encoder
         try:
+            logger.debug("Loading image backbone")
             self._get_backbone(pl_module, self.image_backbone)
         except AttributeError:
             raise MisconfigurationException("The LightningModule does not have a valid image backbone")
 
         # Check if the model has a molecule encoder
         try:
+            logger.debug("Loading molecule backbone")
             self._get_backbone(pl_module, self.molecule_backbone)
         except AttributeError:
             raise MisconfigurationException("The LightningModule does not have a valid molecule backbone")
@@ -129,9 +131,11 @@ class JUMPCLFreezer(BaseFinetuning):
     def freeze_before_training(self, pl_module):
         """Freeze layers before training."""
         if self.unfreeze_image_encoder_at_epoch > 0:
+            logger.info("Freezing image encoder")
             self.freeze(self._get_backbone(pl_module, self.image_backbone))
 
         if self.unfreeze_molecule_encoder_at_epoch > 0:
+            logger.info("Freezing image encoder")
             self.freeze(self._get_backbone(pl_module, self.molecule_backbone))
 
     def finetune_function(self, pl_module, current_epoch, optimizer):
@@ -139,6 +143,7 @@ class JUMPCLFreezer(BaseFinetuning):
         param group to the optimizer."""
         if current_epoch == self.unfreeze_image_encoder_at_epoch:
             # Unfreezes the image encoder and adds the param group to the optimizer
+            logger.info(f"Unfreezing image encoder with lr {self.image_encoder_lr}")
             self.unfreeze_and_add_param_group(
                 modules=self._get_backbone(pl_module, self.image_backbone),
                 optimizer=optimizer,
@@ -149,6 +154,7 @@ class JUMPCLFreezer(BaseFinetuning):
 
         if current_epoch == self.unfreeze_molecule_encoder_at_epoch:
             # Unfreezes the molecule encoder and adds the param group to the optimizer
+            logger.info(f"Unfreezing molecule encoder with lr {self.molecule_encoder_lr}")
             self.unfreeze_and_add_param_group(
                 modules=self._get_backbone(pl_module, self.molecule_backbone),
                 optimizer=optimizer,

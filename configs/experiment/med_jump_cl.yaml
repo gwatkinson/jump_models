@@ -42,6 +42,7 @@ data:
   batch_size: 128
   num_workers: 24
   pin_memory: False
+  prefetch_factor: 3
 
   transform:
     size: 128
