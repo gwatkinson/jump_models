@@ -110,7 +110,7 @@ class JUMPCLFreezer(BaseFinetuning):
         self.image_head_name = image_head_name
         self.molecule_head_name = molecule_head_name
 
-    def on_fit_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+    def setup(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         # Check if the model has an image encoder
         image_encoder = hasattr(pl_module, self.image_encoder_name) and isinstance(
             getattr(pl_module, self.image_encoder_name), Module
