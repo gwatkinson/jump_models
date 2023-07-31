@@ -9,9 +9,11 @@ defaults:
   - _self_
 
 embedding_dim: ???
+lr: ???
+batch_size: ${data.batch_size}
 
 optimizer:
-  lr: ???
+  lr: ${model.lr}
 
 scheduler:
   gamma: 0.9

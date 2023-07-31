@@ -7,18 +7,22 @@ defaults:
   - override /data: jump_cl.yaml
   - override /data/compound_transform: dgllife_gin.yaml
   - override /model: jump_cl.yaml
-  - override /model/image_encoder: resnet50.yaml
-  - override /model/molecule_encoder: gin_masking.yaml
-  - override /model/optimizer: sgd.yaml
-  - override /model/scheduler: onplateau.yaml
-  - override /callbacks: default.yaml
-  - override /trainer: ddp2.yaml
+  - override /model/image_encoder: resnet34.yaml
+  - override /model/molecule_encoder: gin_context_pred.yaml
+  - override /model/optimizer: adam.yaml
+  - override /model/scheduler: cosine_annealing.yaml
+  - override /callbacks: default_jump.yaml
+  - override /trainer: ddp.yaml
   - override /logger: many_loggers.yaml
 
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-tags: ["big_jump_cl", "simple_contrastive_training", "pretrained_gin_infomax", "pretrained_resnet50"]
+tags:
+  - med_jump_cl
+  - simple_contrastive_training
+  - ${model.molecule_encoder.pretrained_name}
+  - ${model.image_encoder.instance_model_name}
 
 seed: 12345
 
