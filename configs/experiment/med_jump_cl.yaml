@@ -31,7 +31,7 @@ compile: False
 trainer:
   min_epochs: 20
   max_epochs: 50
-  log_every_n_steps: 25
+  log_every_n_steps: 5
   gradient_clip_val: 0.5
   num_sanity_val_steps: 2
 
@@ -57,10 +57,10 @@ data:
 
 model:
   embedding_dim: 256
-  lr: 1e-3
+  lr: 4e-2
 
   scheduler:
-    T_0: 50
+    T_0: 10
     T_mult: 2
 
   example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
@@ -68,10 +68,10 @@ model:
 
 callbacks:
   jump_cl_freezer:
-    unfreeze_image_encoder_at_epoch: 8
-    image_encoder_lr: 0.0001
-    unfreeze_molecule_encoder_at_epoch: 5
-    molecule_encoder_lr: 0.001
+    unfreeze_image_encoder_at_epoch: 10
+    image_encoder_lr: 0.005
+    unfreeze_molecule_encoder_at_epoch: 7
+    molecule_encoder_lr: 0.01
 
   wandb_watcher:
     log_freq: 100
