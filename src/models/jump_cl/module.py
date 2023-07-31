@@ -32,6 +32,8 @@ class BasicJUMPModule(LightningModule):
         scheduler: torch.optim.lr_scheduler,
         embedding_dim: int,
         example_input_path: Optional[str] = None,
+        lr: Optional[float] = None,
+        batch_size: Optional[int] = None,
         **kwargs,
     ):
         super().__init__()
@@ -47,6 +49,8 @@ class BasicJUMPModule(LightningModule):
 
         # embedding dim
         self.embedding_dim = embedding_dim
+        self.batch_size = batch_size
+        self.lr = lr
 
         # training
         self.optimizer = optimizer
@@ -61,9 +65,6 @@ class BasicJUMPModule(LightningModule):
         if example_input_path is not None:
             logger.debug(f"Loading example input from: {example_input_path}")
             self.example_input_array = torch.load(example_input_path)
-
-        # for tracking best so far validation accuracy
-        # self.val_acc_best = MaxMetric()
 
     def forward(self, image, compound):
         image_emb = self.image_encoder(image)  # BxE
