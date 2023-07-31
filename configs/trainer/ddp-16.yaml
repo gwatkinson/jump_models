@@ -6,4 +6,5 @@ strategy: ddp
 accelerator: gpu
 num_nodes: 1
 sync_batchnorm: False
+precision: 16-mixed
 devices: ??? # list of devices to use for training

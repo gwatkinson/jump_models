@@ -35,6 +35,7 @@ trainer:
   gradient_clip_val: 0.5
   num_sanity_val_steps: 2
 
+  devices: ???
 
 data:
   batch_size: 32

@@ -35,7 +35,7 @@ trainer:
   gradient_clip_val: 0.5
   num_sanity_val_steps: 2
 
-  devices: 3
+  devices: ???
 
 
 data:
