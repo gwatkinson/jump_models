@@ -6,10 +6,17 @@ from typing import Any, Optional
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from lightning import LightningModule
+from lightning.pytorch.loggers import TensorBoardLogger, WandbLogger
 from torchmetrics import MaxMetric, MeanMetric, MetricCollection, MinMetric
-from torchmetrics.classification import BinaryAccuracy, BinaryAUROC, BinaryF1Score, BinaryPrecision, BinaryRecall
+from torchmetrics.classification import (
+    BinaryAccuracy,
+    BinaryAUROC,
+    BinaryConfusionMatrix,
+    BinaryF1Score,
+    BinaryPrecision,
+    BinaryRecall,
+)
 from torchmetrics.regression import MeanAbsoluteError, MeanSquaredError, R2Score
 
 RMSE = partial(MeanSquaredError, squared=False)
@@ -28,13 +35,17 @@ class OGBClassificationModule(LightningModule):
         BinaryPrecision,
         BinaryF1Score,
     ]
+    plot_metrics = [
+        BinaryConfusionMatrix,
+    ]
+    default_criterion = nn.BCEWithLogitsLoss
 
     def __init__(
         self,
         cross_modal_module: LightningModule,
-        criterion: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
+        criterion: Optional[torch.nn.Module] = None,
         molecule_encoder_attribute_name: str = "molecule_encoder",
         example_input: Optional[torch.Tensor] = None,
         example_input_path: Optional[str] = None,
@@ -47,7 +58,7 @@ class OGBClassificationModule(LightningModule):
         self.save_hyperparameters(logger=False, ignore=["cross_modal_module", "criterion"])
 
         # encoder
-        self.cross_modal_module = cross_modal_module
+        # self.cross_modal_module = cross_modal_module
         self.molecule_encoder = getattr(cross_modal_module, molecule_encoder_attribute_name)
         self.embedding_dim = getattr(self.molecule_encoder, "out_dim", None)
         self.head = nn.Linear(self.embedding_dim, self.out_dim)
@@ -59,7 +70,10 @@ class OGBClassificationModule(LightningModule):
         )
 
         # loss function
-        self.criterion = criterion
+        if criterion is None:
+            self.criterion = self.default_criterion()
+        else:
+            self.criterion = criterion
 
         # training
         self.optimizer = optimizer
@@ -77,14 +91,18 @@ class OGBClassificationModule(LightningModule):
         self.test_loss = MeanMetric()
 
         # metric objects for calculating and averaging accuracy across batches
-        self.train_metric = OGBClassificationModule.task_metric()
-        self.val_metric = OGBClassificationModule.task_metric()
-        self.test_metric = OGBClassificationModule.task_metric()
-        self.val_metric_best = OGBClassificationModule.best_metric()
+        self.train_metric = self.task_metric()
+        self.val_metric = self.task_metric()
+        self.test_metric = self.task_metric()
+        self.val_metric_best = self.best_metric()
 
-        self.train_collection = MetricCollection([metric() for metric in self.additional_metrics], prefix="train/")
-        self.val_collection = MetricCollection([metric() for metric in self.additional_metrics], prefix="val/")
-        self.test_collection = MetricCollection([metric() for metric in self.additional_metrics], prefix="test/")
+        self.train_other_metrics = MetricCollection([metric() for metric in self.additional_metrics], prefix="train/")
+        self.val_other_metrics = MetricCollection([metric() for metric in self.additional_metrics], prefix="val/")
+        self.test_other_metrics = MetricCollection([metric() for metric in self.additional_metrics], prefix="test/")
+
+        self.train_plot_metrics = MetricCollection([metric() for metric in self.plot_metrics], prefix="train/")
+        self.val_plot_metrics = MetricCollection([metric() for metric in self.plot_metrics], prefix="val/")
+        self.test_plot_metrics = MetricCollection([metric() for metric in self.plot_metrics], prefix="test/")
 
     def on_train_start(self):
         # by default lightning executes validation step sanity checks before training starts,
@@ -98,31 +116,33 @@ class OGBClassificationModule(LightningModule):
     def forward(self, compound, label=None):
         return self.model(compound)
 
-    def model_step(self, batch: Any):
+    def model_step(self, batch: Any, phase: str = "train", on_step_loss=True):
         compound = batch["compound"]
-        labels = batch["label"]
+        targets = batch["label"]
 
         logits = self.model(compound)
 
-        loss = self.criterion(logits, labels)
-        preds = F.sigmoid(logits)
+        loss = self.criterion(logits, targets)
+        # preds = F.sigmoid(logits)  # is in the torchmetrics implementation ??
 
-        return loss, preds, labels
+        return loss, logits, targets
 
     def training_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.model_step(batch)
 
-        # update and log metrics
+        # update metrics
         self.train_loss(loss)
         self.train_metric(preds, targets)
-        other_metrics = self.train_collection(preds, targets)
+        self.train_plot_metrics(preds, targets)
+        other_metrics = self.train_other_metrics(preds, targets)
 
+        # log metrics
         self.log("train/loss", self.train_loss, on_step=True, on_epoch=True, prog_bar=True)
         self.log(f"train/{self.metric_name}", self.train_metric, on_step=False, on_epoch=True, prog_bar=True)
         self.log_dict(other_metrics, on_step=False, on_epoch=True, prog_bar=False)
 
         # return loss or backpropagation will fail
-        return loss
+        return {"loss": loss, "preds": preds, "targets": targets}
 
     def on_train_epoch_end(self):
         pass
@@ -130,11 +150,13 @@ class OGBClassificationModule(LightningModule):
     def validation_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.model_step(batch)
 
-        # update and log metrics
+        # update metrics
         self.val_loss(loss)
         self.val_metric(preds, targets)
-        other_metrics = self.train_collection(preds, targets)
+        self.val_plot_metrics(preds, targets)
+        other_metrics = self.train_other_metrics(preds, targets)
 
+        # log metrics
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log(f"val/{self.metric_name}", self.val_metric, on_step=False, on_epoch=True, prog_bar=True)
         self.log_dict(other_metrics, on_step=False, on_epoch=True, prog_bar=False)
@@ -149,11 +171,13 @@ class OGBClassificationModule(LightningModule):
     def test_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.model_step(batch)
 
-        # update and log metrics
+        # update metrics
         self.test_loss(loss)
         self.test_metric(preds, targets)
-        other_metrics = self.train_collection(preds, targets)
+        self.test_plot_metrics(preds, targets)
+        other_metrics = self.train_other_metrics(preds, targets)
 
+        # log metrics
         self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log(f"test/{self.metric_name}", self.test_metric, on_step=False, on_epoch=True, prog_bar=True)
         self.log_dict(other_metrics, on_step=False, on_epoch=True, prog_bar=False)
@@ -169,7 +193,8 @@ class OGBClassificationModule(LightningModule):
         Examples:
             https://lightning.ai/docs/pytorch/latest/common/lightning_module.html#configure-optimizers
         """
-        optimizer = self.optimizer(params=self.parameters())
+        optimizer = self.optimizer(params=filter(lambda p: p.requires_grad, self.parameters()))
+        # optimizer = self.optimizer(params=self.parameters())
         if self.scheduler is not None:
             scheduler = self.scheduler(optimizer=optimizer)
             return {
@@ -196,6 +221,9 @@ class OGBRegressionModule(OGBClassificationModule):
         MeanAbsoluteError,
         R2Score,
     ]
+    plot_metrics = []
+
+    default_criterion = nn.MSELoss
 
 
 class BBBPModule(OGBClassificationModule):
