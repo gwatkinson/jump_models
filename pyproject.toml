@@ -60,6 +60,7 @@ plotly = "^5.15.0"
 [tool.poetry.group.images.dependencies]
 # Image manipulation dependencies
 pillow = "^9.5.0"
+opencv-python = "^4.8.0.74"
 
 
 [tool.poetry.group.molecules.dependencies]
@@ -101,6 +102,8 @@ flake8-simplify = "^0.19.3"
 pep8-naming = "^0.13.3"
 pipdeptree = "^2.9.5"
 nvitop = "^1.1.2"
+
+
 
 
 [tool.isort]
