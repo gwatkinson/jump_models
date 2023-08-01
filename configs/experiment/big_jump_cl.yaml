@@ -11,7 +11,7 @@ defaults:
   - override /model/molecule_encoder: gin_infomax.yaml
   - override /model/optimizer: adam.yaml
   - override /model/scheduler: cosine_annealing_warm_restart.yaml
-  - override /callbacks: default_jump.yaml
+  - override /callbacks: jump.yaml
   - override /trainer: ddp.yaml
   - override /logger: many_loggers.yaml
 
