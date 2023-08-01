@@ -1,11 +1,11 @@
 defaults:
-  - lightning/model_checkpoint
-  - lightning/early_stopping
-  - lightning/model_summary
-  - lightning/rich_progress_bar
-  - lightning/lr_monitor
-  - custom/jump_cl_freezer
-  - custom/wandb_watcher
+  - lightning/model_checkpoint@_here_
+  - lightning/early_stopping@_here_
+  - lightning/model_summary@_here_
+  - lightning/rich_progress_bar@_here_
+  - lightning/lr_monitor@_here_
+  - custom/jump_cl_freezer@_here_
+  - custom/wandb_watcher@_here_
 
 model_checkpoint:
   dirpath: ${paths.output_dir}/checkpoints

@@ -1,8 +1,9 @@
 defaults:
-  - model_checkpoint.yaml
-  - early_stopping.yaml
-  - model_summary.yaml
-  - lr_monitor.yaml
+  - lightning/model_checkpoint@_here_
+  - lightning/early_stopping@_here_
+  - lightning/model_summary@_here_
+  - lightning/rich_progress_bar@_here_
+  - lightning/lr_monitor@_here_
 
 model_checkpoint:
   dirpath: ${paths.output_dir}/checkpoints

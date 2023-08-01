@@ -12,7 +12,6 @@ from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
 
 from src.models.jump_cl.dataset import MoleculeImageDataset
-from src.splitters import RandomSplitter
 from src.utils.io import load_load_df_from_parquet, load_metadata_df_from_csv
 
 py_logger = logging.getLogger(__name__)
@@ -135,7 +134,7 @@ class BasicJUMPDataModule(LightningDataModule):
         )
         self.metadata_dir = kwargs.get("metadata_dir", "../cpjump1/jump/metadata/complete_metadata.csv")
         self.local_load_data_dir = kwargs.get("local_load_data_dir", "../cpjump1/jump/load_data/final/")
-        self.splitter = kwargs.get("splitter", RandomSplitter())
+        self.splitter = kwargs.get("splitter")
         self.channels = kwargs.get("channels", ["DNA", "AGP", "ER", "Mito", "RNA"])
         self.col_fstring = kwargs.get("col_fstring", "FileName_Orig{channel}")
         self.id_cols = kwargs.get("id_cols", ["Metadata_Source", "Metadata_Batch", "Metadata_Plate", "Metadata_Well"])
