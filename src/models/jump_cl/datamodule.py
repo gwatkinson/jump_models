@@ -260,20 +260,20 @@ class BasicJUMPDataModule(LightningDataModule):
         py_logger.info("Setting up datasets and metadata")
 
         if self.load_df is None:
-            py_logger.debug(f"Loading image metadata df from {self.hparams.image_metadata_path}")
+            py_logger.info(f"Loading image metadata df from {self.hparams.image_metadata_path}")
             self.load_df = load_load_df_from_parquet(self.hparams.image_metadata_path)
             self.image_list = self.load_df.index.tolist()
             self.n_images = len(self.image_list)
 
         if self.compound_dict is None:
-            py_logger.debug(f"Loading compound dictionary from {self.hparams.compound_metadata_path}")
+            py_logger.info(f"Loading compound dictionary from {self.hparams.compound_metadata_path}")
             with open(self.hparams.compound_metadata_path) as handle:
                 self.compound_dict = json.load(handle)
             self.compound_list = list(self.compound_dict.keys())
             self.n_compounds = len(self.compound_list)
 
         if self.train_cpds is None or self.val_cpds is None or self.test_cpds is None:
-            py_logger.debug(f"Loading train ids from {self.train_ids_path}")
+            py_logger.info(f"Loading train ids from {self.train_ids_path}")
             self.train_cpds = pd.read_csv(self.train_ids_path).iloc[:, 0].tolist()
             self.val_cpds = pd.read_csv(self.val_ids_path).iloc[:, 0].tolist()
             self.test_cpds = pd.read_csv(self.test_ids_path).iloc[:, 0].tolist()
@@ -282,7 +282,7 @@ class BasicJUMPDataModule(LightningDataModule):
             )
 
         if self.data_train is None:
-            py_logger.debug("Preparing train dataset")
+            py_logger.info("Preparing train dataset")
             train_load_df = self.load_df[self.load_df[self.compound_col].isin(self.train_cpds)]
             train_compound_dict = {k: v for k, v in self.compound_dict.items() if k in self.train_cpds}
             self.data_train = self.dataset_cls(
@@ -296,7 +296,7 @@ class BasicJUMPDataModule(LightningDataModule):
             )
 
         if self.data_val is None:
-            py_logger.debug("Preparing validation dataset")
+            py_logger.info("Preparing validation dataset")
             val_load_df = self.load_df[self.load_df[self.compound_col].isin(self.val_cpds)]
             val_compound_dict = {k: v for k, v in self.compound_dict.items() if k in self.val_cpds}
             self.data_val = self.dataset_cls(
@@ -310,7 +310,7 @@ class BasicJUMPDataModule(LightningDataModule):
             )
 
         if self.data_test is None:
-            py_logger.debug("Preparing test dataset")
+            py_logger.info("Preparing test dataset")
             test_load_df = self.load_df[self.load_df[self.compound_col].isin(self.test_cpds)]
             test_compound_dict = {k: v for k, v in self.compound_dict.items() if k in self.test_cpds}
             self.data_test = self.dataset_cls(
@@ -347,11 +347,11 @@ class BasicJUMPDataModule(LightningDataModule):
             **test_kwargs,
         )
 
-    def transfer_batch_to_device(self, batch: Any, device, dataloader_idx: int) -> Any:
-        py_logger.debug("Transfer batch to device")
-        new_batch = {k: v.to(device) for k, v in batch.items()}
+    # def transfer_batch_to_device(self, batch: Any, device, dataloader_idx: int) -> Any:
+    #     py_logger.debug("Transfer batch to device")
+    #     new_batch = {k: v.to(device) for k, v in batch.items()}
 
-        return new_batch
+    #     return new_batch
 
     def teardown(self, stage: Optional[str] = None):
         """Clean up after fit or test."""

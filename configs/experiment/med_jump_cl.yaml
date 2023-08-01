@@ -40,9 +40,8 @@ trainer:
 
 
 data:
-  batch_size: 128
-  num_workers: 24
-  pin_memory: False
+  batch_size: 512
+  num_workers: 32
   prefetch_factor: 3
 
   transform:
@@ -57,7 +56,7 @@ data:
 
 
 model:
-  embedding_dim: 256
+  embedding_dim: 384
   lr: 5e-3
 
   scheduler:
