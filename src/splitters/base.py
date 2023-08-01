@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 py_logger = logging.getLogger(__name__)
 
@@ -75,11 +75,15 @@ class BaseSplitter(ABC):
         train: Union[float, int],
         val: Union[float, int],
         test: Union[float, int],
+        retrieval: Union[float, int] = 0,
         compound_list: Optional[List[str]] = None,
     ):
         self.train = train
         self.val = val
         self.test = test
+        self.retrieval = retrieval or 0
+        self.total = self.train + self.val + self.test + self.retrieval
+
         self.compound_list = compound_list
         self.normalized = False
 
@@ -110,36 +114,39 @@ class BaseSplitter(ABC):
 
     def normalize_train_val_test(self):
         """Normalize the train, val and test values."""
-        total = self.train + self.val + self.test
         if self.input_type == "int":
             py_logger.debug("Train, val and test are integers.")
-            if self.compound_list is not None and total > len(self.compound_list):
+            if self.total > self.n_compounds:
                 py_logger.warning(
-                    f"Total split size ({total}) is larger than the dataset size ({len(self.compound_list)})."
+                    f"Total split size ({self.total}) is larger than the dataset size ({self.n_compounds})."
                 )
                 py_logger.warning("Normalizing train, val and test to 1.")
-                self.train = self.train / total
-                self.val = self.val / total
-                self.test = self.test / total
+                self.train = self.train / self.total
+                self.val = self.val / self.total
+                self.test = self.test / self.total
+                self.retrieval = self.retrieval / self.total
                 self.normalized = True
         elif self.input_type == "float":
             py_logger.debug("Train, val and test are floats. Normalizing to 1.")
-            self.train = self.train / total
-            self.val = self.val / total
-            self.test = self.test / total
+            self.train = self.train / self.total
+            self.val = self.val / self.total
+            self.test = self.test / self.total
+            self.retrieval = self.retrieval / self.total
             self.normalized = True
         else:
             raise ValueError("Train, val and test must be either integers or floats.")
 
-        py_logger.debug(f"Train: {self.train}, val: {self.val}, test: {self.test}")
+        py_logger.debug(f"Train: {self.train}, val: {self.val}, test: {self.test}, retrieval: {self.retrieval}")
 
     @abstractmethod
-    def split(self) -> Tuple[List[str], List[str], List[str]]:
+    def split(self) -> Dict[str, List[str]]:
         """Split the data into train, val and test sets."""
         raise NotImplementedError
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(train={self.train}, val={self.val}, test={self.test}, len_compound_list={len(self.compound_list)})"
+        return f"{self.__class__.__name__}(train={self.train}, val={self.val}, test={self.test}, total={self.total}, len_compound_list={self.n_compounds})"
 
-    def __call__(self) -> Tuple[List[str], List[str], List[str]]:
+    def __call__(
+        self,
+    ) -> Union[Tuple[List[str], List[str], List[str]], Tuple[List[str], List[str], List[str], List[str]]]:
         return self.split()

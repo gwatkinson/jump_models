@@ -115,12 +115,19 @@ class BasicJUMPDataModule(LightningDataModule):
 
         # data loaders
         self.dataloader_config = dataloader_config
+        self.image_sampler = image_sampler
 
         # other
         self.compound_col = compound_col
-        self.train_ids_path = osp.join(self.hparams.split_path, "train_ids.csv")
-        self.val_ids_path = osp.join(self.hparams.split_path, "val_ids.csv")
-        self.test_ids_path = osp.join(self.hparams.split_path, "test_ids.csv")
+        self.split_path = split_path
+        self.image_metadata_path = image_metadata_path
+        self.compound_metadata_path = compound_metadata_path
+
+        # split paths
+        self.train_ids_path = osp.join(split_path, "train_ids.csv")
+        self.val_ids_path = osp.join(split_path, "val_ids.csv")
+        self.test_ids_path = osp.join(split_path, "test_ids.csv")
+        self.retrieval_ids_path = osp.join(split_path, "retrieval_ids.csv")
 
         # kwargs
         self.index_str = kwargs.get(
@@ -128,7 +135,7 @@ class BasicJUMPDataModule(LightningDataModule):
         )
         self.metadata_dir = kwargs.get("metadata_dir", "../cpjump1/jump/metadata/complete_metadata.csv")
         self.local_load_data_dir = kwargs.get("local_load_data_dir", "../cpjump1/jump/load_data/final/")
-        self.splitter = kwargs.get("splitter", RandomSplitter)
+        self.splitter = kwargs.get("splitter", RandomSplitter())
         self.channels = kwargs.get("channels", ["DNA", "AGP", "ER", "Mito", "RNA"])
         self.col_fstring = kwargs.get("col_fstring", "FileName_Orig{channel}")
         self.id_cols = kwargs.get("id_cols", ["Metadata_Source", "Metadata_Batch", "Metadata_Plate", "Metadata_Well"])
@@ -139,11 +146,12 @@ class BasicJUMPDataModule(LightningDataModule):
 
         Do not use it to assign state (self.x = y).
         """
-        img_path = Path(self.hparams.image_metadata_path)
-        comp_path = Path(self.hparams.compound_metadata_path)
+        img_path = Path(self.image_metadata_path)
+        comp_path = Path(self.compound_metadata_path)
         train_ids_path = Path(self.train_ids_path)
         test_ids_path = Path(self.test_ids_path)
         val_ids_path = Path(self.val_ids_path)
+        retrieval_ids_path = Path(self.retrieval_ids_path)
         load_dir = Path(self.local_load_data_dir)
         meta_dir = Path(self.metadata_dir)
         f_string = self.index_str
@@ -212,7 +220,7 @@ class BasicJUMPDataModule(LightningDataModule):
             or len(pd.read_csv(val_ids_path)) == 0
         )
         if split_not_exists or split_empty:
-            py_logger.info(f"Missing train, test or val ids from {self.hparams.split_path}")
+            py_logger.info(f"Missing train, test or val ids from {self.split_path}")
 
             if "compound_dict" not in locals():
                 py_logger.debug(f"Loading compound dictionary from {comp_path} ...")
@@ -228,7 +236,11 @@ class BasicJUMPDataModule(LightningDataModule):
             self.splitter.set_compound_list(compound_list)
 
             py_logger.info(f"Creating the splits from {self.splitter}")
-            train_ids, test_ids, val_ids = self.splitter.split()
+            split_ids = self.splitter.split()
+
+            train_ids = split_ids["train"]
+            test_ids = split_ids["test"]
+            val_ids = split_ids["val"]
 
             py_logger.debug(f"len(train_ids): {len(train_ids)}")
             py_logger.debug(f"len(test_ids): {len(test_ids)}")
@@ -249,6 +261,15 @@ class BasicJUMPDataModule(LightningDataModule):
             pd.Series(test_ids).to_csv(test_ids_path, index=False)
             pd.Series(val_ids).to_csv(val_ids_path, index=False)
 
+            if "retrieval" in split_ids:
+                retrieval_ids = split_ids["retrieval"]
+                py_logger.debug(f"len(retrieval_ids): {len(retrieval_ids)}")
+
+                if len(retrieval_ids) > 0:
+                    py_logger.debug(f"Saving retrieval ids to {retrieval_ids}")
+                    retrieval_ids_path.parent.mkdir(exist_ok=True)
+                    pd.Series(retrieval_ids).to_csv(retrieval_ids_path, index=False)
+
     def setup(self, stage: Optional[str] = None) -> None:
         """Load data. Set variables: `self.data_train`, `self.data_val`,
         `self.data_test`.
@@ -260,14 +281,14 @@ class BasicJUMPDataModule(LightningDataModule):
         py_logger.info("Setting up datasets and metadata")
 
         if self.load_df is None:
-            py_logger.info(f"Loading image metadata df from {self.hparams.image_metadata_path}")
-            self.load_df = load_load_df_from_parquet(self.hparams.image_metadata_path)
+            py_logger.info(f"Loading image metadata df from {self.image_metadata_path}")
+            self.load_df = load_load_df_from_parquet(self.image_metadata_path)
             self.image_list = self.load_df.index.tolist()
             self.n_images = len(self.image_list)
 
         if self.compound_dict is None:
-            py_logger.info(f"Loading compound dictionary from {self.hparams.compound_metadata_path}")
-            with open(self.hparams.compound_metadata_path) as handle:
+            py_logger.info(f"Loading compound dictionary from {self.compound_metadata_path}")
+            with open(self.compound_metadata_path) as handle:
                 self.compound_dict = json.load(handle)
             self.compound_list = list(self.compound_dict.keys())
             self.n_compounds = len(self.compound_list)
@@ -277,6 +298,7 @@ class BasicJUMPDataModule(LightningDataModule):
             self.train_cpds = pd.read_csv(self.train_ids_path).iloc[:, 0].tolist()
             self.val_cpds = pd.read_csv(self.val_ids_path).iloc[:, 0].tolist()
             self.test_cpds = pd.read_csv(self.test_ids_path).iloc[:, 0].tolist()
+
             py_logger.info(
                 f"Train, test, val lengths: {len(self.train_cpds)}, {len(self.test_cpds)}, {len(self.val_cpds)}"
             )
@@ -290,7 +312,7 @@ class BasicJUMPDataModule(LightningDataModule):
                 compound_dict=train_compound_dict,
                 transform=self.transform,
                 compound_transform=self.compound_transform,
-                sampler=self.hparams.image_sampler,
+                sampler=self.image_sampler,
                 channels=self.channels,
                 col_fstring=self.col_fstring,
             )
@@ -304,12 +326,12 @@ class BasicJUMPDataModule(LightningDataModule):
                 compound_dict=val_compound_dict,
                 transform=self.transform,
                 compound_transform=self.compound_transform,
-                sampler=self.hparams.image_sampler,
+                sampler=self.image_sampler,
                 channels=self.channels,
                 col_fstring=self.col_fstring,
             )
 
-        if self.data_test is None:
+        if stage == "test" and self.data_test is None:
             py_logger.info("Preparing test dataset")
             test_load_df = self.load_df[self.load_df[self.compound_col].isin(self.test_cpds)]
             test_compound_dict = {k: v for k, v in self.compound_dict.items() if k in self.test_cpds}
@@ -318,7 +340,7 @@ class BasicJUMPDataModule(LightningDataModule):
                 compound_dict=test_compound_dict,
                 transform=self.transform,
                 compound_transform=self.compound_transform,
-                sampler=self.hparams.image_sampler,
+                sampler=self.image_sampler,
                 channels=self.channels,
                 col_fstring=self.col_fstring,
             )

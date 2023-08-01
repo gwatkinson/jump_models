@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Dict, List
 
 from sklearn.model_selection import train_test_split
 
@@ -8,7 +8,7 @@ from src.splitters import BaseSplitter
 class RandomSplitter(BaseSplitter):
     """Split data randomly into train, val and test sets."""
 
-    def split(self) -> Tuple[List[str], List[str], List[str]]:
+    def split(self) -> Dict[str, List[str]]:
         """Split the data into train, val and test sets."""
         if self.compound_list is None:
             raise ValueError("Compound list is None.")
@@ -24,4 +24,4 @@ class RandomSplitter(BaseSplitter):
         else:
             raise ValueError("Error in the code.")
 
-        return train, val, test
+        return {"train": train, "val": val, "test": test}

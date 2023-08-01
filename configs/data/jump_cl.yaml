@@ -26,6 +26,7 @@ splitter:
   train: ???
   test: ???
   val: ???
+  retrieval: 0
 
 # example: ${paths.split_path}/small_test/
 split_path: ???

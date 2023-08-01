@@ -1,0 +1,26 @@
+defaults:
+  - lightning/model_checkpoint
+  - lightning/early_stopping
+  - lightning/model_summary
+  - lightning/rich_progress_bar
+  - lightning/lr_monitor
+  - lightning/lr_finder
+  - lightning/batch_size_finder
+  - custom/jump_cl_freezer
+  - custom/wandb_watcher
+
+model_checkpoint:
+  dirpath: ${paths.output_dir}/checkpoints
+  filename: "epoch_{epoch:03d}"
+  monitor: "val/loss"
+  mode: "min"
+  save_last: True
+  auto_insert_metric_name: False
+
+early_stopping:
+  monitor: "val/loss"
+  patience: 10
+  mode: "min"
+
+model_summary:
+  max_depth: 2

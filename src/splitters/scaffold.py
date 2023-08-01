@@ -7,7 +7,7 @@
 import logging
 import random
 from collections import defaultdict
-from typing import List, Tuple
+from typing import Dict, List
 
 import datamol as dm
 from rdkit.Chem.Scaffolds.MurckoScaffold import MurckoScaffoldSmiles
@@ -20,6 +20,52 @@ py_logger = logging.getLogger(__name__)
 class ScaffoldSplitter(BaseSplitter):
     """Split the data into train, val and test sets using the scaffold
     splitting method."""
+
+    def split(self) -> Dict[str, List[str]]:
+        """Split the data into train, val and test sets."""
+        if self.compound_list is None:
+            raise ValueError("Compound list is None.")
+
+        scaffold_sets = self.generate_scaffolds()
+        random.shuffle(scaffold_sets)
+
+        py_logger.info("Generating sets ...")
+        if self.input_type == "float":
+            train_cutoff = int(self.train * self.n_compounds)
+            val_cutoff = int(self.val * self.n_compounds)
+            test_cutoff = int(self.test * self.n_compounds)
+            retrieval_cutoff = int(self.retrieval * self.n_compounds)
+        elif self.input_type == "int":
+            train_cutoff = self.train
+            val_cutoff = self.val
+            test_cutoff = self.test
+            retrieval_cutoff = self.retrieval
+
+        train_cpds: List[str] = []
+        val_cpds: List[str] = []
+        test_cpds: List[str] = []
+        retrieval_cpds: List[str] = []
+
+        for scaffold_set in scaffold_sets:
+            if len(train_cpds) + len(scaffold_set) <= train_cutoff:
+                train_cpds += scaffold_set
+            elif len(val_cpds) + len(scaffold_set) <= val_cutoff:
+                val_cpds += scaffold_set
+            elif len(test_cpds) + len(scaffold_set) <= test_cutoff:
+                test_cpds += scaffold_set
+            elif len(retrieval_cpds) + len(scaffold_set) <= retrieval_cutoff:
+                retrieval_cpds += scaffold_set
+
+        output = {
+            "train": train_cpds,
+            "val": val_cpds,
+            "test": test_cpds,
+        }
+
+        if retrieval_cutoff > 0:
+            output["retrieval"] = retrieval_cpds
+
+        return output
 
     def generate_scaffolds(self) -> List[List[int]]:
         """Generate the scaffolds.
@@ -45,38 +91,6 @@ class ScaffoldSplitter(BaseSplitter):
             for (_, scaffold_set) in sorted(scaffolds.items(), key=lambda x: (len(x[1]), x[1][0]), reverse=True)
         ]
         return scaffold_sets
-
-    def split(self) -> Tuple[List[str], List[str], List[str]]:
-        """Split the data into train, val and test sets."""
-        if self.compound_list is None:
-            raise ValueError("Compound list is None.")
-
-        scaffold_sets = self.generate_scaffolds()
-        random.shuffle(scaffold_sets)
-
-        py_logger.info("Generating sets ...")
-        if self.input_type == "float":
-            train_cutoff = int(self.train * self.n_compounds)
-            val_cutoff = int(self.val * self.n_compounds)
-            test_cutoff = int(self.test * self.n_compounds)
-        elif self.input_type == "int":
-            train_cutoff = self.train
-            val_cutoff = self.val
-            test_cutoff = self.test
-
-        train_cpds: List[str] = []
-        val_cpds: List[str] = []
-        test_cpds: List[str] = []
-
-        for scaffold_set in scaffold_sets:
-            if len(train_cpds) + len(scaffold_set) <= train_cutoff:
-                train_cpds += scaffold_set
-            elif len(val_cpds) + len(scaffold_set) <= val_cutoff:
-                val_cpds += scaffold_set
-            elif len(test_cpds) + len(scaffold_set) <= test_cutoff:
-                test_cpds += scaffold_set
-
-        return train_cpds, val_cpds, test_cpds
 
     @staticmethod
     def _generate_scaffold(inchi: str, include_chirality: bool = False) -> str:

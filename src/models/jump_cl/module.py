@@ -139,15 +139,19 @@ class BasicJUMPModule(LightningModule):
         Examples:
             https://lightning.ai/docs/pytorch/latest/common/lightning_module.html#configure-optimizers
         """
-        params = filter(lambda p: p.requires_grad, self.parameters())
+        test_params = self.molecule_encoder.base_model.parameters()
+        require_grad = [p.requires_grad for p in test_params]
+        logger.info(f"Number of require grad parameters in image base model: {sum(require_grad)}/{len(require_grad)}")
+
         optimizer = self.optimizer(
             [
                 {
-                    "params": params,
+                    "params": filter(lambda p: p.requires_grad, self.parameters()),
                     "lr": self.lr,
                     "name": "projection_head",
                 }
-            ]
+            ],
+            lr=self.lr,
         )
         if self.scheduler is not None:
             scheduler = self.scheduler(optimizer=optimizer)

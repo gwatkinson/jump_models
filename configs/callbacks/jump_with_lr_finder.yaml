@@ -1,14 +1,12 @@
 defaults:
-  - model_checkpoint.yaml
-  - early_stopping.yaml
-  - model_summary.yaml
-  - rich_progress_bar.yaml
-  - lr_monitor.yaml
-  # - lr_finder.yaml
-  - jump_cl_freezer.yaml
-  - wandb_watcher.yaml
-  - swa.yaml
-  - _self_
+  - lightning/model_checkpoint
+  - lightning/early_stopping
+  - lightning/model_summary
+  - lightning/rich_progress_bar
+  - lightning/lr_monitor
+  - lightning/lr_finder
+  - custom/jump_cl_freezer
+  - custom/wandb_watcher
 
 model_checkpoint:
   dirpath: ${paths.output_dir}/checkpoints
