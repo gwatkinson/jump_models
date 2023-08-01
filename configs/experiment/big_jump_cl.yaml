@@ -39,13 +39,13 @@ trainer:
 
 
 data:
-  batch_size: 512
+  batch_size: 768
   num_workers: 32
   pin_memory: False
-  prefetch_factor: 3
+  prefetch_factor: 2
 
   transform:
-    size: 256
+    size: 128
 
   splitter:
     train: 90_000
@@ -59,6 +59,9 @@ data:
 model:
   embedding_dim: 512
   lr: 1e-2
+
+  optimizer:
+    weight_decay: 1e-3
 
   scheduler:
     T_0: 4

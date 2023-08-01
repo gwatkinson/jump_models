@@ -1,6 +1,5 @@
 _target_: torch.optim.Adagrad
 _partial_: true
-lr: ???
 lr_decay: 0
 weight_decay: 0
 initial_accumulator_value: 0

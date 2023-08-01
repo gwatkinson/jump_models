@@ -1,12 +1,13 @@
 """Callbacks for freezing and unfreezing layers in a model."""
 
 import logging
-from typing import List, Optional, Union
+from typing import Iterable, List, Optional, Union
 
 import lightning.pytorch as pl
 from lightning.pytorch.callbacks import BaseFinetuning
 from lightning.pytorch.utilities.exceptions import MisconfigurationException
 from torch.nn import Module
+from torch.optim.optimizer import Optimizer
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +130,7 @@ class JUMPCLFreezer(BaseFinetuning):
         # named_parameters = dict(pl_module.named_parameters())
         # logger.debug(f"Named parameters: {named_parameters.keys()}")
 
-        return super().on_fit_start(trainer, pl_module)  # TODO: check if this is needed and debug
+        return super().on_fit_start(trainer, pl_module)  # TODO: check if this is needed and debug for lr finder
 
     def freeze_before_training(self, pl_module):
         """Freeze layers before training."""
@@ -153,6 +154,7 @@ class JUMPCLFreezer(BaseFinetuning):
                 train_bn=True,
                 lr=self.image_encoder_lr,
                 initial_denom_lr=self.image_initial_denom_lr,
+                name="image_encoder",
             )
 
         if current_epoch == self.unfreeze_molecule_encoder_at_epoch:
@@ -164,4 +166,39 @@ class JUMPCLFreezer(BaseFinetuning):
                 train_bn=True,
                 lr=self.molecule_encoder_lr,
                 initial_denom_lr=self.molecule_initial_denom_lr,
+                name="molecule_encoder",
             )
+
+    @staticmethod
+    def unfreeze_and_add_param_group(
+        modules: Union[Module, Iterable[Union[Module, Iterable]]],
+        optimizer: Optimizer,
+        lr: Optional[float] = None,
+        initial_denom_lr: float = 10.0,
+        train_bn: bool = True,
+        name: Optional[str] = None,
+    ) -> None:
+        """Unfreezes a module and adds its parameters to an optimizer.
+
+        Args:
+            modules: A module or iterable of modules to unfreeze.
+                Their parameters will be added to an optimizer as a new param group.
+            optimizer: The provided optimizer will receive new parameters and will add them to
+                `add_param_group`
+            lr: Learning rate for the new param group.
+            initial_denom_lr: If no lr is provided, the learning from the first param group will be used
+                and divided by `initial_denom_lr`.
+            train_bn: Whether to train the BatchNormalization layers.
+            name: Name of the param group.If None, the name will not be added to the param group.
+        """
+        BaseFinetuning.make_trainable(modules)
+        params_lr = optimizer.param_groups[0]["lr"] if lr is None else float(lr)
+        denom_lr = initial_denom_lr if lr is None else 1.0
+        params = BaseFinetuning.filter_params(modules, train_bn=train_bn, requires_grad=True)
+        params = BaseFinetuning.filter_on_optimizer(optimizer, params)
+        if params:
+            updated_params = {"params": params, "lr": params_lr / denom_lr}
+            if name is not None:
+                updated_params["name"] = name
+
+            optimizer.add_param_group(updated_params)

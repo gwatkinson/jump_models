@@ -94,7 +94,7 @@ class BasicJUMPModule(LightningModule):
 
         # update and log metrics
         logger.debug("Log training loss")
-        self.train_loss(loss)
+        self.train_loss.update(loss)
         self.log("train/loss", self.train_loss, on_step=True, on_epoch=True, prog_bar=True)
 
         return loss
@@ -108,12 +108,12 @@ class BasicJUMPModule(LightningModule):
 
         # update and log metrics
         logger.debug("Log validation loss")
-        self.val_loss(loss)
+        self.val_loss.update(loss)
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_validation_epoch_end(self):
         loss = self.val_loss.compute()  # get current val loss
-        self.val_loss_min(loss)  # update min so far val loss
+        self.val_loss_min.update(loss)  # update min so far val loss
         self.log("val/loss_min", self.val_loss_min.compute(), sync_dist=True, prog_bar=True)
         # acc = self.val_acc.compute()  # get current val acc
         # self.val_acc_best(acc)  # update best so far val acc
@@ -125,7 +125,7 @@ class BasicJUMPModule(LightningModule):
         loss = self.model_step(batch)
 
         # update and log metrics
-        self.test_loss(loss)
+        self.test_loss.update(loss)
         self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_test_epoch_end(self):
@@ -139,7 +139,16 @@ class BasicJUMPModule(LightningModule):
         Examples:
             https://lightning.ai/docs/pytorch/latest/common/lightning_module.html#configure-optimizers
         """
-        optimizer = self.optimizer(filter(lambda p: p.requires_grad, self.parameters()))
+        params = filter(lambda p: p.requires_grad, self.parameters())
+        optimizer = self.optimizer(
+            [
+                {
+                    "params": params,
+                    "lr": self.lr,
+                    "name": "projection_head",
+                }
+            ]
+        )
         if self.scheduler is not None:
             scheduler = self.scheduler(optimizer=optimizer)
             return {

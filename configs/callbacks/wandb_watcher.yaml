@@ -3,4 +3,4 @@ wandb_watcher:
   watch: True
   watch_log: all # or "gradients", "parameters", "all"
   log_freq: ???
-  log_graph: True
+  log_graph: False
