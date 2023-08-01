@@ -17,83 +17,89 @@ class CNNEncoder(nn.Module):
         self.model_name = model_name = instance_model_name
         self.out_dim = out_dim = target_num
 
-        self.model = timm.create_model(model_name, pretrained=self.pretrained)
+        self.backbone = timm.create_model(model_name, pretrained=self.pretrained)
 
         if ("efficientnet" in model_name) or ("mixnet" in model_name):
-            self.model.conv_stem.weight = nn.Parameter(
-                self.model.conv_stem.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
+            self.backbone.conv_stem.weight = nn.Parameter(
+                self.backbone.conv_stem.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
-            self.myfc = nn.Linear(self.model.classifier.in_features, out_dim)
-            self.model.classifier = nn.Identity()
+            self.projection_head = nn.Linear(self.backbone.classifier.in_features, out_dim)
+            self.backbone.classifier = nn.Identity()
         elif model_name in ["resnet34d"]:
-            self.model.conv1[0].weight = nn.Parameter(
-                self.model.conv1[0].weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
+            self.backbone.conv1[0].weight = nn.Parameter(
+                self.backbone.conv1[0].weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
-            self.myfc = nn.Linear(self.model.fc.in_features, out_dim)
-            self.model.fc = nn.Identity()
+            self.projection_head = nn.Linear(self.backbone.fc.in_features, out_dim)
+            self.backbone.fc = nn.Identity()
         elif ("resnet" in model_name or "resnest" in model_name) and "vit" not in model_name:
-            self.model.conv1.weight = nn.Parameter(self.model.conv1.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch])
-            self.myfc = nn.Linear(self.model.fc.in_features, out_dim)
-            self.model.fc = nn.Identity()
+            self.backbone.conv1.weight = nn.Parameter(
+                self.backbone.conv1.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
+            )
+            self.projection_head = nn.Linear(self.backbone.fc.in_features, out_dim)
+            self.backbone.fc = nn.Identity()
         elif "rexnet" in model_name or "regnety" in model_name or "nf_regnet" in model_name:
-            self.model.stem.conv.weight = nn.Parameter(
-                self.model.stem.conv.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
+            self.backbone.stem.conv.weight = nn.Parameter(
+                self.backbone.stem.conv.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
-            self.myfc = nn.Linear(self.model.head.fc.in_features, out_dim)
-            self.model.head.fc = nn.Identity()
+            self.projection_head = nn.Linear(self.backbone.head.fc.in_features, out_dim)
+            self.backbone.head.fc = nn.Identity()
         elif "resnext" in model_name:
-            self.model.conv1.weight = nn.Parameter(self.model.conv1.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch])
-            self.myfc = nn.Linear(self.model.fc.in_features, out_dim)
-            self.model.fc = nn.Identity()
+            self.backbone.conv1.weight = nn.Parameter(
+                self.backbone.conv1.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
+            )
+            self.projection_head = nn.Linear(self.backbone.fc.in_features, out_dim)
+            self.backbone.fc = nn.Identity()
         elif "hrnet_w32" in model_name:
-            self.model.conv1.weight = nn.Parameter(self.model.conv1.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch])
-            self.myfc = nn.Linear(self.model.classifier.in_features, out_dim)
-            self.model.classifier = nn.Identity()
+            self.backbone.conv1.weight = nn.Parameter(
+                self.backbone.conv1.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
+            )
+            self.projection_head = nn.Linear(self.backbone.classifier.in_features, out_dim)
+            self.backbone.classifier = nn.Identity()
         elif "densenet" in model_name:
-            self.model.features.conv0.weight = nn.Parameter(
-                self.model.features.conv0.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
+            self.backbone.features.conv0.weight = nn.Parameter(
+                self.backbone.features.conv0.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
-            self.myfc = nn.Linear(self.model.classifier.in_features, out_dim)
-            self.model.classifier = nn.Identity()
+            self.projection_head = nn.Linear(self.backbone.classifier.in_features, out_dim)
+            self.backbone.classifier = nn.Identity()
         elif "ese_vovnet39b" in model_name or "xception41" in model_name:
-            self.model.stem[0].conv.weight = nn.Parameter(
-                self.model.stem[0].conv.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
+            self.backbone.stem[0].conv.weight = nn.Parameter(
+                self.backbone.stem[0].conv.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
-            self.myfc = nn.Linear(self.model.head.fc.in_features, out_dim)
-            self.model.head.fc = nn.Identity()
+            self.projection_head = nn.Linear(self.backbone.head.fc.in_features, out_dim)
+            self.backbone.head.fc = nn.Identity()
         elif "dpn" in model_name:
-            self.model.features.conv1_1.conv.weight = nn.Parameter(
-                self.model.features.conv1_1.conv.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
+            self.backbone.features.conv1_1.conv.weight = nn.Parameter(
+                self.backbone.features.conv1_1.conv.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
-            self.myfc = nn.Linear(self.model.classifier.in_channels, out_dim)
-            self.model.classifier = nn.Identity()
+            self.projection_head = nn.Linear(self.backbone.classifier.in_channels, out_dim)
+            self.backbone.classifier = nn.Identity()
         elif "inception" in model_name:
-            self.model.features[0].conv.weight = nn.Parameter(
-                self.model.features[0].conv.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
+            self.backbone.features[0].conv.weight = nn.Parameter(
+                self.backbone.features[0].conv.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
-            self.myfc = nn.Linear(self.model.last_linear.in_features, out_dim)
-            self.model.last_linear = nn.Identity()
+            self.projection_head = nn.Linear(self.backbone.last_linear.in_features, out_dim)
+            self.backbone.last_linear = nn.Identity()
         elif "vit" in model_name:
-            self.model.patch_embed.proj.weight = nn.Parameter(
-                self.model.patch_embed.proj.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
+            self.backbone.patch_embed.proj.weight = nn.Parameter(
+                self.backbone.patch_embed.proj.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
-            self.myfc = nn.Linear(self.model.head.in_features, out_dim)
-            self.model.head = nn.Identity()
+            self.projection_head = nn.Linear(self.backbone.head.in_features, out_dim)
+            self.backbone.head = nn.Identity()
         elif "vit_base_resnet50" in model_name:
-            self.model.patch_embed.backbone.stem.conv.weight = nn.Parameter(
-                self.model.patch_embed.backbone.stem.conv.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
+            self.backbone.patch_embed.backbone.stem.conv.weight = nn.Parameter(
+                self.backbone.patch_embed.backbone.stem.conv.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
-            self.myfc = nn.Linear(self.model.head.in_features, out_dim)
-            self.model.head = nn.Identity()
+            self.projection_head = nn.Linear(self.backbone.head.in_features, out_dim)
+            self.backbone.head = nn.Identity()
         else:
             raise
 
         self.dropouts = nn.ModuleList([nn.Dropout(0.5) for _ in range(5)])
 
     def extract(self, x):
-        return self.model(x)
+        return self.backbone(x)
 
     def forward(self, x):
-        x = self.extract(x)
-        re = self.myfc(x)
+        x = self.backbone(x)
+        re = self.projection_head(x)
         return re

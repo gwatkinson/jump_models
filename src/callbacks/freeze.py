@@ -41,8 +41,8 @@ class OGBFreezer(BaseFinetuning):
             )
 
 
-default_image_backbone = ["image_encoder", "model"]
-default_molecule_backbone = ["molecule_encoder", "base_model"]
+default_image_backbone = ["image_encoder", "backbone"]
+default_molecule_backbone = ["molecule_encoder", "backbone"]
 
 
 class JUMPCLFreezer(BaseFinetuning):

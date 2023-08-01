@@ -20,6 +20,7 @@ transform:
   size: ???
   dim: [-2, -1]
 
+force_split: False
 
 splitter:
   _target_: src.splitters.ScaffoldSplitter

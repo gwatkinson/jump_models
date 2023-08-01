@@ -4,8 +4,8 @@ defaults:
   - lightning/model_summary@_here_
   - lightning/rich_progress_bar@_here_
   - lightning/lr_monitor@_here_
-  - lightning/lr_finder@_here_
   - lightning/batch_size_finder@_here_
+  - lightning/lr_finder@_here_
   - lightning/swa@_here_
   - custom/jump_cl_freezer@_here_
   - custom/wandb_watcher@_here_

@@ -25,23 +25,23 @@ class GINPretrainedWithLinearHead(nn.Module):
         self.out_dim = out_dim
         self.pooling = pooling
 
-        self.base_model = dgllife.model.load_pretrained(self.pretrained_name)
-        self.pretrained_dim = self.base_model.node_embeddings[0].embedding_dim
+        self.backbone = dgllife.model.load_pretrained(self.pretrained_name)
+        self.pretrained_dim = self.backbone.node_embeddings[0].embedding_dim
         self.pooler = self.get_pooling(pooling)
-        self.head = nn.Linear(self.pretrained_dim, self.out_dim)
+        self.projection_head = nn.Linear(self.pretrained_dim, self.out_dim)
 
         logger.info(f"Using pretrained model: {self.pretrained_name}")
 
     def extract(self, x):
         nfeats, efeats = self.get_nodes_edges_feats(x)
-        node_feats = self.base_model(x, nfeats, efeats)
+        node_feats = self.backbone(x, nfeats, efeats)
         z = self.pooler(x, node_feats)
         return z
 
     def forward(self, x):
         # x is a batch of DGLGraphs created in the custom collate_fn of the dataloader
         z = self.extract(x)
-        z = self.head(z)
+        z = self.projection_head(z)
         return z
 
     @staticmethod

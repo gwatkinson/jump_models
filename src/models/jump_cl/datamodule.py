@@ -49,6 +49,7 @@ class BasicJUMPDataModule(LightningDataModule):
         compound_metadata_path: str,
         split_path: str,
         dataloader_config: DictConfig,
+        force_split: bool = False,
         compound_col: str = "Metadata_InChI",
         transform: Optional[Callable] = None,
         compound_transform: Optional[Callable] = None,
@@ -69,6 +70,8 @@ class BasicJUMPDataModule(LightningDataModule):
             split_path (str): Path to the directory containing the train, test and val split csvs.
             dataloader_config (DictConfig): Config dict for the dataloaders.
                 Should contains the train, test, val keys with subkeys giving the dataloader parameters.
+            force_split (bool): Whether to force the split of the data.
+                If False, will try to load the split csvs from the split_path.
             compound_col (str): Name of the column containing the compound names in the image metadata df.
             transform (Optional[Callable]): Transform to apply to the images.
             compound_transform (Optional[Callable]): Transform to apply to the compounds.
@@ -123,6 +126,7 @@ class BasicJUMPDataModule(LightningDataModule):
         self.compound_metadata_path = compound_metadata_path
 
         # split paths
+        self.force_split = force_split
         self.train_ids_path = osp.join(split_path, "train_ids.csv")
         self.val_ids_path = osp.join(split_path, "val_ids.csv")
         self.test_ids_path = osp.join(split_path, "test_ids.csv")
@@ -213,7 +217,8 @@ class BasicJUMPDataModule(LightningDataModule):
         # Prepare train, test and val ids
         split_not_exists = not train_ids_path.exists() or not test_ids_path.exists() or not val_ids_path.exists()
         split_empty = (
-            split_not_exists
+            self.force_split
+            or split_not_exists
             or len(pd.read_csv(train_ids_path)) == 0
             or len(pd.read_csv(test_ids_path)) == 0
             or len(pd.read_csv(val_ids_path)) == 0
