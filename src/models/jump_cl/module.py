@@ -93,7 +93,7 @@ class BasicJUMPModule(LightningModule):
         self.val_loss.reset()
         super().on_train_start()
 
-    def model_step(self, batch: Any, stage: str, on_step: bool = True, on_epoch: bool = True, prog_bar: bool = True):
+    def model_step(self, batch: Any, stage: str, **kwargs):
         image_emb = self.image_encoder(batch["image"])
         compound_emb = self.molecule_encoder(batch["compound"])
 
@@ -102,9 +102,8 @@ class BasicJUMPModule(LightningModule):
             embeddings_b=compound_emb,
         )
 
-        logger.debug(f"Log {stage} loss")
         self.loss_dict[stage].update(loss)
-        self.log(f"{stage}/loss", self.loss_dict[stage], on_step=on_step, on_epoch=on_epoch, prog_bar=prog_bar)
+        self.log(f"{stage}/loss", self.loss_dict[stage], **kwargs)
 
         return loss
 
