@@ -18,6 +18,7 @@ model_checkpoint:
 early_stopping:
   monitor: "val/loss"
   patience: 10
+  min_delta: 0
   mode: "min"
 
 model_summary:
