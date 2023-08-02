@@ -102,8 +102,9 @@ class BasicJUMPModule(LightningModule):
             embeddings_b=compound_emb,
         )
 
-        self.loss_dict[stage].update(loss)
+        loss_to_log = self.loss_dict[stage](loss)
         self.log(f"{stage}/loss", self.loss_dict[stage], **kwargs)
+        self.log(f"{stage}/loss_to_log", loss_to_log, **kwargs)
 
         return loss
 
