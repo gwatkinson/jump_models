@@ -74,8 +74,13 @@ callbacks:
   jump_cl_freezer:
     unfreeze_image_backbone_at_epoch: 3
     image_initial_denom_lr: 50
+    image_lambda_func:
+      a0: 1.8
     unfreeze_molecule_backbone_at_epoch: 2
     molecule_initial_denom_lr: 50
+    molecule_lambda_func:
+      a0: 1.8
+
 
   wandb_watcher:
     log_freq: 50
