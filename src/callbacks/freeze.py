@@ -272,6 +272,8 @@ class JUMPCLFreezer(BaseFinetuning):
 
         if is_aligned or next_backbone_lr > current_lr:
             local_is_aligned = True
+        else:
+            local_is_aligned = False
 
         next_backbone_lr = current_lr if (should_align and local_is_aligned) else next_backbone_lr
 
