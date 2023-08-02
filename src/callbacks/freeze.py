@@ -131,6 +131,9 @@ class JUMPCLFreezer(BaseFinetuning):
         self.molecule_lambda_func = molecule_lambda_func
         self.molecule_should_align = molecule_should_align
 
+        self.previous_image_backbone_lr = None
+        self.previous_molecule_backbone_lr = None
+
     def state_dict(self) -> Dict[str, Any]:
         return {
             "internal_optimizer_metadata": self._internal_optimizer_metadata,
