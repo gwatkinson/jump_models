@@ -203,7 +203,7 @@ class JUMPCLFreezer(BaseFinetuning):
         elif current_epoch > self.unfreeze_image_backbone_at_epoch:
             next_image_backbone_lr = self.update_lr(
                 optimizer=optimizer,
-                epoch=current_epoch - self.unfreeze_image_backbone_at_epoch,
+                diff_epoch=current_epoch - self.unfreeze_image_backbone_at_epoch,
                 previous_backbone_lr=self.previous_image_backbone_lr,
                 lambda_func=self.image_lambda_func,
                 should_align=self.image_should_align,
@@ -228,7 +228,7 @@ class JUMPCLFreezer(BaseFinetuning):
         elif current_epoch > self.unfreeze_molecule_backbone_at_epoch:
             next_molecule_backbone_lr = self.update_lr(
                 optimizer=optimizer,
-                epoch=current_epoch - self.unfreeze_molecule_backbone_at_epoch,
+                diff_epoch=current_epoch - self.unfreeze_molecule_backbone_at_epoch,
                 previous_backbone_lr=self.previous_molecule_backbone_lr,
                 lambda_func=self.molecule_lambda_func,
                 should_align=self.molecule_should_align,
