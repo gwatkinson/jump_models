@@ -1,7 +1,6 @@
 defaults:
   - lightning/rich_progress_bar@_here_
   - lightning/model_summary@_here_
-  - lightning/device_monitor@_here_
   - lightning/model_checkpoint@_here_
   - lightning/early_stopping@_here_
   - lightning/lr_monitor@_here_

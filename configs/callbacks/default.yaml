@@ -4,7 +4,6 @@ defaults:
   - lightning/model_summary@_here_
   - lightning/rich_progress_bar@_here_
   - lightning/lr_monitor@_here_
-  - lightning/device_monitor@_here_
 
 model_checkpoint:
   dirpath: ${paths.output_dir}/checkpoints

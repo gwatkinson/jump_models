@@ -6,9 +6,17 @@ jump_cl_freezer:
   unfreeze_image_encoder_at_epoch: ???
   image_backbone: [image_encoder, backbone]
   image_encoder_lr: null  # if null, uses the same as the first param group
-  image_initial_denom_lr: null  # if image_encoder_lr is null, divides the first param group's lr by this
+  image_initial_denom_lr: 50  # if image_encoder_lr is null, divides the first param group's lr by this
+  image_lambda_func:
+    _target_: src.callbacks.freeze.multiplicative_func
+    a0: 1.5
+  image_should_align: True
 
   unfreeze_molecule_encoder_at_epoch: ???
   molecule_backbone: [molecule_encoder, backbone]
   molecule_encoder_lr: null
-  molecule_initial_denom_lr: null
+  molecule_initial_denom_lr: 50
+  molecule_lambda_func:
+    _target_: src.callbacks.freeze.multiplicative_func
+    a0: 1.5
+  molecule_should_align: True

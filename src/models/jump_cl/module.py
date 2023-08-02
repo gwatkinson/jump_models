@@ -33,6 +33,9 @@ class BasicJUMPModule(LightningModule):
         embedding_dim: int,
         example_input: Optional[torch.Tensor] = None,
         example_input_path: Optional[str] = None,
+        monitor: str = "val/loss",
+        interval: str = "epoch",
+        frequency: int = 1,
         lr: Optional[float] = None,
         batch_size: Optional[int] = None,
         **kwargs,
@@ -56,6 +59,9 @@ class BasicJUMPModule(LightningModule):
         # training
         self.optimizer = optimizer
         self.scheduler = scheduler
+        self.monitor = monitor
+        self.interval = interval
+        self.frequency = frequency
 
         # for averaging loss across batches
         self.train_loss = MeanMetric()
@@ -149,9 +155,9 @@ class BasicJUMPModule(LightningModule):
                 "optimizer": optimizer,
                 "lr_scheduler": {
                     "scheduler": scheduler,
-                    "monitor": "val/loss",
-                    "interval": "epoch",
-                    "frequency": 1,
+                    "monitor": self.monitor,
+                    "interval": self.interval,
+                    "frequency": self.frequency,
                 },
             }
         return {"optimizer": optimizer}

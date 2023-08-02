@@ -40,9 +40,9 @@ trainer:
 
 
 data:
-  batch_size: 512
-  num_workers: 32
-  prefetch_factor: 3
+  batch_size: 1024
+  num_workers: 24
+  prefetch_factor: 2
 
   transform:
     size: 128
@@ -57,7 +57,7 @@ data:
 
 model:
   embedding_dim: 384
-  lr: 5e-3
+  lr: 1e-2
 
   scheduler:
     T_0: 10

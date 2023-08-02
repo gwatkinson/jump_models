@@ -79,6 +79,6 @@ logger:
   wandb:
     tags: ${tags}
     project: "jump_models"
-    group: "med_jump_cl"
+    group: "small_jump_cl"
     job_type: ""
     log_model: True
