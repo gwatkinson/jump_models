@@ -8,6 +8,7 @@ from typing import Callable, Dict, List, Optional
 
 import pandas as pd
 import torch
+from PIL import UnidentifiedImageError
 from torch.utils.data import Dataset
 
 from src.utils.io import load_image_paths_to_array
@@ -30,6 +31,8 @@ class MoleculeImageDataset(Dataset):
         sampler: Optional[Callable[[List[str]], str]] = None,
         channels: List[str] = default_channels,
         col_fstring: str = "FileName_Orig{channel}",
+        max_tries: int = 10,
+        use_compond_cache: bool = True,
     ):
         """Initializes the dataset.
 
@@ -48,6 +51,9 @@ class MoleculeImageDataset(Dataset):
                 format the column names in the load_df. Defaults to default_channels.
             col_fstring (str, optional): A format string that is used to format the
                 column names in the load_df. Defaults to "FileName_Orig{channel}".
+            max_tries (int, optional): The maximum number of tries to sample an image for a compound.
+                Defaults to 10.
+            use_compond_cache (bool, optional): Whether to cache the compound transforms. Defaults to True.
         """
 
         # data
@@ -63,6 +69,7 @@ class MoleculeImageDataset(Dataset):
         self.compound_transform = compound_transform
 
         # sampler
+        self.max_tries = max_tries
         if sampler is None:
             self.sampler = random.choice
         else:
@@ -73,7 +80,8 @@ class MoleculeImageDataset(Dataset):
         self.col_fstring = col_fstring
 
         # caching
-        self.cached_compound = {}
+        self.use_compond_cache = use_compond_cache
+        self.cached_compounds = {}
 
     def __len__(self):
         return self.n_compounds
@@ -82,29 +90,23 @@ class MoleculeImageDataset(Dataset):
         return f"{self.__class__.__name__}(n_compounds={self.n_compounds}, n_images={self.n_images})"
 
     def transform_compound(self, compound):
-        if compound in self.cached_compound:
-            return self.cached_compound[compound]
+        if self.cached_compounds and compound in self.cached_compounds:
+            return self.cached_compounds[compound]
         else:
             tr_compound = self.compound_transform(compound)
-            self.cached_compound[compound] = tr_compound
+
+            if self.use_compond_cache:
+                self.cached_compounds[compound] = tr_compound
             return tr_compound
 
     def __getitem__(self, idx):
         start = time.time()
         compound = self.compound_list[idx]  # An inchi or smiles string
-        image_id = self.sampler(self.compound_dict[compound])  # An index into the load_df
-        image_paths = [
-            str(self.load_df.loc[image_id, self.col_fstring.format(channel=channel)]) for channel in self.channels
-        ]
-        path_time = time.time()
+        corresponding_images = self.compound_dict[compound]  # A list of indices into the load_df
 
-        img_array = load_image_paths_to_array(image_paths)  # A numpy array: (5, 768, 768)
-        img_array = torch.from_numpy(img_array)
-        img_time = time.time()
-
-        if self.transform:
-            img_array = self.transform(img_array)
-        it_time = time.time()
+        tries = 0
+        fetched = False
+        images_tried = []
 
         if self.compound_transform:
             tr_compound = self.transform_compound(compound)
@@ -112,8 +114,35 @@ class MoleculeImageDataset(Dataset):
             tr_compound = compound
         ct_time = time.time()
 
-        py_logger.debug(
-            f"Timing: path: {path_time - start:.2f}s, img: {img_time - path_time:.2f}s, it: {it_time - img_time:.2f}s, ct: {ct_time - it_time:.2f}s, total: {ct_time - start:.2f}s"
-        )
+        while not fetched and tries < self.max_tries and len(corresponding_images) > 0:
+            try:
+                # Random choice in the list of images
+                image_id = self.sampler(corresponding_images)
+                images_tried.append(image_id)
 
-        return {"image": img_array, "compound": tr_compound}
+                image_paths = [
+                    str(self.load_df.loc[image_id, self.col_fstring.format(channel=channel)])
+                    for channel in self.channels
+                ]
+                path_time = time.time()
+
+                img_array = load_image_paths_to_array(image_paths)  # A numpy array: (5, 768, 768)
+                img_array = torch.from_numpy(img_array)
+                img_time = time.time()
+
+                if self.transform:
+                    img_array = self.transform(img_array)
+                it_time = time.time()
+
+                py_logger.debug(
+                    f"Timing: compound_transform: {ct_time - start:.2f}s, path: {path_time - ct_time:.2f}s, img: {img_time - path_time:.2f}s, it: {it_time - img_time:.2f}s total: {it_time - start:.2f}s"
+                )
+
+                return {"image": img_array, "compound": tr_compound}
+
+            except UnidentifiedImageError:
+                tries += 1
+                py_logger.warning(f"Could not load image {image_id}. Try: {tries}/{self.max_tries}")
+                corresponding_images = [i for i in corresponding_images if i != image_id]
+
+        raise RuntimeError(f"Could not find an image for compound {compound} after {self.max_tries} tries.")

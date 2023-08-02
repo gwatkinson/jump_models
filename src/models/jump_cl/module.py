@@ -31,6 +31,7 @@ class BasicJUMPModule(LightningModule):
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
         embedding_dim: int,
+        example_input: Optional[torch.Tensor] = None,
         example_input_path: Optional[str] = None,
         lr: Optional[float] = None,
         batch_size: Optional[int] = None,
@@ -62,7 +63,15 @@ class BasicJUMPModule(LightningModule):
         self.test_loss = MeanMetric()
         self.val_loss_min = MinMetric()
 
-        if example_input_path is not None:
+        self.loss_dict = {
+            "train": self.train_loss,
+            "val": self.val_loss,
+            "test": self.test_loss,
+        }
+
+        if example_input is not None:
+            self.example_input_array = example_input
+        elif example_input_path is not None:
             logger.debug(f"Loading example input from: {example_input_path}")
             self.example_input_array = torch.load(example_input_path)
 
@@ -78,7 +87,7 @@ class BasicJUMPModule(LightningModule):
         self.val_loss.reset()
         super().on_train_start()
 
-    def model_step(self, batch: Any):
+    def model_step(self, batch: Any, stage: str, on_step: bool = True, on_epoch: bool = True, prog_bar: bool = True):
         image_emb = self.image_encoder(batch["image"])
         compound_emb = self.molecule_encoder(batch["compound"])
 
@@ -87,46 +96,31 @@ class BasicJUMPModule(LightningModule):
             embeddings_b=compound_emb,
         )
 
+        logger.debug(f"Log {stage} loss")
+        self.loss_dict[stage].update(loss)
+        self.log(f"{stage}/loss", self.loss_dict[stage], on_step=on_step, on_epoch=on_epoch, prog_bar=prog_bar)
+
         return loss
 
     def training_step(self, batch: Any, batch_idx: int):
-        loss = self.model_step(batch)
-
-        # update and log metrics
-        logger.debug("Log training loss")
-        self.train_loss.update(loss)
-        self.log("train/loss", self.train_loss, on_step=True, on_epoch=True, prog_bar=True)
-
+        loss = self.model_step(batch, stage="train", on_step=True, on_epoch=True, prog_bar=True)
         return loss
 
     def on_train_epoch_end(self):
         pass
 
     def validation_step(self, batch: Any, batch_idx: int):
-        logger.debug("Run training step from validation_step()")
-        loss = self.model_step(batch)
-
-        # update and log metrics
-        logger.debug("Log validation loss")
-        self.val_loss.update(loss)
-        self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
+        loss = self.model_step(batch, stage="val", on_step=False, on_epoch=True, prog_bar=True)
+        return loss
 
     def on_validation_epoch_end(self):
         loss = self.val_loss.compute()  # get current val loss
         self.val_loss_min.update(loss)  # update min so far val loss
-        self.log("val/loss_min", self.val_loss_min.compute(), sync_dist=True, prog_bar=True)
-        # acc = self.val_acc.compute()  # get current val acc
-        # self.val_acc_best(acc)  # update best so far val acc
-        # # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
-        # # otherwise metric would be reset by lightning after each epoch
-        # self.log("val/acc_best", self.val_acc_best.compute(), sync_dist=True, prog_bar=True)
+        self.log("val/loss_min", self.val_loss_min.compute(), prog_bar=True)
 
     def test_step(self, batch: Any, batch_idx: int):
-        loss = self.model_step(batch)
-
-        # update and log metrics
-        self.test_loss.update(loss)
-        self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
+        loss = self.model_step(batch, stage="test", on_step=False, on_epoch=True, prog_bar=True)
+        return loss
 
     def on_test_epoch_end(self):
         pass

@@ -104,6 +104,27 @@ class OGBClassificationModule(LightningModule):
         self.val_plot_metrics = MetricCollection([metric() for metric in self.plot_metrics], prefix="val/")
         self.test_plot_metrics = MetricCollection([metric() for metric in self.plot_metrics], prefix="test/")
 
+        self.loss_dict = {
+            "train": self.train_loss,
+            "val": self.val_loss,
+            "test": self.test_loss,
+        }
+        self.metric_dict = {
+            "train": self.train_metric,
+            "val": self.val_metric,
+            "test": self.test_metric,
+        }
+        self.other_metrics_dict = {
+            "train": self.train_other_metrics,
+            "val": self.val_other_metrics,
+            "test": self.test_other_metrics,
+        }
+        self.plot_metrics_dict = {
+            "train": self.train_plot_metrics,
+            "val": self.val_plot_metrics,
+            "test": self.test_plot_metrics,
+        }
+
     def on_train_start(self):
         # by default lightning executes validation step sanity checks before training starts,
         # so it's worth to make sure validation metrics don't store results from these checks
@@ -116,7 +137,7 @@ class OGBClassificationModule(LightningModule):
     def forward(self, compound, label=None):
         return self.model(compound)
 
-    def model_step(self, batch: Any, phase: str = "train", on_step_loss=True):
+    def model_step(self, batch: Any, stage: str = "train", on_step_loss=True):
         compound = batch["compound"]
         targets = batch["label"]
 
@@ -125,62 +146,36 @@ class OGBClassificationModule(LightningModule):
         loss = self.criterion(logits, targets)
         # preds = F.sigmoid(logits)  # is in the torchmetrics implementation ??
 
+        # update metrics
+        self.loss_dict[stage].update(loss)
+        self.metric_dict[stage].update(logits, targets)
+        self.plot_metrics_dict[stage].update(logits, targets)
+        other_metrics = self.other_metrics_dict[stage](logits, targets)
+
+        # log metrics
+        self.log("{stage}/loss", self.loss_dict[stage], on_step=on_step_loss, on_epoch=True, prog_bar=True)
+        self.log(f"{stage}/{self.metric_name}", self.metric_dict[stage], on_step=False, on_epoch=True, prog_bar=True)
+        self.log_dict(other_metrics, on_step=False, on_epoch=True, prog_bar=False)
+
         return loss, logits, targets
 
     def training_step(self, batch: Any, batch_idx: int):
-        loss, preds, targets = self.model_step(batch)
-
-        # update metrics
-        self.train_loss(loss)
-        self.train_metric(preds, targets)
-        self.train_plot_metrics(preds, targets)
-        other_metrics = self.train_other_metrics(preds, targets)
-
-        # log metrics
-        self.log("train/loss", self.train_loss, on_step=True, on_epoch=True, prog_bar=True)
-        self.log(f"train/{self.metric_name}", self.train_metric, on_step=False, on_epoch=True, prog_bar=True)
-        self.log_dict(other_metrics, on_step=False, on_epoch=True, prog_bar=False)
-
-        # return loss or backpropagation will fail
-        return {"loss": loss, "preds": preds, "targets": targets}
+        loss, _preds, _targets = self.model_step(batch, stage="train", on_step_loss=True)
+        return loss
 
     def on_train_epoch_end(self):
         pass
 
     def validation_step(self, batch: Any, batch_idx: int):
-        loss, preds, targets = self.model_step(batch)
-
-        # update metrics
-        self.val_loss(loss)
-        self.val_metric(preds, targets)
-        self.val_plot_metrics(preds, targets)
-        other_metrics = self.train_other_metrics(preds, targets)
-
-        # log metrics
-        self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log(f"val/{self.metric_name}", self.val_metric, on_step=False, on_epoch=True, prog_bar=True)
-        self.log_dict(other_metrics, on_step=False, on_epoch=True, prog_bar=False)
+        _loss, _preds, _targets = self.model_step(batch, stage="val", on_step_loss=False)
 
     def on_validation_epoch_end(self):
-        metric = self.val_metric.compute()  # get current val metric
-        self.val_metric_best(metric)  # update best so far val metric
-        # log `val_metric_best` as a value through `.compute()` method, instead of as a metric object
-        # otherwise metric would be reset by lightning after each epoch
-        self.log(f"val/{self.metric_name}_best", self.val_metric_best.compute(), sync_dist=True, prog_bar=True)
+        metric = self.val_metric.compute()
+        self.val_metric_best(metric)
+        self.log(f"val/{self.metric_name}_best", self.val_metric_best.compute(), prog_bar=True)
 
     def test_step(self, batch: Any, batch_idx: int):
-        loss, preds, targets = self.model_step(batch)
-
-        # update metrics
-        self.test_loss(loss)
-        self.test_metric(preds, targets)
-        self.test_plot_metrics(preds, targets)
-        other_metrics = self.train_other_metrics(preds, targets)
-
-        # log metrics
-        self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log(f"test/{self.metric_name}", self.test_metric, on_step=False, on_epoch=True, prog_bar=True)
-        self.log_dict(other_metrics, on_step=False, on_epoch=True, prog_bar=False)
+        loss, preds, targets = self.model_step(batch, stage="test", on_step_loss=False)
 
     def on_test_epoch_end(self):
         pass
@@ -194,7 +189,6 @@ class OGBClassificationModule(LightningModule):
             https://lightning.ai/docs/pytorch/latest/common/lightning_module.html#configure-optimizers
         """
         optimizer = self.optimizer(params=filter(lambda p: p.requires_grad, self.parameters()))
-        # optimizer = self.optimizer(params=self.parameters())
         if self.scheduler is not None:
             scheduler = self.scheduler(optimizer=optimizer)
             return {
