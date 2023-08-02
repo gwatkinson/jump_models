@@ -249,11 +249,17 @@ class JUMPCLFreezer(BaseFinetuning):
             )
             self.previous_molecule_backbone_lr = next_molecule_backbone_lr
 
-        logger.info(
-            f"Current lr: {current_lr:.4f}, "
-            f"Image backbone lr: {self.previous_image_backbone_lr:.4f}, "
-            f"Molecule backbone lr: {self.previous_molecule_backbone_lr:.4f}"
-        )
+        if (
+            current_epoch >= self.unfreeze_image_backbone_at_epoch
+            and current_epoch >= self.unfreeze_molecule_backbone_at_epoch
+        ):
+            current_lr = optimizer.param_groups[0]["lr"]
+            if self.previous_image_backbone_lr < current_lr or self.previous_molecule_backbone_lr < current_lr:
+                logger.info(
+                    f"Current lr: {current_lr:.4f}, "
+                    f"Image backbone lr: {self.previous_image_backbone_lr:.4f}, "
+                    f"Molecule backbone lr: {self.previous_molecule_backbone_lr:.4f}"
+                )
 
     @staticmethod
     def update_lr(
