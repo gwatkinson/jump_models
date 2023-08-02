@@ -1,5 +1,5 @@
 # https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.callbacks.LearningRateMonitor.html#lightning.pytorch.callbacks.DeviceStatsMonitor
 
-lr_monitor:
+device_monitor:
   _target_: lightning.pytorch.callbacks.DeviceStatsMonitor
   cpu_stats: True
