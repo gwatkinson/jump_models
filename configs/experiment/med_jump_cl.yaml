@@ -32,20 +32,19 @@ trainer:
   min_epochs: 0
   max_epochs: 50
   log_every_n_steps: 5
-  gradient_clip_val: 0.5
-  gradient_clip_algorithm: value
-  num_sanity_val_steps: 2
+  gradient_clip_val: null # 0.5
+  num_sanity_val_steps: 1
 
   devices: ???
 
 
 data:
-  batch_size: 1024
+  batch_size: 512
   num_workers: 24
   prefetch_factor: 2
 
   transform:
-    size: 128
+    size: 256
 
   splitter:
     train: 25_000
@@ -56,11 +55,11 @@ data:
 
 
 model:
-  embedding_dim: 384
+  embedding_dim: 512
   lr: 1e-2
 
   scheduler:
-    T_0: 10
+    T_0: 5
     T_mult: 1
 
   example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
@@ -68,11 +67,11 @@ model:
 
 callbacks:
   jump_cl_freezer:
-    unfreeze_image_backbone_at_epoch: 10
+    unfreeze_image_backbone_at_epoch: 7
     image_initial_denom_lr: 50
     image_lambda_func:
       a0: 1.8
-    unfreeze_molecule_backbone_at_epoch: 7
+    unfreeze_molecule_backbone_at_epoch: 5
     molecule_initial_denom_lr: 50
     molecule_lambda_func:
       a0: 1.8
