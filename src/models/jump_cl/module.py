@@ -133,11 +133,6 @@ class BasicJUMPModule(LightningModule):
         Examples:
             https://lightning.ai/docs/pytorch/latest/common/lightning_module.html#configure-optimizers
         """
-        mb_params = self.molecule_encoder.backbone.parameters()
-
-        require_grad = [p.requires_grad for p in mb_params]
-        logger.info(f"Number of require grad parameters in image base model: {sum(require_grad)}/{len(require_grad)}")
-
         optimizer = self.optimizer(
             [
                 {
