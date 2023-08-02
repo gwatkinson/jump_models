@@ -62,12 +62,12 @@ class JUMPCLFreezer(BaseFinetuning):
         unfreeze_image_backbone_at_epoch: int = 5,
         unfreeze_molecule_backbone_at_epoch: int = 3,
         image_backbone: Union[str, List[str]] = default_image_backbone,
-        image_encoder_lr: Optional[float] = 1e-4,
+        image_encoder_lr: Optional[float] = None,
         image_initial_denom_lr: Optional[float] = None,
         image_lambda_func: Callable[[int], float] = default_lambda_func,
         image_should_align: bool = True,
         molecule_backbone: Union[str, List[str]] = default_molecule_backbone,
-        molecule_encoder_lr: Optional[float] = 1e-4,
+        molecule_encoder_lr: Optional[float] = None,
         molecule_initial_denom_lr: Optional[float] = None,
         molecule_lambda_func: Callable[[int], float] = default_lambda_func,
         molecule_should_align: bool = True,
@@ -115,29 +115,34 @@ class JUMPCLFreezer(BaseFinetuning):
         """
 
         super().__init__()
-        self.unfreeze_image_backbone_at_epoch = unfreeze_image_backbone_at_epoch
-        self.unfreeze_molecule_backbone_at_epoch = unfreeze_molecule_backbone_at_epoch
+        self.unfreeze_image_backbone_at_epoch: int = unfreeze_image_backbone_at_epoch
+        self.unfreeze_molecule_backbone_at_epoch: int = unfreeze_molecule_backbone_at_epoch
 
-        self.image_backbone = image_backbone
-        self.image_encoder_lr = image_encoder_lr
-        self.image_initial_denom_lr = image_initial_denom_lr
-        self.image_lambda_func = image_lambda_func
-        self.image_should_align = image_should_align
+        self.image_backbone: List[str] = image_backbone
+        self.image_encoder_lr: Optional[float] = image_encoder_lr
+        self.image_initial_denom_lr: Optional[float] = image_initial_denom_lr
+        self.image_lambda_func: Callable[[int], float] = image_lambda_func
+        self.image_should_align: bool = image_should_align
 
-        self.molecule_backbone = molecule_backbone
-        self.molecule_encoder_lr = molecule_encoder_lr
-        self.molecule_initial_denom_lr = molecule_initial_denom_lr
-        self.molecule_lambda_func = molecule_lambda_func
-        self.molecule_should_align = molecule_should_align
+        self.molecule_backbone: List[str] = molecule_backbone
+        self.molecule_encoder_lr: Optional[float] = molecule_encoder_lr
+        self.molecule_initial_denom_lr: Optional[float] = molecule_initial_denom_lr
+        self.molecule_lambda_func: Callable[[int], float] = molecule_lambda_func
+        self.molecule_should_align: bool = molecule_should_align
 
-        self.previous_image_backbone_lr = None
-        self.previous_molecule_backbone_lr = None
+        self.previous_image_backbone_lr: Optional[float] = None
+        self.previous_molecule_backbone_lr: Optional[float] = None
+
+        self.image_is_aligned: bool = False
+        self.molecule_is_aligned: bool = False
 
     def state_dict(self) -> Dict[str, Any]:
         return {
             "internal_optimizer_metadata": self._internal_optimizer_metadata,
             "previous_image_backbone_lr": self.previous_image_backbone_lr,
+            "image_is_aligned": self.image_is_aligned,
             "previous_molecule_backbone_lr": self.previous_molecule_backbone_lr,
+            "molecule_is_aligned": self.molecule_is_aligned,
         }
 
     def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
@@ -189,7 +194,7 @@ class JUMPCLFreezer(BaseFinetuning):
         # Unfreezes the image encoder and adds the param group to the optimizer
         if current_epoch == self.unfreeze_image_backbone_at_epoch:
             current_lr = optimizer.param_groups[0]["lr"]
-            self.previous_image_backbone_lr = self.image_encoder_lr or current_lr
+            self.previous_image_backbone_lr = self.image_encoder_lr or current_lr / self.image_initial_denom_lr
 
             logger.info(f"Unfreezing image encoder with lr {self.previous_image_backbone_lr}")
             self.unfreeze_and_add_param_group(
@@ -201,20 +206,22 @@ class JUMPCLFreezer(BaseFinetuning):
                 name="image_encoder",
             )
         elif current_epoch > self.unfreeze_image_backbone_at_epoch:
-            next_image_backbone_lr = self.update_lr(
+            next_image_backbone_lr, image_is_aligned = self.update_lr(
                 optimizer=optimizer,
                 diff_epoch=current_epoch - self.unfreeze_image_backbone_at_epoch,
                 previous_lr=self.previous_image_backbone_lr,
                 lambda_func=self.image_lambda_func,
                 should_align=self.image_should_align,
+                is_aligned=self.image_is_aligned,
                 name="image_encoder",
             )
             self.previous_image_backbone_lr = next_image_backbone_lr
+            self.image_is_aligned = image_is_aligned
 
         # Unfreezes the molecule encoder and adds the param group to the optimizer
         if current_epoch == self.unfreeze_molecule_backbone_at_epoch:
             current_lr = optimizer.param_groups[0]["lr"]
-            self.previous_molecule_backbone_lr = self.molecule_encoder_lr or current_lr
+            self.previous_molecule_backbone_lr = self.molecule_encoder_lr or current_lr / self.molecule_initial_denom_lr
 
             logger.info(f"Unfreezing molecule encoder with lr {self.previous_molecule_backbone_lr}")
             self.unfreeze_and_add_param_group(
@@ -226,15 +233,17 @@ class JUMPCLFreezer(BaseFinetuning):
                 name="molecule_encoder",
             )
         elif current_epoch > self.unfreeze_molecule_backbone_at_epoch:
-            next_molecule_backbone_lr = self.update_lr(
+            next_molecule_backbone_lr, molecule_is_aligned = self.update_lr(
                 optimizer=optimizer,
                 diff_epoch=current_epoch - self.unfreeze_molecule_backbone_at_epoch,
                 previous_lr=self.previous_molecule_backbone_lr,
                 lambda_func=self.molecule_lambda_func,
                 should_align=self.molecule_should_align,
+                is_aligned=self.molecule_is_aligned,
                 name="molecule_encoder",
             )
             self.previous_molecule_backbone_lr = next_molecule_backbone_lr
+            self.molecule_is_aligned = molecule_is_aligned
 
         if (
             current_epoch >= self.unfreeze_image_backbone_at_epoch
@@ -255,17 +264,22 @@ class JUMPCLFreezer(BaseFinetuning):
         previous_lr: float,
         lambda_func: Callable[[int], float],
         should_align: bool,
+        is_aligned: bool,
         name: str,
     ):
         current_lr = optimizer.param_groups[0]["lr"]
         next_backbone_lr = lambda_func(diff_epoch) * previous_lr
-        next_backbone_lr = current_lr if (should_align and next_backbone_lr > current_lr) else next_backbone_lr
+
+        if is_aligned or next_backbone_lr > current_lr:
+            local_is_aligned = True
+
+        next_backbone_lr = current_lr if (should_align and local_is_aligned) else next_backbone_lr
 
         for param_group in optimizer.param_groups:
             if param_group.get("name") == name:
                 param_group["lr"] = next_backbone_lr
 
-        return next_backbone_lr
+        return next_backbone_lr, local_is_aligned
 
     @staticmethod
     def unfreeze_and_add_param_group(
