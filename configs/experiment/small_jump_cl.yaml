@@ -66,9 +66,9 @@ model:
 callbacks:
   jump_cl_freezer:
     unfreeze_image_backbone_at_epoch: 15
-    image_encoder_lr: 0.005
+    image_initial_denom_lr: 50
     unfreeze_molecule_backbone_at_epoch: 10
-    molecule_encoder_lr: 0.01
+    molecule_initial_denom_lr: 50
 
   wandb_watcher:
     log_freq: 100
