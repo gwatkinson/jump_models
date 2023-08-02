@@ -20,6 +20,7 @@ wandb = "^0.15.4"
 pyrootutils = "^1.0.4"
 rich = "^13.4.2"
 pydantic = "<2.0"
+optuna = "^3.2.0"
 
 
 [tool.poetry.group.torch.dependencies]

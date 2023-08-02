@@ -1,7 +1,7 @@
 # @package _global_
 
 # example hyperparameter optimization of some experiment with Optuna:
-# python train.py -m hparams_search=mnist_optuna experiment=example
+# python src/train.py -m hparams_search=jump_cl_optuna experiment=med_jump_cl
 
 defaults:
   - override /hydra/sweeper: optuna
@@ -45,6 +45,6 @@ hydra:
 
     # define hyperparameter search space
     params:
-      model.optimizer.lr: interval(0.0001, 0.1)
-      data.batch_size: choice(32, 64, 128, 256)
+      # model.optimizer.lr: interval(0.0001, 0.1)
+      data.batch_size: choice(32, 128, 512, 1024)
 
