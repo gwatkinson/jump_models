@@ -1,7 +1,6 @@
 """Callbacks for freezing and unfreezing layers in a model."""
 
 import logging
-from collections import defaultdict
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 import lightning.pytorch as pl
@@ -170,21 +169,6 @@ class JUMPCLFreezer(BaseFinetuning):
             self._get_backbone(pl_module, self.molecule_backbone)
         except AttributeError:
             raise MisconfigurationException("The LightningModule does not have a valid molecule backbone")
-
-        logger.debug(f"Params group of optimizer 0: {trainer.optimizers[0].param_groups}")
-
-        optimizer = trainer.optimizers[0]
-        param_groups = optimizer.param_groups
-
-        id_to_param_group_id = defaultdict(list)
-
-        for i, group in enumerate(param_groups):
-            for p in group["params"]:
-                id_to_param_group_id[id(p)].append(i)
-        multi_group_params = {k: v for k, v in id_to_param_group_id.items() if len(v) > 1}
-
-        logger.debug(f"Parameter in multiple groups:\n{multi_group_params}")
-        logger.debug(f"Param Id to parameter groups:\n{id_to_param_group_id}")
 
         # return super().on_fit_start(trainer, pl_module)  # TODO: check if this is needed and debug for lr finder
 
