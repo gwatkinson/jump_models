@@ -330,7 +330,8 @@ class JUMPCLFreezer(BaseFinetuning):
         params = BaseFinetuning.filter_params(modules, train_bn=train_bn, requires_grad=True)
         params = JUMPCLFreezer.filter_on_optimizer(optimizer, params)
         if params:
-            optimizer.add_param_group({"params": params, "lr": params_lr / denom_lr, "name": name})
+            new_lr = params_lr / denom_lr
+            optimizer.add_param_group({"params": params, "lr": new_lr, "name": name, "swa_lr": new_lr})
 
     @staticmethod
     def filter_on_optimizer(optimizer: Optimizer, params: Iterable) -> List:

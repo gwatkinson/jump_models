@@ -117,15 +117,18 @@ class BasicJUMPModule(LightningModule):
         self.log(f"{stage}/loss", self.loss_dict[stage], **kwargs)
         # self.log(f"{stage}/loss_to_log", loss_to_log, **kwargs)
 
+        if stage == "train":
+            temperature = self.criterion.logit_scale.exp().item()
+            self.log("model/temperature", temperature, prog_bar=False, on_epoch=True, on_step=False)
+
         return loss
 
     def training_step(self, batch: Any, batch_idx: int):
         loss = self.model_step(batch, stage="train", on_step=True, on_epoch=True, prog_bar=True)
         return loss
 
-    def on_train_epoch_start(self):
-        logit_scale = self.criterion.logit_scale.exp().item()
-        self.log("model/logit_scale", logit_scale, prog_bar=False)
+    def on_train_epoch_end(self):
+        pass
 
     def validation_step(self, batch: Any, batch_idx: int):
         loss = self.model_step(batch, stage="val", on_step=False, on_epoch=True, prog_bar=True)
