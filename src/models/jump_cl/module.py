@@ -153,34 +153,45 @@ class BasicJUMPModule(LightningModule):
         """
         params_groups = [
             {
-                "params": list(filter(lambda p: p.requires_grad, self.image_head.parameters())),
+                "params": list(self.image_head.parameters()),
                 "name": "image_projection_head",
             },
             {
-                "params": list(filter(lambda p: p.requires_grad, self.molecule_head.parameters())),
+                "params": list(self.molecule_head.parameters()),
                 "name": "molecule_projection_head",
             },
             {
-                "params": list(filter(lambda p: p.requires_grad, self.criterion.parameters())),
+                "params": list(self.criterion.parameters()),
                 "name": "criterion",
             },
             {
-                "params": list(filter(lambda p: p.requires_grad, self.image_backbone.parameters())),
+                "params": list(self.image_backbone.parameters()),
                 "name": "image_encoder",
             },
             {
-                "params": list(filter(lambda p: p.requires_grad, self.molecule_backbone.parameters())),
+                "params": list(self.molecule_backbone.parameters()),
                 "name": "molecule_encoder",
             },
         ]
-        group_lens = {group["name"]: len(group["params"]) for group in params_groups}
+        filtered_params_groups = [
+            {
+                "params": list(filter(lambda p: p.requires_grad, group["params"])),
+                "name": group["name"],
+            }
+            for group in params_groups
+        ]
+
+        params_len = {group["name"]: len(group["params"]) for group in params_groups}
+        group_lens = {group["name"]: len(group["params"]) for group in filtered_params_groups}
+
         group_to_keep = [
             group["name"]
-            for group in params_groups
+            for group in filtered_params_groups
             if group_lens[group["name"]] > 0 and group["name"] not in self.params_group_to_ignore
         ]
 
-        logger.info(f"Params groups:\n{group_lens}")
+        logger.info(f"Number of params in each groups:\n{params_len}")
+        logger.info(f"Number of require grad params in each groups:\n{group_lens}")
         logger.info(f"Params groups to keep:\n{group_to_keep}")
 
         optimizer = self.optimizer(

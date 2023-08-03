@@ -6,7 +6,7 @@
 defaults:
   - override /data: jump_cl.yaml
   - override /data/compound_transform: dgllife_gin.yaml
-  - override /model: jump_cl.yaml
+  - override /model: frozen_jump_cl.yaml
   - override /model/image_encoder: resnet18.yaml
   - override /model/molecule_encoder: gin_context_pred.yaml
   - override /model/optimizer: adam.yaml
@@ -65,9 +65,9 @@ model:
 
 callbacks:
   jump_cl_freezer:
-    unfreeze_image_backbone_at_epoch: 15
+    unfreeze_image_backbone_at_epoch: 10
     image_initial_denom_lr: 50
-    unfreeze_molecule_backbone_at_epoch: 10
+    unfreeze_molecule_backbone_at_epoch: 8
     molecule_initial_denom_lr: 50
 
   wandb_watcher:
