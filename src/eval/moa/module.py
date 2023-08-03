@@ -7,7 +7,8 @@ from typing import Any, Optional
 import torch
 import torch.nn as nn
 from lightning import LightningModule
-from torchmetrics import MeanMetric, MetricCollection, MinMetric
+from lightning.pytorch.loggers import TensorBoardLogger, WandbLogger
+from torchmetrics import MaxMetric, MeanMetric, MetricCollection, MinMetric
 from torchmetrics.classification import (
     BinaryAccuracy,
     BinaryAUROC,
@@ -16,15 +17,12 @@ from torchmetrics.classification import (
     BinaryPrecision,
     BinaryRecall,
 )
-from torchmetrics.regression import MeanAbsoluteError, MeanSquaredError, R2Score
-
-RMSE = partial(MeanSquaredError, squared=False)
 
 
-class OGBClassificationModule(LightningModule):
-    """Module for evaluating a model on the OGB classification tasks."""
+class MOAClassificationModule(LightningModule):
+    """Module for evaluating a model on the MOA tasks from the images."""
 
-    prefix = "ogb"
+    prefix = "moa"
     dataset_name = None
     out_dim = 1
     default_criterion = nn.BCEWithLogitsLoss
@@ -109,6 +107,11 @@ class OGBClassificationModule(LightningModule):
             "val": self.val_loss,
             "test": self.test_loss,
         }
+        self.metric_dict = {
+            "train": self.train_metric,
+            "val": self.val_metric,
+            "test": self.test_metric,
+        }
         self.other_metrics_dict = {
             "train": self.train_other_metrics,
             "val": self.val_other_metrics,
@@ -148,9 +151,8 @@ class OGBClassificationModule(LightningModule):
         other_metrics = self.other_metrics_dict[stage](logits, targets)
 
         # log metrics
-        self.log(
-            f"{self.log_prefix}/{stage}/loss", self.loss_dict[stage], on_step=on_step_loss, on_epoch=True, prog_bar=True
-        )
+        self.log("{stage}/loss", self.loss_dict[stage], on_step=on_step_loss, on_epoch=True, prog_bar=True)
+        self.log(f"{stage}/{self.metric_name}", self.metric_dict[stage], on_step=False, on_epoch=True, prog_bar=True)
         self.log_dict(other_metrics, on_step=False, on_epoch=True, prog_bar=False)
 
         return loss, logits, targets
@@ -166,7 +168,9 @@ class OGBClassificationModule(LightningModule):
         _loss, _preds, _targets = self.model_step(batch, stage="val", on_step_loss=False)
 
     def on_validation_epoch_end(self):
-        pass
+        metric = self.val_metric.compute()
+        self.val_metric_best(metric)
+        self.log(f"val/{self.metric_name}_best", self.val_metric_best.compute(), prog_bar=True)
 
     def test_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.model_step(batch, stage="test", on_step_loss=False)
@@ -195,41 +199,3 @@ class OGBClassificationModule(LightningModule):
                 },
             }
         return {"optimizer": optimizer}
-
-
-class OGBRegressionModule(OGBClassificationModule):
-    """Module for evaluating a model on the OGB classification tasks with RMSE
-    as the main metric."""
-
-    out_dim = 1
-    default_criterion = nn.MSELoss
-    additional_metrics = [
-        RMSE,
-        MeanAbsoluteError,
-        R2Score,
-    ]
-    plot_metrics = []
-
-
-class BBBPModule(OGBClassificationModule):
-    dataset_name = "bbbp"
-
-
-class HIVModule(OGBClassificationModule):
-    dataset_name = "hiv"
-
-
-class Tox21Module(OGBClassificationModule):
-    dataset_name = "tox21"
-
-
-class EsolModule(OGBRegressionModule):
-    dataset_name = "esol"
-
-
-class LipoModule(OGBRegressionModule):
-    dataset_name = "lipophilicity"
-
-
-class ToxCastModule(OGBClassificationModule):  # TODO: Not a simple 1 label classification task
-    dataset_name = "toxcast"
