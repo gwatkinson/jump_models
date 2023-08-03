@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import torch
 from lightning import LightningModule
@@ -38,6 +38,7 @@ class BasicJUMPModule(LightningModule):
         frequency: int = 1,
         lr: Optional[float] = None,
         batch_size: Optional[int] = None,
+        params_group_to_ignore: Optional[List[str]] = None,
         image_backbone: str = "backbone",
         image_head: str = "projection_head",
         molecule_backbone: str = "backbone",
@@ -58,6 +59,7 @@ class BasicJUMPModule(LightningModule):
         self.image_head = getattr(self.image_encoder, image_head)
         self.molecule_backbone = getattr(self.molecule_encoder, molecule_backbone)
         self.molecule_head = getattr(self.molecule_encoder, molecule_head)
+        self.params_group_to_ignore = params_group_to_ignore
 
         # embedding dim
         self.embedding_dim = embedding_dim
@@ -171,14 +173,16 @@ class BasicJUMPModule(LightningModule):
                 "name": "molecule_encoder",
             },
         ]
-        non_empty_params_groups = [group["name"] for group in params_groups if len(group["params"]) > 0]
-        empty_params_groups = [group["name"] for group in params_groups if len(group["params"]) == 0]
+        group_lens = {group["name"]: len(group["params"]) for group in params_groups}
 
-        logger.info(f"Adding the groups: {non_empty_params_groups}")
-        logger.info(f"Skipping the groups: {empty_params_groups}")
+        logger.info(f"Params groups:\n{group_lens}")
 
         optimizer = self.optimizer(
-            [group for group in params_groups if len(group["params"]) > 0],
+            [
+                group
+                for group in params_groups
+                if group_lens[group["name"]] > 0 and group["name"] not in self.params_group_to_ignore
+            ],
             lr=self.lr,
         )
 
