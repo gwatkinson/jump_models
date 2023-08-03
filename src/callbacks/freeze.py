@@ -42,13 +42,17 @@ class OGBFreezer(BaseFinetuning):
             )
 
 
-def multiplicative_func(a0: float) -> Callable[[int], float]:
-    return lambda _: a0
+def multiplicative_func(a0: float) -> Callable[[int, float], float]:
+    return lambda _, lr: a0 * lr
 
 
-def linear_func(a1: float, a0: float) -> Callable[[int], float]:
+def additive_func(a0: float) -> Callable[[int, float], float]:
+    return lambda _, lr: a0 + lr
+
+
+def linear_func(a1: float, a0: float) -> Callable[[int, float], float]:
     """Return a function of the form a1 * x + a0 where x is the number of epochs."""
-    return lambda x: a1 * x + a0
+    return lambda epoch, lr: a1 * epoch + a0 * lr
 
 
 default_image_backbone = ["image_encoder", "backbone"]
@@ -71,6 +75,7 @@ class JUMPCLFreezer(BaseFinetuning):
         molecule_initial_denom_lr: Optional[float] = None,
         molecule_lambda_func: Callable[[int], float] = default_lambda_func,
         molecule_should_align: bool = True,
+        verbose: bool = False,
     ):
         """Freeze and unfreeze layers in a cross modal model.
 
@@ -90,7 +95,7 @@ class JUMPCLFreezer(BaseFinetuning):
             image_initial_denom_lr (Optional[float], optional):
                 If no lr is provided, the learning from the first param group will be used and divided by initial_denom_lr.
                 Defaults to None.
-            image_lambda_func (Callable[[int], float], optional):
+            image_lambda_func (Callable[[int, float], float], optional):
                 Function that takes the current epoch as input and returns a float. This float will be used to multiply
                 the learning rate of the image backbone param group. Defaults to lambda x: 1.2.
             image_should_align (bool, optional):
@@ -103,11 +108,13 @@ class JUMPCLFreezer(BaseFinetuning):
             molecule_initial_denom_lr (Optional[float], optional):
                 If no lr is provided, the learning from the first param group will be used and divided by initial_denom_lr.
                 Defaults to None.
-            molecule_lambda_func (Callable[[int], float], optional):
+            molecule_lambda_func (Callable[[int, float], float], optional):
                 Function that takes the current epoch as input and returns a float. This float will be used to multiply
                 the learning rate of the molecule backbone param group. Defaults to lambda x: 1.2.
             molecule_should_align (bool, optional):
                 If True, the molecule backbone param group will be aligned with the first param group.
+            verbose (bool, optional):
+                If True, will print the param groups and the learning rates in the logger. Defaults to False.
 
         Raises:
             MisconfigurationException:
@@ -121,13 +128,13 @@ class JUMPCLFreezer(BaseFinetuning):
         self.image_backbone: List[str] = image_backbone
         self.image_encoder_lr: Optional[float] = image_encoder_lr
         self.image_initial_denom_lr: Optional[float] = image_initial_denom_lr
-        self.image_lambda_func: Callable[[int], float] = image_lambda_func
+        self.image_lambda_func: Callable[[int, float], float] = image_lambda_func
         self.image_should_align: bool = image_should_align
 
         self.molecule_backbone: List[str] = molecule_backbone
         self.molecule_encoder_lr: Optional[float] = molecule_encoder_lr
         self.molecule_initial_denom_lr: Optional[float] = molecule_initial_denom_lr
-        self.molecule_lambda_func: Callable[[int], float] = molecule_lambda_func
+        self.molecule_lambda_func: Callable[[int, float], float] = molecule_lambda_func
         self.molecule_should_align: bool = molecule_should_align
 
         self.previous_image_backbone_lr: Optional[float] = None
@@ -135,6 +142,8 @@ class JUMPCLFreezer(BaseFinetuning):
 
         self.image_is_aligned: bool = False
         self.molecule_is_aligned: bool = False
+
+        self.verbose: bool = verbose
 
     def state_dict(self) -> Dict[str, Any]:
         return {
@@ -177,14 +186,20 @@ class JUMPCLFreezer(BaseFinetuning):
 
         # return super().on_fit_start(trainer, pl_module)  # TODO: check if this is needed and debug for lr finder
 
+    def log_message(self, message):
+        if self.verbose:
+            logger.info(message)
+        else:
+            logger.debug(message)
+
     def freeze_before_training(self, pl_module):
         """Freeze layers before training."""
         if self.unfreeze_image_backbone_at_epoch > 0:
-            logger.info("Freezing image encoder")
+            self.log_message("Freezing image encoder")
             self.freeze(self._get_backbone(pl_module, self.image_backbone))
 
         if self.unfreeze_molecule_backbone_at_epoch > 0:
-            logger.info("Freezing molecule encoder")
+            self.log_message("Freezing molecule encoder")
             self.freeze(self._get_backbone(pl_module, self.molecule_backbone))
 
     def finetune_function(self, pl_module, current_epoch, optimizer):
@@ -196,7 +211,7 @@ class JUMPCLFreezer(BaseFinetuning):
             current_lr = optimizer.param_groups[0]["lr"]
             self.previous_image_backbone_lr = self.image_encoder_lr or current_lr / self.image_initial_denom_lr
 
-            logger.info(f"Unfreezing image encoder with lr {self.previous_image_backbone_lr}")
+            self.log_message(f"Unfreezing image encoder with lr {self.previous_image_backbone_lr}")
             self.unfreeze_and_add_param_group(
                 modules=self._get_backbone(pl_module, self.image_backbone),
                 optimizer=optimizer,
@@ -223,7 +238,7 @@ class JUMPCLFreezer(BaseFinetuning):
             current_lr = optimizer.param_groups[0]["lr"]
             self.previous_molecule_backbone_lr = self.molecule_encoder_lr or current_lr / self.molecule_initial_denom_lr
 
-            logger.info(f"Unfreezing molecule encoder with lr {self.previous_molecule_backbone_lr}")
+            self.log_message(f"Unfreezing molecule encoder with lr {self.previous_molecule_backbone_lr}")
             self.unfreeze_and_add_param_group(
                 modules=self._get_backbone(pl_module, self.molecule_backbone),
                 optimizer=optimizer,
@@ -251,7 +266,7 @@ class JUMPCLFreezer(BaseFinetuning):
         ):
             current_lr = optimizer.param_groups[0]["lr"]
             if self.previous_image_backbone_lr < current_lr or self.previous_molecule_backbone_lr < current_lr:
-                logger.info(
+                self.log_message(
                     f"Current lr: {current_lr:.4f}, "
                     f"Image backbone lr: {self.previous_image_backbone_lr:.4f}, "
                     f"Molecule backbone lr: {self.previous_molecule_backbone_lr:.4f}"
@@ -262,13 +277,13 @@ class JUMPCLFreezer(BaseFinetuning):
         optimizer: Optimizer,
         diff_epoch: int,
         previous_lr: float,
-        lambda_func: Callable[[int], float],
+        lambda_func: Callable[[int, float], float],
         should_align: bool,
         is_aligned: bool,
         name: str,
     ):
         current_lr = optimizer.param_groups[0]["lr"]
-        next_backbone_lr = lambda_func(diff_epoch) * previous_lr
+        next_backbone_lr = lambda_func(diff_epoch, previous_lr)
 
         if is_aligned or next_backbone_lr > current_lr:
             local_is_aligned = True
