@@ -149,31 +149,39 @@ class BasicJUMPModule(LightningModule):
         Examples:
             https://lightning.ai/docs/pytorch/latest/common/lightning_module.html#configure-optimizers
         """
+        params_groups = [
+            {
+                "params": filter(lambda p: p.requires_grad, self.image_head.parameters()),
+                "name": "image_projection_head",
+            },
+            {
+                "params": filter(lambda p: p.requires_grad, self.molecule_head.parameters()),
+                "name": "molecule_projection_head",
+            },
+            {
+                "params": filter(lambda p: p.requires_grad, self.criterion.parameters()),
+                "name": "criterion",
+            },
+            {
+                "params": filter(lambda p: p.requires_grad, self.image_backbone.parameters()),
+                "name": "image_encoder",
+            },
+            {
+                "params": filter(lambda p: p.requires_grad, self.molecule_backbone.parameters()),
+                "name": "molecule_encoder",
+            },
+        ]
+        non_empty_params_groups = [group["name"] for group in params_groups if len(group["params"]) > 0]
+        empty_params_groups = [group["name"] for group in params_groups if len(group["params"]) == 0]
+
+        logger.info(f"Adding the groups: {non_empty_params_groups}")
+        logger.info(f"Skipping the groups: {empty_params_groups}")
+
         optimizer = self.optimizer(
-            [
-                {
-                    "params": filter(lambda p: p.requires_grad, self.image_head.parameters()),
-                    "name": "image_projection_head",
-                },
-                {
-                    "params": filter(lambda p: p.requires_grad, self.molecule_head.parameters()),
-                    "name": "molecule_projection_head",
-                },
-                {
-                    "params": filter(lambda p: p.requires_grad, self.image_backbone.parameters()),
-                    "name": "image_encoder",
-                },
-                {
-                    "params": filter(lambda p: p.requires_grad, self.molecule_backbone.parameters()),
-                    "name": "molecule_encoder",
-                },
-                {
-                    "params": filter(lambda p: p.requires_grad, self.criterion.parameters()),
-                    "name": "criterion",
-                },
-            ],
+            [group for group in params_groups if len(group["params"]) > 0],
             lr=self.lr,
         )
+
         if self.scheduler is not None:
             scheduler = self.scheduler(optimizer=optimizer)
             return {
@@ -185,4 +193,5 @@ class BasicJUMPModule(LightningModule):
                     "frequency": self.frequency,
                 },
             }
+
         return {"optimizer": optimizer}

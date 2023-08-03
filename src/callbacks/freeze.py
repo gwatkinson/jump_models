@@ -4,8 +4,10 @@ import logging
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 import lightning.pytorch as pl
+import torch
 from lightning.pytorch.callbacks import BaseFinetuning
 from lightning.pytorch.utilities.exceptions import MisconfigurationException
+from lightning.pytorch.utilities.rank_zero import rank_zero_warn
 from torch.nn import Module
 from torch.optim.optimizer import Optimizer
 
@@ -324,10 +326,38 @@ class JUMPCLFreezer(BaseFinetuning):
         params_lr = optimizer.param_groups[0]["lr"] if lr is None else float(lr)
         denom_lr = initial_denom_lr if lr is None else 1.0
         params = BaseFinetuning.filter_params(modules, train_bn=train_bn, requires_grad=True)
-        params = BaseFinetuning.filter_on_optimizer(optimizer, params)
+        params = JUMPCLFreezer.filter_on_optimizer(optimizer, params)
         if params:
-            updated_params = {"params": params, "lr": params_lr / denom_lr}
-            if name is not None:
-                updated_params["name"] = name
+            optimizer.add_param_group({"params": params, "lr": params_lr / denom_lr, "name": name})
 
-            optimizer.add_param_group(updated_params)
+    @staticmethod
+    def filter_on_optimizer(optimizer: Optimizer, params: Iterable) -> List:
+        """This function is used to exclude any parameter which already exists
+        in this optimizer.
+
+        Args:
+            optimizer: Optimizer used for parameter exclusion
+            params: Iterable of parameters used to check against the provided optimizer
+
+        Returns:
+            List of parameters not contained in this optimizer param groups
+        """
+        out_params = []
+        removed_params = []
+        for param in params:
+            if not any(torch.equal(p, param) for group in optimizer.param_groups for p in group["params"]):
+                out_params.append(param)
+            else:
+                removed_params.append(param)
+
+        if removed_params:
+            logger.warning(
+                f"Removed {len(removed_params)} params from the optimizer. {len(out_params)} params remaining."
+            )
+            rank_zero_warn(
+                "The provided params to be frozen already exist within another group of this optimizer."
+                " Those parameters will be skipped.\n"
+                "HINT: Did you init your optimizer in `configure_optimizer` as such:\n"
+                f" {type(optimizer)}(filter(lambda p: p.requires_grad, self.parameters()), ...) ",
+            )
+        return out_params
