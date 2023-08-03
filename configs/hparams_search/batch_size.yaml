@@ -37,10 +37,11 @@ hydra:
 
     # choose Optuna hyperparameter sampler
     # you can choose bayesian sampler (tpe), random search (without optimization), grid sampler, and others
-    # docs: https://optuna.readthedocs.io/en/stable/reference/samplers/index.html
+    # docs: https://optuna.readthedocs.io/en/v2.10.1/reference/samplers.html
     sampler:
-      _target_: optuna.samplers.BruteForceSampler
-      seed: 1234
+      _target_: optuna.samplers.GridSampler
+      search_space:
+        data.batch_size: [32, 128, 512, 1024]
 
     # define hyperparameter search space
     params:

@@ -26,9 +26,6 @@ model_summary:
   max_depth: 2
 
 swa:
-  swa_lrs:
-    - ${model.lr}
-    - 3e-4
-    - 1e-4
+  swa_lrs: ${model.lr}
   swa_epoch_start: 12
   annealing_epochs: 3

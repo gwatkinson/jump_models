@@ -59,7 +59,7 @@ model:
 
   scheduler:
     T_0: 15
-    T_mult: 1
+    T_mult: 2
 
   example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
 
