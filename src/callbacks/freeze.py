@@ -175,14 +175,16 @@ class JUMPCLFreezer(BaseFinetuning):
         # Check if the model has an image encoder
         try:
             logger.debug("Loading image backbone")
-            self._get_backbone(pl_module, self.image_backbone)
+            image_backbone = self._get_backbone(pl_module, self.image_backbone)
+            logger.info(f"{len(list(image_backbone.parameters()))} parameters in image backbone")
         except AttributeError:
             raise MisconfigurationException("The LightningModule does not have a valid image backbone")
 
         # Check if the model has a molecule encoder
         try:
             logger.debug("Loading molecule backbone")
-            self._get_backbone(pl_module, self.molecule_backbone)
+            molecule_backbone = self._get_backbone(pl_module, self.molecule_backbone)
+            logger.info(f"{len(list(molecule_backbone.parameters()))} parameters in molecule backbone")
         except AttributeError:
             raise MisconfigurationException("The LightningModule does not have a valid molecule backbone")
 
