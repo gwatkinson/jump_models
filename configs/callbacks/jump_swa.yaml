@@ -1,9 +1,11 @@
 defaults:
   - lightning/rich_progress_bar@_here_
   - lightning/model_summary@_here_
+  - lightning/lr_monitor@_here_
   - lightning/model_checkpoint@_here_
   - lightning/early_stopping@_here_
-  - lightning/lr_monitor@_here_
+  - lightning/swa@_here_
+  - custom/jump_cl_freezer@_here_
   - custom/wandb_watcher@_here_
 
 model_checkpoint:
@@ -22,3 +24,11 @@ early_stopping:
 
 model_summary:
   max_depth: 2
+
+swa:
+  swa_lrs:
+    - ${model.lr}
+    - 3e-4
+    - 1e-4
+  swa_epoch_start: 12
+  annealing_epochs: 3
