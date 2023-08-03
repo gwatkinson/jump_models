@@ -80,7 +80,7 @@ def contrastive_loss_with_temperature(
     )
 
 
-DEFAULT_LOGIT_SCALE = nn.Parameter(math.log(1 / 0.07) * torch.ones([]))
+DEFAULT_LOGIT_SCALE = nn.Parameter(math.log(1 / 0.07) * torch.ones([]), requires_grad=False)
 LOG_1 = math.log(1)
 LOG_100 = math.log(100)
 
@@ -129,6 +129,7 @@ class ContrastiveLossWithTemperature(nn.Module):
         logit_scale: Union[float, nn.Parameter] = DEFAULT_LOGIT_SCALE,
         logit_scale_min: Optional[float] = LOG_1,
         logit_scale_max: Optional[float] = LOG_100,
+        requires_grad: bool = False,
     ):
         super().__init__()
         torch._C._log_api_usage_once(f"torchmultimodal.{self.__class__.__name__}")
@@ -142,7 +143,7 @@ class ContrastiveLossWithTemperature(nn.Module):
         if isinstance(logit_scale, nn.Parameter):
             self.logit_scale = logit_scale
         else:
-            self.logit_scale = nn.Parameter(logit_scale * torch.ones([]))
+            self.logit_scale = nn.Parameter(logit_scale * torch.ones([]), requires_grad=requires_grad)
 
     def forward(
         self,

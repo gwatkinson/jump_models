@@ -38,6 +38,10 @@ class BasicJUMPModule(LightningModule):
         frequency: int = 1,
         lr: Optional[float] = None,
         batch_size: Optional[int] = None,
+        image_backbone: str = "backbone",
+        image_head: str = "projection_head",
+        molecule_backbone: str = "backbone",
+        molecule_head: str = "projection_head",
         **kwargs,
     ):
         super().__init__()
@@ -50,6 +54,10 @@ class BasicJUMPModule(LightningModule):
         self.image_encoder = image_encoder
         self.molecule_encoder = molecule_encoder
         self.criterion = criterion
+        self.image_backbone = getattr(self.image_encoder, image_backbone)
+        self.image_head = getattr(self.image_encoder, image_head)
+        self.molecule_backbone = getattr(self.molecule_encoder, molecule_backbone)
+        self.molecule_head = getattr(self.molecule_encoder, molecule_head)
 
         # embedding dim
         self.embedding_dim = embedding_dim
@@ -114,7 +122,8 @@ class BasicJUMPModule(LightningModule):
         return loss
 
     def on_train_epoch_end(self):
-        pass
+        logit_scale = self.criterion.logit_scale.exp().item()
+        self.log("model/logit_scale", logit_scale, prog_bar=False, on_epoch=True)
 
     def validation_step(self, batch: Any, batch_idx: int):
         loss = self.model_step(batch, stage="val", on_step=False, on_epoch=True, prog_bar=True)
