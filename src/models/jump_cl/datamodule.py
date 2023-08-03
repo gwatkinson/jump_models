@@ -282,7 +282,6 @@ class BasicJUMPDataModule(LightningDataModule):
         `trainer.test()`, so be careful not to execute things like
         random split twice!
         """
-        py_logger.info("Setting up datasets and metadata")
 
         if self.load_df is None:
             py_logger.info(f"Loading image metadata df from {self.image_metadata_path}")
