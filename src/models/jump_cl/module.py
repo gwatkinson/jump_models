@@ -174,15 +174,17 @@ class BasicJUMPModule(LightningModule):
             },
         ]
         group_lens = {group["name"]: len(group["params"]) for group in params_groups}
+        group_to_keep = [
+            group["name"]
+            for group in params_groups
+            if group_lens[group["name"]] > 0 and group["name"] not in self.params_group_to_ignore
+        ]
 
         logger.info(f"Params groups:\n{group_lens}")
+        logger.info(f"Params groups to keep:\n{group_to_keep}")
 
         optimizer = self.optimizer(
-            [
-                group
-                for group in params_groups
-                if group_lens[group["name"]] > 0 and group["name"] not in self.params_group_to_ignore
-            ],
+            [group for group in params_groups if group["name"] in group_to_keep],
             lr=self.lr,
         )
 
