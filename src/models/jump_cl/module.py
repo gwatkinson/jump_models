@@ -152,10 +152,25 @@ class BasicJUMPModule(LightningModule):
         optimizer = self.optimizer(
             [
                 {
-                    "params": filter(lambda p: p.requires_grad, self.parameters()),
-                    "lr": self.lr,
-                    "name": "projection_head",
-                }
+                    "params": filter(lambda p: p.requires_grad, self.image_head.parameters()),
+                    "name": "image_projection_head",
+                },
+                {
+                    "params": filter(lambda p: p.requires_grad, self.molecule_head.parameters()),
+                    "name": "molecule_projection_head",
+                },
+                {
+                    "params": filter(lambda p: p.requires_grad, self.image_backbone.parameters()),
+                    "name": "image_encoder",
+                },
+                {
+                    "params": filter(lambda p: p.requires_grad, self.molecule_backbone.parameters()),
+                    "name": "molecule_encoder",
+                },
+                {
+                    "params": filter(lambda p: p.requires_grad, self.criterion.parameters()),
+                    "name": "criterion",
+                },
             ],
             lr=self.lr,
         )
