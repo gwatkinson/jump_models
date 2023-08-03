@@ -1,0 +1,30 @@
+defaults:
+  - lightning/rich_progress_bar@_here_
+  - lightning/model_summary@_here_
+  - lightning/lr_monitor@_here_
+  - lightning/model_checkpoint@_here_
+  - lightning/early_stopping@_here_
+  - lightning/swa@_here_
+  - custom/wandb_watcher@_here_
+
+model_checkpoint:
+  dirpath: ${paths.output_dir}/checkpoints
+  filename: "epoch_{epoch:03d}"
+  monitor: "val/loss"
+  mode: "min"
+  save_last: True
+  auto_insert_metric_name: False
+
+early_stopping:
+  monitor: "val/loss"
+  patience: 10
+  min_delta: 0
+  mode: "min"
+
+model_summary:
+  max_depth: 2
+
+swa:
+  swa_lrs: ${model.lr}
+  swa_epoch_start: 12
+  annealing_epochs: 3
