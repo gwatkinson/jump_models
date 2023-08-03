@@ -121,9 +121,9 @@ class BasicJUMPModule(LightningModule):
         loss = self.model_step(batch, stage="train", on_step=True, on_epoch=True, prog_bar=True)
         return loss
 
-    def on_train_epoch_end(self):
+    def on_train_epoch_start(self):
         logit_scale = self.criterion.logit_scale.exp().item()
-        self.log("model/logit_scale", logit_scale, prog_bar=False, on_epoch=True)
+        self.log("model/logit_scale", logit_scale, prog_bar=False)
 
     def validation_step(self, batch: Any, batch_idx: int):
         loss = self.model_step(batch, stage="val", on_step=False, on_epoch=True, prog_bar=True)
@@ -151,23 +151,23 @@ class BasicJUMPModule(LightningModule):
         """
         params_groups = [
             {
-                "params": filter(lambda p: p.requires_grad, self.image_head.parameters()),
+                "params": list(filter(lambda p: p.requires_grad, self.image_head.parameters())),
                 "name": "image_projection_head",
             },
             {
-                "params": filter(lambda p: p.requires_grad, self.molecule_head.parameters()),
+                "params": list(filter(lambda p: p.requires_grad, self.molecule_head.parameters())),
                 "name": "molecule_projection_head",
             },
             {
-                "params": filter(lambda p: p.requires_grad, self.criterion.parameters()),
+                "params": list(filter(lambda p: p.requires_grad, self.criterion.parameters())),
                 "name": "criterion",
             },
             {
-                "params": filter(lambda p: p.requires_grad, self.image_backbone.parameters()),
+                "params": list(filter(lambda p: p.requires_grad, self.image_backbone.parameters())),
                 "name": "image_encoder",
             },
             {
-                "params": filter(lambda p: p.requires_grad, self.molecule_backbone.parameters()),
+                "params": list(filter(lambda p: p.requires_grad, self.molecule_backbone.parameters())),
                 "name": "molecule_encoder",
             },
         ]
