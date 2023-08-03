@@ -1,5 +1,5 @@
 # disable python warnings if they annoy you
-ignore_warnings: True
+ignore_warnings: False
 
 # rich style
 style: dim
