@@ -1,17 +1,17 @@
 # @package _global_
 
 # to execute this experiment run:
-# python train.py experiment=small_jump_cl
+# python train.py experiment=med_jump_cl
 
 defaults:
   - override /data: jump_cl.yaml
   - override /data/compound_transform: dgllife_gin.yaml
-  - override /model: jump_cl.yaml
+  - override /model: frozen_jump_cl.yaml
   - override /model/image_encoder: resnet18.yaml
   - override /model/molecule_encoder: gin_infomax.yaml
   - override /model/optimizer: adam.yaml
   - override /model/scheduler: cosine_annealing_warm_restart.yaml
-  - override /callbacks: default.yaml
+  - override /callbacks: jump.yaml
   - override /trainer: gpu.yaml
   - override /logger: many_loggers.yaml
 
@@ -32,39 +32,55 @@ trainer:
   min_epochs: 0
   max_epochs: 50
   log_every_n_steps: 1
-  # gradient_clip_val: 0.5
-  num_sanity_val_steps: 2
+  gradient_clip_val: null # 0.5
+  num_sanity_val_steps: 1
   reload_dataloaders_every_n_epochs: 1
 
   devices: ???
 
+
 data:
-  batch_size: 32
+  batch_size: 512
   num_workers: 24
-  prefetch_factor: 3
+  prefetch_factor: 2
 
   transform:
-    size: 128
+    size: 256
 
   splitter:
-    train: 800
-    test: 200
-    val: 100
+    train: 25_000
+    test: 3000
+    val: 2000
 
-  split_path: ${paths.split_path}/small_jump_cl/
+  split_path: ${paths.split_path}/med_jump_cl/
 
 
 model:
-  embedding_dim: 128
-  lr: 4e-2
+  embedding_dim: 512
+  lr: 1e-2
+
+  monitor: val/loss  # metric to monitor for some schedulers
+  interval: epoch    # epoch or step
+  frequency: 1       # how often to call the scheduler wrt interval
 
   scheduler:
-    T_0: 15
+    T_0: 7
     T_mult: 2
 
   example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
 
+
 callbacks:
+  jump_cl_freezer:
+    unfreeze_image_backbone_at_epoch: 10
+    image_initial_denom_lr: 50
+    image_lambda_func:
+      a0: 1.8
+    unfreeze_molecule_backbone_at_epoch: 8
+    molecule_initial_denom_lr: 50
+    molecule_lambda_func:
+      a0: 1.8
+
   wandb_watcher:
     log_freq: 100
     watch_log: all
@@ -74,6 +90,6 @@ logger:
   wandb:
     tags: ${tags}
     project: "jump_models"
-    group: "small_jump_cl"
+    group: "med_jump_cl"
     job_type: ""
     log_model: True

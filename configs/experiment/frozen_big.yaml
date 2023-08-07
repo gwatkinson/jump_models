@@ -1,18 +1,18 @@
 # @package _global_
 
 # to execute this experiment run:
-# python train.py experiment=small_jump_cl
+# python train.py experiment=big_jump_cl
 
 defaults:
   - override /data: jump_cl.yaml
   - override /data/compound_transform: dgllife_gin.yaml
-  - override /model: jump_cl.yaml
-  - override /model/image_encoder: resnet18.yaml
+  - override /model: frozen_jump_cl.yaml
+  - override /model/image_encoder: resnet34.yaml
   - override /model/molecule_encoder: gin_infomax.yaml
   - override /model/optimizer: adam.yaml
   - override /model/scheduler: cosine_annealing_warm_restart.yaml
-  - override /callbacks: default.yaml
-  - override /trainer: gpu.yaml
+  - override /callbacks: jump.yaml
+  - override /trainer: ddp.yaml
   - override /logger: many_loggers.yaml
 
 # all parameters below will be merged with parameters from default configurations set above
@@ -29,44 +29,58 @@ seed: 12345
 compile: False
 
 trainer:
-  min_epochs: 0
-  max_epochs: 50
+  min_epochs: 35
+  max_epochs: 100
   log_every_n_steps: 1
-  # gradient_clip_val: 0.5
-  num_sanity_val_steps: 2
+  gradient_clip_val: 0.5
+  num_sanity_val_steps: 1
   reload_dataloaders_every_n_epochs: 1
 
   devices: ???
 
+
 data:
-  batch_size: 32
-  num_workers: 24
-  prefetch_factor: 3
+  batch_size: 768
+  num_workers: 32
+  pin_memory: False
+  prefetch_factor: 2
 
   transform:
     size: 128
 
   splitter:
-    train: 800
-    test: 200
-    val: 100
+    train: 90_000
+    test: 10_000
+    val: 5_000
+    retrieval: 3_000
 
-  split_path: ${paths.split_path}/small_jump_cl/
+  split_path: ${paths.split_path}/big_jump_cl/
 
 
 model:
-  embedding_dim: 128
-  lr: 4e-2
+  embedding_dim: 512
+  lr: 1e-2
+
+  optimizer:
+    weight_decay: 1e-3
 
   scheduler:
-    T_0: 15
+    T_0: 4
     T_mult: 2
 
   example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
 
+
 callbacks:
+  jump_cl_freezer:
+    unfreeze_image_backbone_at_epoch: 3
+    image_initial_denom_lr: 50
+    unfreeze_molecule_backbone_at_epoch: 2
+    molecule_initial_denom_lr: 50
+
+
   wandb_watcher:
-    log_freq: 100
+    log_freq: 50
     watch_log: all
 
 
@@ -74,6 +88,6 @@ logger:
   wandb:
     tags: ${tags}
     project: "jump_models"
-    group: "small_jump_cl"
+    group: "big_jump_cl"
     job_type: ""
     log_model: True
