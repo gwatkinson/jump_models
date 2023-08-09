@@ -111,9 +111,9 @@ class BasicJUMPDataModule(LightningDataModule):
         self.collate_fn = collate_fn
 
         # datasets
-        self.data_train: Optional[Dataset] = None
-        self.data_val: Optional[Dataset] = None
-        self.data_test: Optional[Dataset] = None
+        self.train_dataset: Optional[Dataset] = None
+        self.val_dataset: Optional[Dataset] = None
+        self.test_dataset: Optional[Dataset] = None
 
         # data loaders
         self.dataloader_config = dataloader_config
@@ -143,6 +143,49 @@ class BasicJUMPDataModule(LightningDataModule):
         self.col_fstring = kwargs.get("col_fstring", "FileName_Orig{channel}")
         self.id_cols = kwargs.get("id_cols", ["Metadata_Source", "Metadata_Batch", "Metadata_Plate", "Metadata_Well"])
         self.extra_cols = kwargs.get("extra_cols", ["Metadata_PlateType", "Metadata_Site"])
+
+    def prepare_load_df_with_meta(self):
+        img_path = Path(self.image_metadata_path)
+        load_dir = Path(self.local_load_data_dir)
+        meta_dir = Path(self.metadata_dir)
+        f_string = self.index_str
+        cols_to_keep = (
+            self.id_cols
+            + [self.col_fstring.format(channel=channel) for channel in self.channels]
+            + [self.compound_col]
+            + self.extra_cols
+        )
+
+        py_logger.info("Preparing image metadata")
+        py_logger.debug(f"{img_path} does not exist.")
+        py_logger.debug(f"Loading load data df from {load_dir} ...")
+        load_df = load_load_df_from_parquet(load_dir)
+
+        py_logger.debug(f"Loading metadata df from {meta_dir} ...")
+        meta_df = load_metadata_df_from_csv(meta_dir)
+
+        py_logger.debug(f"ID cols: {self.id_cols}")
+        py_logger.debug(f"Extra cols: {self.extra_cols}")
+        py_logger.debug(f"load_df cols: {load_df.columns.tolist()}")
+        py_logger.debug(f"meta_df cols: {meta_df.columns.tolist()}")
+
+        py_logger.info("Merging metadata and load data...")
+        load_df_with_meta = load_df.merge(meta_df, how="left", on=self.id_cols).dropna(subset=[self.compound_col])
+        load_df_with_meta = load_df_with_meta.query("Metadata_PlateType == 'COMPOUND'")
+        load_df_with_meta["index"] = load_df_with_meta.apply(lambda x: f_string.format(**x), axis=1)
+
+        load_df_with_meta = load_df_with_meta.set_index("index", drop=True).loc[:, cols_to_keep]
+
+        py_logger.debug(f"load_df_with_meta ids unique: {load_df_with_meta.index.is_unique}")
+
+        py_logger.debug(f"Saving image metadata df to {img_path} ...")
+        img_path.parent.mkdir(exist_ok=True, parents=True)
+        load_df_with_meta.to_parquet(
+            path=str(img_path),
+            engine="pyarrow",
+            compression="snappy",
+            index=True,
+        )
 
     def prepare_data(self) -> None:
         """Download data if needed.
@@ -182,6 +225,7 @@ class BasicJUMPDataModule(LightningDataModule):
 
             py_logger.info("Merging metadata and load data...")
             load_df_with_meta = load_df.merge(meta_df, how="left", on=self.id_cols).dropna(subset=[self.compound_col])
+            load_df_with_meta = load_df_with_meta.query("Metadata_PlateType == 'COMPOUND'")
             load_df_with_meta["index"] = load_df_with_meta.apply(lambda x: f_string.format(**x), axis=1)
 
             load_df_with_meta = load_df_with_meta.set_index("index", drop=True).loc[:, cols_to_keep]
@@ -275,8 +319,8 @@ class BasicJUMPDataModule(LightningDataModule):
                     pd.Series(retrieval_ids).to_csv(retrieval_ids_path, index=False)
 
     def setup(self, stage: Optional[str] = None) -> None:
-        """Load data. Set variables: `self.data_train`, `self.data_val`,
-        `self.data_test`.
+        """Load data. Set variables: `self.train_dataset`, `self.val_dataset`,
+        `self.test_dataset`.
 
         This method is called by lightning with both `trainer.fit()` and
         `trainer.test()`, so be careful not to execute things like
@@ -306,11 +350,11 @@ class BasicJUMPDataModule(LightningDataModule):
                 f"Train, test, val lengths: {len(self.train_cpds)}, {len(self.test_cpds)}, {len(self.val_cpds)}"
             )
 
-        if self.data_train is None:
+        if self.train_dataset is None:
             py_logger.info("Preparing train dataset")
             train_load_df = self.load_df[self.load_df[self.compound_col].isin(self.train_cpds)]
             train_compound_dict = {k: v for k, v in self.compound_dict.items() if k in self.train_cpds}
-            self.data_train = self.dataset_cls(
+            self.train_dataset = self.dataset_cls(
                 load_df=train_load_df,
                 compound_dict=train_compound_dict,
                 transform=self.transform,
@@ -320,11 +364,11 @@ class BasicJUMPDataModule(LightningDataModule):
                 col_fstring=self.col_fstring,
             )
 
-        if self.data_val is None:
+        if self.val_dataset is None:
             py_logger.info("Preparing validation dataset")
             val_load_df = self.load_df[self.load_df[self.compound_col].isin(self.val_cpds)]
             val_compound_dict = {k: v for k, v in self.compound_dict.items() if k in self.val_cpds}
-            self.data_val = self.dataset_cls(
+            self.val_dataset = self.dataset_cls(
                 load_df=val_load_df,
                 compound_dict=val_compound_dict,
                 transform=self.transform,
@@ -334,11 +378,11 @@ class BasicJUMPDataModule(LightningDataModule):
                 col_fstring=self.col_fstring,
             )
 
-        if stage == "test" and self.data_test is None:
+        if stage == "test" and self.test_dataset is None:
             py_logger.info("Preparing test dataset")
             test_load_df = self.load_df[self.load_df[self.compound_col].isin(self.test_cpds)]
             test_compound_dict = {k: v for k, v in self.compound_dict.items() if k in self.test_cpds}
-            self.data_test = self.dataset_cls(
+            self.test_dataset = self.dataset_cls(
                 load_df=test_load_df,
                 compound_dict=test_compound_dict,
                 transform=self.transform,
@@ -351,7 +395,7 @@ class BasicJUMPDataModule(LightningDataModule):
     def train_dataloader(self) -> DataLoader:
         train_kwargs = OmegaConf.to_container(self.dataloader_config.train, resolve=True)
         return DataLoader(
-            dataset=self.data_train,
+            dataset=self.train_dataset,
             collate_fn=self.collate_fn,
             **train_kwargs,
         )
@@ -359,7 +403,7 @@ class BasicJUMPDataModule(LightningDataModule):
     def val_dataloader(self) -> DataLoader:
         val_kwargs = OmegaConf.to_container(self.dataloader_config.val, resolve=True)
         return DataLoader(
-            dataset=self.data_val,
+            dataset=self.val_dataset,
             collate_fn=self.collate_fn,
             **val_kwargs,
         )
@@ -367,7 +411,7 @@ class BasicJUMPDataModule(LightningDataModule):
     def test_dataloader(self) -> DataLoader:
         test_kwargs = OmegaConf.to_container(self.dataloader_config.test, resolve=True)
         return DataLoader(
-            dataset=self.data_test,
+            dataset=self.test_dataset,
             collate_fn=self.collate_fn,
             **test_kwargs,
         )

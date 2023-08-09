@@ -1,5 +1,5 @@
 import logging
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 import torch
 from lightning import LightningModule
@@ -38,7 +38,6 @@ class BasicJUMPModule(LightningModule):
         frequency: int = 1,
         lr: Optional[float] = None,
         batch_size: Optional[int] = None,
-        params_group_to_ignore: Optional[List[str]] = None,
         image_backbone: str = "backbone",
         image_head: str = "projection_head",
         molecule_backbone: str = "backbone",
@@ -59,7 +58,6 @@ class BasicJUMPModule(LightningModule):
         self.image_head = getattr(self.image_encoder, image_head)
         self.molecule_backbone = getattr(self.molecule_encoder, molecule_backbone)
         self.molecule_head = getattr(self.molecule_encoder, molecule_head)
-        self.params_group_to_ignore = params_group_to_ignore
 
         # embedding dim
         self.embedding_dim = embedding_dim
@@ -106,6 +104,7 @@ class BasicJUMPModule(LightningModule):
     def model_step(self, batch: Any, batch_idx: int, stage: str, **kwargs):
         image_emb = self.image_encoder(batch["image"])
         compound_emb = self.molecule_encoder(batch["compound"])
+        batch_size = image_emb.shape[0]
 
         loss = self.criterion(
             embeddings_a=image_emb,
@@ -113,13 +112,14 @@ class BasicJUMPModule(LightningModule):
         )
 
         self.loss_dict[stage](loss)
-        # loss_to_log = self.loss_dict[stage](loss)
-        self.log(f"{stage}/loss", self.loss_dict[stage], **kwargs)
-        # self.log(f"{stage}/loss_to_log", loss_to_log, **kwargs)
+        self.log(f"{stage}/loss", self.loss_dict[stage], batch_size=batch_size, **kwargs)
 
         if stage == "train":
-            temperature = self.criterion.logit_scale.exp().item()
-            self.log("model/temperature", temperature, prog_bar=False, on_epoch=True, on_step=False)
+            try:
+                temperature = self.criterion.logit_scale.exp().item()
+                self.log("model/temperature", temperature, prog_bar=False, on_epoch=True, on_step=False)
+            except AttributeError:
+                pass
 
         if not torch.isfinite(loss):
             logger.info(f"Loss of batch {batch_idx} is {loss}. Returning None.")
@@ -191,11 +191,7 @@ class BasicJUMPModule(LightningModule):
         params_len = {group["name"]: len(group["params"]) for group in params_groups}
         group_lens = {group["name"]: len(group["params"]) for group in filtered_params_groups}
 
-        group_to_keep = [
-            group["name"]
-            for group in filtered_params_groups
-            if group_lens[group["name"]] > 0 and group["name"] not in self.params_group_to_ignore
-        ]
+        group_to_keep = [group["name"] for group in filtered_params_groups if group_lens[group["name"]] > 0]
 
         logger.info(f"Number of params in each groups:\n{params_len}")
         logger.info(f"Number of require grad params in each groups:\n{group_lens}")
