@@ -22,18 +22,18 @@ class GATPretrainedWithLinearHead(nn.Module):
         self.pretrained_name = pretrained_name
         self.out_dim = out_dim
 
-        self.base_model = dgllife.model.load_pretrained(self.pretrained_name)
-        self.pretrained_dim = self.base_model.gnn.gnn_layers[0].gat_conv.fc.in_features
-        self.head = nn.Linear(self.pretrained_dim, self.out_dim)
+        self.backbone = dgllife.model.load_pretrained(self.pretrained_name)
+        self.pretrained_dim = self.backbone.gnn.gnn_layers[0].gat_conv.fc.in_features
+        self.projection_head = nn.Linear(self.pretrained_dim, self.out_dim)
 
         logger.info(f"Using pretrained model: {self.pretrained_name}")
 
     def extract(self, x):
-        node_feats = self.base_model(x, x.ndata["h"])
+        node_feats = self.backbone(x, x.ndata["h"])
         return node_feats
 
     def forward(self, x):
         # x is a batch of DGLGraphs created in the custom collate_fn of the dataloader
         z = self.extract(x)
-        z = self.head(z)
+        z = self.projection_head(z)
         return z
