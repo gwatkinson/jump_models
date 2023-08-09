@@ -5,13 +5,13 @@
 
 defaults:
   - override /data: jump_cl.yaml
-  - override /data/compound_transform: dgllife_gin.yaml
-  - override /model: frozen_jump_cl.yaml
-  - override /model/image_encoder: resnet18.yaml
-  - override /model/molecule_encoder: gin_infomax.yaml
+  - override /data/compound_transform: attentive_fp.yaml
+  - override /model: jump_cl.yaml
+  - override /model/image_encoder: vit_base.yaml
+  - override /model/molecule_encoder: attentive_fp.yaml
   - override /model/optimizer: adam.yaml
   - override /model/scheduler: cosine_annealing_warm_restart.yaml
-  - override /callbacks: jump.yaml
+  - override /callbacks: default.yaml
   - override /trainer: gpu.yaml
   - override /logger: many_loggers.yaml
 
@@ -45,14 +45,16 @@ data:
   prefetch_factor: 2
 
   transform:
-    size: 256
+    size: 384
 
   splitter:
     train: 25_000
     test: 3000
     val: 2000
 
-  split_path: ${paths.split_path}/med_jump_cl/
+  split_path: ${paths.split_path}/med_scratch/
+  image_metadata_path: ${paths.metadata_path}/images_metadata_scratch.parquet
+  compound_metadata_path: ${paths.metadata_path}/compound_dict_scratch.json
 
 
 model:
@@ -67,20 +69,10 @@ model:
     T_0: 7
     T_mult: 2
 
-  example_input_path: ${paths.data_root_dir}/jump/models/example_batch/simple_jump_cl/batch.pth
+  example_input_path: /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
 
 
 callbacks:
-  jump_cl_freezer:
-    unfreeze_image_backbone_at_epoch: 10
-    image_initial_denom_lr: 50
-    image_lambda_func:
-      a0: 1.8
-    unfreeze_molecule_backbone_at_epoch: 8
-    molecule_initial_denom_lr: 50
-    molecule_lambda_func:
-      a0: 1.8
-
   wandb_watcher:
     log_freq: 100
     watch_log: all

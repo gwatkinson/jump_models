@@ -57,8 +57,8 @@ image_metadata_path: ${paths.metadata_path}/images_metadata.parquet
 compound_metadata_path: ${paths.metadata_path}/compound_dict.json
 compound_col: Metadata_InChI
 image_sampler: null
-metadata_dir: /projects/cpjump1/jump/metadata/complete_metadata.csv
-local_load_data_dir: /projects/cpjump1/jump/load_data/final/
+metadata_dir: ${paths.raw_metadata_path}/complete_metadata.csv
+local_load_data_dir: ${paths.load_data_path}/final/
 
 index_str: "{Metadata_Source}__{Metadata_Batch}__{Metadata_Plate}__{Metadata_Well}__{Metadata_Site}"
 channels: [DNA,AGP,ER,Mito,RNA]

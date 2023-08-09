@@ -1,0 +1,9 @@
+_target_: src.modules.molecules.attentive_fp.AttentiveFPWithLinearHead
+node_feat_size: 74
+edge_feat_size: 13
+num_layers: 4
+num_timesteps: 2
+graph_feat_size: 256
+n_tasks: 256
+dropout: 0.2
+out_dim: 512
