@@ -58,7 +58,7 @@ def configcell_text_and_colors(array_df, lin, col, oText, facecolors, posi, fz, 
         else:
             per_ok = per_err = 0
 
-        per_ok_s = [f"{per_ok:{per_fmt}}", "100%"][per_ok == 100]
+        per_ok_s = [f"{per_ok/100:{per_fmt}}", "100%"][per_ok == 100]
 
         # text to DEL
         text_del.append(oText)
@@ -72,7 +72,7 @@ def configcell_text_and_colors(array_df, lin, col, oText, facecolors, posi, fz, 
             "gid": "sum",
             "fontproperties": font_prop,
         }
-        lis_txt = [f"{cell_val:.0f}", per_ok_s, f"{per_err:{per_fmt}}"]
+        lis_txt = [f"{cell_val:.0f}", per_ok_s, f"{per_err/100:{per_fmt}}"]
         lis_kwa = [text_kwargs]
         dic = text_kwargs.copy()
         dic["color"] = "g"
@@ -102,7 +102,7 @@ def configcell_text_and_colors(array_df, lin, col, oText, facecolors, posi, fz, 
 
     else:
         if per > 0:
-            txt = f"{cell_val}\n{per:{per_fmt}}"
+            txt = f"{cell_val}\n{per/100:{per_fmt}}"
         else:
             if show_null_values == 0:
                 txt = ""
