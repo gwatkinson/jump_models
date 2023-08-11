@@ -142,7 +142,7 @@ def insert_totals(df_cm):
 def pp_matrix(
     df_cm,
     annot=True,
-    cmap="Oranges",
+    cmap="YlGnBu",
     fmt=".2f",
     fz=11,
     lw=0.5,

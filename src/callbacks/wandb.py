@@ -113,7 +113,7 @@ class WandbPlottingCallback(WandbTrainingCallback):
 
             table.add_data(*data)
             key = f"{self.prefix}{phase}_plots"
-            self.logger.log_table(key=key, columns=table.columns, data=table.data, step=current_epoch)
+            self.logger.log_table(key=key, columns=table.columns, data=table.data)
 
     def on_train_epoch_end(self, trainer, pl_module):
         self.on_epoch_end_plotting(trainer, pl_module, phase="train")

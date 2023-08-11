@@ -89,7 +89,8 @@ callbacks = [
         log_graph=True,
         prefix="jump_moa/image_graph/",
         figsize=(16, 16),
-        cmap="Blues",
+        cmap="YlGnBu",
+        fz=10,
     )
 ]
 
