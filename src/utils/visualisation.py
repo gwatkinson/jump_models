@@ -35,7 +35,7 @@ def configcell_text_and_colors(array_df, lin, col, oText, facecolors, posi, fz, 
     text_del = []
     cell_val = array_df[lin][col]
     tot_all = array_df[-1][-1]
-    per = (float(cell_val) / tot_all) * 100
+    per = float(cell_val) / tot_all
     curr_column = array_df[:, col]
     ccl = len(curr_column)
 
@@ -47,18 +47,18 @@ def configcell_text_and_colors(array_df, lin, col, oText, facecolors, posi, fz, 
                 tot_rig = 0
                 for i in range(array_df.shape[0] - 1):
                     tot_rig += array_df[i][i]
-                per_ok = (float(tot_rig) / cell_val) * 100
+                per_ok = float(tot_rig) / cell_val
             elif col == ccl - 1:
                 tot_rig = array_df[lin][lin]
-                per_ok = (float(tot_rig) / cell_val) * 100
+                per_ok = float(tot_rig) / cell_val
             elif lin == ccl - 1:
                 tot_rig = array_df[col][col]
-                per_ok = (float(tot_rig) / cell_val) * 100
-            per_err = 100 - per_ok
+                per_ok = float(tot_rig) / cell_val
+            per_err = 1 - per_ok
         else:
             per_ok = per_err = 0
 
-        per_ok_s = [f"{per_ok/100:{per_fmt}}", "100%"][per_ok == 100]
+        per_ok_s = [f"{per_ok:{per_fmt}}", "100%"][per_ok == 1]
 
         # text to DEL
         text_del.append(oText)
@@ -72,7 +72,7 @@ def configcell_text_and_colors(array_df, lin, col, oText, facecolors, posi, fz, 
             "gid": "sum",
             "fontproperties": font_prop,
         }
-        lis_txt = [f"{cell_val:.0f}", per_ok_s, f"{per_err/100:{per_fmt}}"]
+        lis_txt = [f"{cell_val:.0f}", per_ok_s, f"{per_err:{per_fmt}}"]
         lis_kwa = [text_kwargs]
         dic = text_kwargs.copy()
         dic["color"] = "g"
@@ -102,14 +102,14 @@ def configcell_text_and_colors(array_df, lin, col, oText, facecolors, posi, fz, 
 
     else:
         if per > 0:
-            txt = f"{cell_val}\n{per/100:{per_fmt}}"
+            txt = f"{cell_val}\n{per:{per_fmt}}"
         else:
             if show_null_values == 0:
                 txt = ""
             elif show_null_values == 1:
                 txt = "0"
             else:
-                txt = f"0\n{0.:{per_fmt}}"
+                txt = "0\n0%"
         oText.set_text(txt)
 
         # main diagonal
