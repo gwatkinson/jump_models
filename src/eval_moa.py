@@ -1,5 +1,8 @@
+import logging
+
 import torch
 import torch.nn as nn
+from dotenv import load_dotenv
 from lightning.pytorch import Trainer
 from lightning.pytorch.loggers import WandbLogger
 from omegaconf import DictConfig
@@ -11,6 +14,11 @@ from src.modules.images.timm_pretrained import CNNEncoder
 from src.modules.molecules.dgllife_gin import GINPretrainedWithLinearHead
 from src.modules.transforms import DefaultJUMPTransform
 from src.splitters import StratifiedSplitter
+
+load_dotenv()
+
+
+logger = logging.getLogger(__name__)
 
 dataloader_config = DictConfig(
     {
@@ -32,6 +40,7 @@ dataloader_config = DictConfig(
     }
 )
 
+logger.info("Loading DataModule")
 
 dm = JumpMOADataModule(
     moa_load_df_path="/projects/cpjump1/jump/models/eval/test/moa_1000.csv",
@@ -54,15 +63,17 @@ dm = JumpMOADataModule(
 )
 
 
+logger.info("Preparing DataModule")
 dm.prepare_data()
 
-
+logger.info("Setting up Train DataModule")
 dm.setup("train", data_root_dir="../")
 
-
+logger.info("Loading Models")
 image_encoder = CNNEncoder("resnet18", target_num=128)
 molecule_encoder = GINPretrainedWithLinearHead("gin_supervised_infomax", out_dim=128)
 
+logger.info("Setting up Module")
 model = JumpMOAImageModule(
     image_encoder=image_encoder,
     optimizer=torch.optim.Adam,
@@ -72,8 +83,9 @@ model = JumpMOAImageModule(
     example_input_path="/projects/cpjump1/jump/models/eval/test/example.pt",
 )
 
-
+logger.info("Setting up Trainer")
 logger = WandbLogger(project="jump_moa", log_model=True, group="debug")
 trainer = Trainer(max_epochs=10, logger=logger)
 
+logger.info("Fitting Trainer")
 trainer.fit(model, dm)
