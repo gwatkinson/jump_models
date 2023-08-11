@@ -143,7 +143,6 @@ class OGBClassificationModule(LightningModule):
 
         # update metrics
         self.loss_dict[stage].update(loss)
-        self.metric_dict[stage].update(logits, targets)
         self.plot_metrics_dict[stage].update(logits, targets)
         other_metrics = self.other_metrics_dict[stage](logits, targets)
 

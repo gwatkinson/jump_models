@@ -8,7 +8,6 @@ This allows for easy comparison of models on a list of downstream tasks.
 """
 
 import logging
-from abc import ABC, abstractmethod
 from typing import List, Optional, Union
 
 from lightning import LightningDataModule, LightningModule, Trainer
@@ -16,7 +15,7 @@ from lightning import LightningDataModule, LightningModule, Trainer
 logger = logging.getLogger(__name__)
 
 
-class Evaluator(ABC):
+class Evaluator:
     """Base class for an evaluator.
 
     This requires a pytorch lightning datamodule, a model with
@@ -25,38 +24,23 @@ class Evaluator(ABC):
 
     def __init__(
         self,
-        name: Optional[str] = None,
-    ):
-        self.name = name
-
-    @abstractmethod
-    def evaluate(self):
-        """Evaluate the model."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def run(self):
-        """Run the evaluator."""
-        raise NotImplementedError
-
-    def __repr__(self):
-        return f"({self.name}) {self.__class__.__name__}()"
-
-
-class FinetunableEvaluator(Evaluator):
-    """Class for tunable evaluators."""
-
-    def __init__(
-        self,
         model: LightningModule,
         datamodule: LightningDataModule,
         trainer: Trainer,
+        finetune_kwargs: Optional[dict] = None,
+        evaluate_kwargs: Optional[dict] = None,
+        visualize_kwargs: Optional[dict] = None,
         name: Optional[str] = None,
     ):
-        super().__init__(name=name)
+        super().__init__()
+        self.name = name
         self.model = model
         self.datamodule = datamodule
         self.trainer = trainer
+
+        self.finetune_kwargs = finetune_kwargs or {}
+        self.evaluate_kwargs = evaluate_kwargs or {}
+        self.visualize_kwargs = visualize_kwargs or {}
 
     def finetune(self, **kwargs):
         """Finetune the model."""
@@ -73,57 +57,19 @@ class FinetunableEvaluator(Evaluator):
         logger.info(f"Visualizing {self.model} on {self.datamodule} with {self.trainer}")
         pass  # To implement in subclasses
 
-    def __repr__(self):
-        display = f"({self.name}) " if self.name is not None else ""
-        display += f"{self.__class__.__name__}("
-        display += f"\n\tdatamodule={self.datamodule},"
-        display += f"\n\tmodel={self.model},"
-        display += f"\n\ttrainer={self.trainer}"
-        display += "\n)"
-        return display
-
-    def run(self, **kwargs):
+    def run(self):
         """Run the evaluator."""
-        self.finetune(**kwargs)
-        self.evaluate(**kwargs)
-        self.visualize(**kwargs)
-
-
-class NonFinetunableEvaluator(Evaluator):
-    """Class for non-tunable evaluators, relying on a predefined metric and
-    model."""
-
-    def __init__(
-        self, model: LightningModule, datamodule: LightningDataModule, trainer: Trainer, name: Optional[str] = None
-    ):
-        super().__init__(name)
-        self.model = model
-        self.datamodule = datamodule
-        self.trainer = trainer
-
-    def evaluate(self, **kwargs):
-        """Evaluate the model."""
-        logger.info(f"Evaluating {self.model} on {self.datamodule} with {self.trainer}")
-        self.trainer.test(model=self.model, datamodule=self.datamodule, **kwargs)
-
-    def visualize(self, **kwargs):
-        """Create visualizations."""
-        logger.info(f"Visualizing {self.model} on {self.datamodule} with {self.trainer}")
-        pass
+        self.finetune(**self.finetune_kwargs)
+        self.evaluate(**self.evaluate_kwargs)
+        self.visualize(**self.visualize_kwargs)
 
     def __repr__(self):
-        display = f"({self.name}) " if self.name is not None else ""
-        display += f"{self.__class__.__name__}("
-        display += f"\n\tdatamodule={self.datamodule},"
-        display += f"\n\tmodel={self.model},"
-        display += f"\n\ttrainer={self.trainer}"
-        display += "\n)"
-        return display
-
-    def run(self, **kwargs):
-        """Run the evaluator."""
-        self.evaluate(**kwargs)
-        self.visualize(**kwargs)
+        """Returns a string representation of the Evaluator object."""
+        return f"""{"(" + str(self.name) + ") " if self.name else ""}{self.__class__.__name__}(
+            datamodule={self.datamodule},
+            model={self.model},
+            trainer={self.trainer}
+        )"""
 
 
 class EvaluatorList:
@@ -132,8 +78,6 @@ class EvaluatorList:
     def __init__(self, evaluators: List[Evaluator], name: Optional[str] = None):
         self.evaluators = evaluators
         self.name = name
-        self.finetunable = [evaluator for evaluator in evaluators if isinstance(evaluator, FinetunableEvaluator)]
-        self.non_finetunable = [evaluator for evaluator in evaluators if isinstance(evaluator, NonFinetunableEvaluator)]
 
     def __getitem__(self, index: int) -> Evaluator:
         return self.evaluators[index]
@@ -167,17 +111,15 @@ class EvaluatorList:
         return self.__add__(other)
 
     def __repr__(self):
-        display = f"({self.name}) " if self.name is not None else ""
-        display += f"{self.__class__.__name__}("
-        display += f"\tn_evaluators={len(self.evaluators)},"
-        display += "\tevaluators="
-        for evaluator in self.evaluators:
-            display += f"\n\t\t{evaluator}"
-        display += "\n)"
-        return display
+        eval_str = "\n\t\t".join([str(evaluator) for evaluator in self.evaluators])
 
-    def run(self, **kwargs):
+        return f"""({self.name}) {self.__class__.__name__}(
+            n_evaluators={len(self.evaluators)},
+            evaluators={eval_str}
+        )"""
+
+    def run(self):
         """Run the evaluators."""
         logger.info(f"Running {self}")
         for evaluator in self.evaluators:
-            evaluator.run(**kwargs)
+            evaluator.run()

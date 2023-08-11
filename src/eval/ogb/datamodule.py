@@ -44,6 +44,8 @@ class OGBDataset(Dataset):
                 The compound transform to apply to the compounds.
                 Defaults to None.
         """
+        super().__init__()
+
         self.mapping = mapping
         self.targets = targets
         self.ids = ids
