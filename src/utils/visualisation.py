@@ -13,8 +13,6 @@ REFerences:
   http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html#sphx-glr-auto-examples-model-selection-plot-confusion-matrix-py
 """
 
-# flake8: noqa
-
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,7 +28,7 @@ def get_new_fig(fn, figsize=(9, 9)):
     return fig1, ax1
 
 
-def configcell_text_and_colors(array_df, lin, col, oText, facecolors, posi, fz, fmt, show_null_values=0):
+def configcell_text_and_colors(array_df, lin, col, oText, facecolors, posi, fz, fmt, per_fmt, show_null_values=0):
     """Config cell text and colors and return text elements to add and to
     dell."""
     text_add = []
@@ -60,21 +58,21 @@ def configcell_text_and_colors(array_df, lin, col, oText, facecolors, posi, fz, 
         else:
             per_ok = per_err = 0
 
-        per_ok_s = ["%.2f%%" % (per_ok), "100%"][per_ok == 100]
+        per_ok_s = [f"{per_ok:per_fmt}", "100%"][per_ok == 100]
 
         # text to DEL
         text_del.append(oText)
 
         # text to ADD
         font_prop = fm.FontProperties(weight="bold", size=fz)
-        text_kwargs = dict(
-            color="w",
-            ha="center",
-            va="center",
-            gid="sum",
-            fontproperties=font_prop,
-        )
-        lis_txt = ["%d" % (cell_val), per_ok_s, "%.2f%%" % (per_err)]
+        text_kwargs = {
+            "color": "w",
+            "ha": "center",
+            "va": "center",
+            "gid": "sum",
+            "fontproperties": font_prop,
+        }
+        lis_txt = [f"{cell_val:.0f}", per_ok_s, f"{per_err:per_fmt}"]
         lis_kwa = [text_kwargs]
         dic = text_kwargs.copy()
         dic["color"] = "g"
@@ -88,12 +86,12 @@ def configcell_text_and_colors(array_df, lin, col, oText, facecolors, posi, fz, 
             (oText._x, oText._y + 0.3),
         ]
         for i in range(len(lis_txt)):
-            newText = dict(
-                x=lis_pos[i][0],
-                y=lis_pos[i][1],
-                text=lis_txt[i],
-                kw=lis_kwa[i],
-            )
+            newText = {
+                "x": lis_pos[i][0],
+                "y": lis_pos[i][1],
+                "text": lis_txt[i],
+                "kw": lis_kwa[i],
+            }
             text_add.append(newText)
 
         # set background color for sum cells (last line and last column)
@@ -104,14 +102,14 @@ def configcell_text_and_colors(array_df, lin, col, oText, facecolors, posi, fz, 
 
     else:
         if per > 0:
-            txt = "{}\n{:.2f}%".format(cell_val, per)
+            txt = f"{cell_val}\n{per:per_fmt}"
         else:
             if show_null_values == 0:
                 txt = ""
             elif show_null_values == 1:
                 txt = "0"
             else:
-                txt = "0\n0.0%"
+                txt = f"0\n{0:per_fmt}"
         oText.set_text(txt)
 
         # main diagonal
@@ -142,12 +140,13 @@ def insert_totals(df_cm):
 def pp_matrix(
     df_cm,
     annot=True,
-    cmap="YlGnBu",
+    cmap="Oranges",
     fmt=".2f",
+    per_fmt=".1%",
     fz=11,
     lw=0.5,
     cbar=False,
-    figsize=[8, 8],
+    figsize=(8, 8),
     show_null_values=0,
     pred_val_axis="y",
 ):
@@ -209,15 +208,15 @@ def pp_matrix(
     array_df = np.array(df_cm.to_records(index=False).tolist())
     text_add = []
     text_del = []
-    posi = -1  # from left to right, bottom to top.
-    for t in ax.collections[0].axes.texts:  # ax.texts:
+    for posi, t in enumerate(ax.collections[0].axes.texts):  # ax.texts:
         pos = np.array(t.get_position()) - [0.5, 0.5]
         lin = int(pos[1])
         col = int(pos[0])
-        posi += 1
 
         # set text
-        txt_res = configcell_text_and_colors(array_df, lin, col, t, facecolors, posi, fz, fmt, show_null_values)
+        txt_res = configcell_text_and_colors(
+            array_df, lin, col, t, facecolors, posi, fz, fmt, per_fmt, show_null_values
+        )
 
         text_add.extend(txt_res[0])
         text_del.extend(txt_res[1])
@@ -246,10 +245,11 @@ def pp_matrix_from_data(
     annot=True,
     cmap="Oranges",
     fmt=".2f",
+    per_fmt=".1%",
     fz=11,
     lw=0.5,
     cbar=False,
-    figsize=[8, 8],
+    figsize=(8, 8),
     show_null_values=0,
     pred_val_axis="lin",
 ):
@@ -262,7 +262,7 @@ def pp_matrix_from_data(
     if not columns:
         from string import ascii_uppercase
 
-        columns = ["class %s" % (i) for i in list(ascii_uppercase)[0 : len(np.unique(y_test))]]
+        columns = [f"class {i}" for i in list(ascii_uppercase)[0 : len(np.unique(y_test))]]
 
     confm = confusion_matrix(y_test, predictions)
     df_cm = DataFrame(confm, index=columns, columns=columns)
