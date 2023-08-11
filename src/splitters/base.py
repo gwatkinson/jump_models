@@ -77,12 +77,15 @@ class BaseSplitter(ABC):
         test: Union[float, int],
         retrieval: Union[float, int] = 0,
         compound_list: Optional[List[str]] = None,
+        random_state: int = 42,
     ):
         self.train = train
         self.val = val
         self.test = test
         self.retrieval = retrieval or 0
         self.total = self.train + self.val + self.test + self.retrieval
+
+        self.random_state = random_state
 
         self.compound_list = compound_list
         self.normalized = False

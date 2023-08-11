@@ -15,12 +15,19 @@ class RandomSplitter(BaseSplitter):
 
         if self.input_type == "int":
             train_val, test = train_test_split(
-                self.compound_list, test_size=self.test, train_size=self.train + self.val, random_state=42
+                self.compound_list,
+                test_size=self.test,
+                train_size=self.train + self.val,
+                random_state=self.random_state,
             )
-            train, val = train_test_split(train_val, test_size=self.val, train_size=self.train, random_state=42)
+            train, val = train_test_split(
+                train_val, test_size=self.val, train_size=self.train, random_state=self.random_state
+            )
         elif self.normalized:
-            train_val, test = train_test_split(self.compound_list, test_size=self.test, random_state=42)
-            train, val = train_test_split(train_val, test_size=self.val / (self.train + self.val), random_state=42)
+            train_val, test = train_test_split(self.compound_list, test_size=self.test, random_state=self.random_state)
+            train, val = train_test_split(
+                train_val, test_size=self.val / (self.train + self.val), random_state=self.random_state
+            )
         else:
             raise ValueError("Error in the code.")
 
