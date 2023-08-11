@@ -87,7 +87,7 @@ model = JumpMOAImageModule(
 
 logger.info("Setting up Trainer")
 loggers = WandbLogger(project="jump_moa", log_model=True, group="debug")
-trainer = Trainer(max_epochs=10, logger=loggers, devices=[1], accelerator="gpu", stochastic_weight_avg=True)
+trainer = Trainer(max_epochs=10, logger=loggers, devices=[1], accelerator="gpu")
 
 logger.info("Fitting Trainer")
 trainer.fit(model, dm)
