@@ -51,7 +51,7 @@ class WandbTrainingCallback(Callback):
             self.logger.experiment.unwatch(pl_module)
 
 
-class WandbPlottingCallback(Callback):
+class WandbPlottingCallback(WandbTrainingCallback):
     def __init__(
         self,
         watch: bool = True,
