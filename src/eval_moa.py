@@ -90,14 +90,14 @@ callbacks = [
         prefix="jump_moa/image_graph/",
         figsize=(16, 16),
         per_fmt=".1%",
-        cmap="Oranges_r",
+        cmap="Blues_r",
         fz=10,
     )
 ]
 
 loggers = WandbLogger(project="jump_moa", log_model=True, group="debug")
 trainer = Trainer(
-    max_epochs=20, logger=loggers, devices=[1], accelerator="gpu", log_every_n_steps=1, callbacks=callbacks
+    max_epochs=50, logger=loggers, devices=[1], accelerator="gpu", log_every_n_steps=1, callbacks=callbacks
 )
 
 logger.info("Fitting Trainer")
