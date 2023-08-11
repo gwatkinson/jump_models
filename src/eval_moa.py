@@ -69,7 +69,7 @@ logger.info("Preparing DataModule")
 dm.prepare_data()
 
 logger.info("Setting up Train DataModule")
-dm.setup("train", data_root_dir="../")
+dm.setup("train")
 
 logger.info("Loading Models")
 image_encoder = CNNEncoder("resnet18", target_num=128)
