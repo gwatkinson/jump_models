@@ -87,7 +87,7 @@ callbacks = [
 
 loggers = WandbLogger(project="jump_moa", log_model=True, group="debug")
 trainer = Trainer(
-    max_epochs=10, logger=loggers, devices=[1], accelerator="gpu", log_every_n_steps=1, callbacks=callbacks
+    max_epochs=20, logger=loggers, devices=[1], accelerator="gpu", log_every_n_steps=1, callbacks=callbacks
 )
 
 logger.info("Fitting Trainer")
