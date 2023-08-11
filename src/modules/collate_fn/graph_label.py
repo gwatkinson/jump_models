@@ -12,6 +12,7 @@ def label_graph_collate_function(data):
         dict with keys 'compound' and 'label'
     """
     compound = dgl.batch([d["compound"] for d in data])
+
     label = torch.stack([d["label"] for d in data])
 
     return {"compound": compound, "label": label}
