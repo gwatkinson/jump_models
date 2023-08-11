@@ -34,7 +34,6 @@ class JumpMOAImageModule(LightningModule):
     }
     plot_metrics = {
         "ConfusionMatrix": MulticlassConfusionMatrix(num_classes=26, normalize=None),
-        "ConfusionMatrix_normalized": MulticlassConfusionMatrix(num_classes=26, normalize="true"),
     }
 
     def __init__(
@@ -133,7 +132,7 @@ class JumpMOAImageModule(LightningModule):
 
         # update metrics
         self.loss_dict[stage](loss)
-        self.plot_metrics_dict[stage].update(logits, targets)
+        self.plot_metrics_dict[stage](logits, targets)
         other_metrics = self.other_metrics_dict[stage](logits, targets)
 
         # log metrics

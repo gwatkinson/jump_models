@@ -82,7 +82,15 @@ model = JumpMOAImageModule(
 
 logger.info("Setting up Trainer")
 callbacks = [
-    WandbPlottingCallback(watch=True, watch_log="all", log_freq=50, log_graph=True, prefix="jump_moa/image_graph/")
+    WandbPlottingCallback(
+        watch=True,
+        watch_log="all",
+        log_freq=50,
+        log_graph=True,
+        prefix="jump_moa/image_graph/",
+        figsize=(16, 16),
+        cmap="Blues",
+    )
 ]
 
 loggers = WandbLogger(project="jump_moa", log_model=True, group="debug")

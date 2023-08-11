@@ -60,13 +60,14 @@ class WandbPlottingCallback(WandbTrainingCallback):
         watch_log: Optional[Literal["gradients", "parameters", "all"]] = "all",
         log_freq: int = 100,
         log_graph: bool = True,
-        cmap: str = "Blues",
         prefix: Optional[str] = None,
+        **kwargs,
     ):
         super().__init__(watch=watch, watch_log=watch_log, log_freq=log_freq, log_graph=log_graph)
         self.tables = None
         self.num_figs = None
-        self.cmap = cmap
+        self.kwargs = kwargs
+
         if prefix is None:
             self.prefix = ""
         elif prefix.endswith("/"):
@@ -103,7 +104,7 @@ class WandbPlottingCallback(WandbTrainingCallback):
                     df_cm = pd.DataFrame(
                         array, index=range(1, array.shape[0] + 1), columns=range(1, array.shape[1] + 1)
                     )
-                    fig_, ax_ = pp_matrix(df_cm, cmap=self.cmap)
+                    fig_, ax_ = pp_matrix(df_cm, **self.kwargs)
                 else:
                     fig_, ax_ = metric.plot()
                 metric.reset()
