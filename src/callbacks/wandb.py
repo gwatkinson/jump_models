@@ -98,7 +98,7 @@ class WandbPlottingCallback(WandbTrainingCallback):
             data = [current_epoch]
             for name, metric in plot_metrics.items():
                 if "ConfusionMatrix" in name:
-                    array = metric.compute()
+                    array = metric.compute().cpu().numpy()
                     df_cm = pd.DataFrame(
                         array, index=range(1, array.shape[0] + 1), columns=range(1, array.shape[1] + 1)
                     )
