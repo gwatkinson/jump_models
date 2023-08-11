@@ -55,6 +55,7 @@ class MoleculeImageDataset(Dataset):
                 Defaults to 10.
             use_compond_cache (bool, optional): Whether to cache the compound transforms. Defaults to True.
         """
+        super().__init__()
 
         # data
         self.load_df = load_df
