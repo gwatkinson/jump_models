@@ -66,6 +66,7 @@ class WandbPlottingCallback(WandbTrainingCallback):
         super().__init__(watch=watch, watch_log=watch_log, log_freq=log_freq, log_graph=log_graph)
         self.tables = None
         self.num_figs = None
+        self.cmap = cmap
         if prefix is None:
             self.prefix = ""
         elif prefix.endswith("/"):
