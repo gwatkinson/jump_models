@@ -56,6 +56,10 @@ class ScaffoldSplitter(BaseSplitter):
             elif len(retrieval_cpds) + len(scaffold_set) <= retrieval_cutoff:
                 retrieval_cpds += scaffold_set
 
+        random.shuffle(train_cpds)
+        random.shuffle(val_cpds)
+        random.shuffle(test_cpds)
+
         output = {
             "train": train_cpds,
             "val": val_cpds,

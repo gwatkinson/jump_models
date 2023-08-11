@@ -12,7 +12,7 @@ from src.eval.moa.datamodule import JumpMOADataModule
 from src.eval.moa.module import JumpMOAImageGraphModule, JumpMOAImageModule  # noqa: F401
 from src.modules.compound_transforms import DGLPretrainedFromSmiles
 from src.modules.images.timm_pretrained import CNNEncoder
-from src.modules.molecules.dgllife_gin import GINPretrainedWithLinearHead
+from src.modules.molecules.dgllife_gin import GINPretrainedWithLinearHead  # noqa: F401
 from src.modules.transforms import DefaultJUMPTransform
 from src.splitters import ScaffoldSplitter, StratifiedSplitter  # noqa: F401
 
@@ -46,8 +46,8 @@ dataloader_config = DictConfig(
 logger.info("Loading DataModule")
 
 dm = JumpMOADataModule(
-    moa_load_df_path="/projects/cpjump1/jump/models/eval/test_scaffold/moa_1000.csv",
-    split_path="/projects/cpjump1/jump/models/eval/test_scaffold/",
+    moa_load_df_path="/projects/cpjump1/jump/models/eval/test/moa_1000.csv",
+    split_path="/projects/cpjump1/jump/models/eval/test/",
     dataloader_config=dataloader_config,
     force_split=False,
     transform=DefaultJUMPTransform(size=256),
@@ -57,7 +57,7 @@ dm = JumpMOADataModule(
     collate_fn=None,
     metadata_dir="/projects/cpjump1/jump/metadata",
     load_data_dir="/projects/cpjump1/jump/load_data",
-    splitter=ScaffoldSplitter(
+    splitter=StratifiedSplitter(
         train=0.75,
         val=0.15,
         test=0.1,
@@ -67,13 +67,12 @@ dm = JumpMOADataModule(
 
 
 logger.info("Loading Models")
-image_encoder = CNNEncoder("resnet18", target_num=128)
-molecule_encoder = GINPretrainedWithLinearHead("gin_supervised_infomax", out_dim=128)
+image_encoder = CNNEncoder("resnet18", target_num=256)
+# molecule_encoder = GINPretrainedWithLinearHead("gin_supervised_infomax", out_dim=128)
 
 logger.info("Setting up Module")
-model = JumpMOAImageGraphModule(
+model = JumpMOAImageModule(
     image_encoder=image_encoder,
-    molecule_encoder=molecule_encoder,
     optimizer=torch.optim.Adam,
     scheduler=None,
     criterion=nn.CrossEntropyLoss(),
@@ -83,7 +82,7 @@ model = JumpMOAImageGraphModule(
 
 logger.info("Setting up Trainer")
 callbacks = [
-    WandbPlottingCallback(watch=True, watch_log="all", log_freq=50, log_graph=True, prefix="jump_moa/image_graph")
+    WandbPlottingCallback(watch=True, watch_log="all", log_freq=50, log_graph=True, prefix="jump_moa/image_graph/")
 ]
 
 loggers = WandbLogger(project="jump_moa", log_model=True, group="debug")

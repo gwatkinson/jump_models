@@ -63,7 +63,12 @@ class WandbPlottingCallback(WandbTrainingCallback):
         super().__init__(watch=watch, watch_log=watch_log, log_freq=log_freq, log_graph=log_graph)
         self.tables = None
         self.num_figs = None
-        self.prefix = prefix or ""
+        if prefix is None:
+            self.prefix = ""
+        elif prefix.endswith("/"):
+            self.prefix = prefix
+        else:
+            self.prefix = prefix + "/"
 
     def setup(self, trainer, pl_module, stage=None):
         super().setup(trainer, pl_module, stage=stage)
