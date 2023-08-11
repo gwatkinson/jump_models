@@ -20,6 +20,8 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
+logging.basicConfig(level=logging.INFO)
+
 dataloader_config = DictConfig(
     {
         "train": {
@@ -84,8 +86,8 @@ model = JumpMOAImageModule(
 )
 
 logger.info("Setting up Trainer")
-logger = WandbLogger(project="jump_moa", log_model=True, group="debug")
-trainer = Trainer(max_epochs=10, logger=logger)
+loggers = WandbLogger(project="jump_moa", log_model=True, group="debug")
+trainer = Trainer(max_epochs=10, logger=loggers)
 
 logger.info("Fitting Trainer")
 trainer.fit(model, dm)
