@@ -109,7 +109,7 @@ def configcell_text_and_colors(array_df, lin, col, oText, facecolors, posi, fz, 
             elif show_null_values == 1:
                 txt = "0"
             else:
-                txt = f"0\n{0:per_fmt}"
+                txt = f"0\n{0.:per_fmt}"
         oText.set_text(txt)
 
         # main diagonal
@@ -215,7 +215,16 @@ def pp_matrix(
 
         # set text
         txt_res = configcell_text_and_colors(
-            array_df, lin, col, t, facecolors, posi, fz, fmt, per_fmt, show_null_values
+            array_df=array_df,
+            lin=lin,
+            col=col,
+            oText=t,
+            facecolors=facecolors,
+            posi=posi,
+            fz=fz,
+            fmt=fmt,
+            per_fmt=per_fmt,
+            show_null_values=show_null_values,
         )
 
         text_add.extend(txt_res[0])
@@ -269,6 +278,8 @@ def pp_matrix_from_data(
     return pp_matrix(
         df_cm,
         fz=fz,
+        fmt=fmt,
+        per_fmt=per_fmt,
         cmap=cmap,
         figsize=figsize,
         show_null_values=show_null_values,
