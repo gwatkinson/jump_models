@@ -2,6 +2,7 @@
 using the wandb logger."""
 
 import logging
+from typing import Literal, Optional
 
 import matplotlib.pyplot as plt
 from lightning.pytorch.callbacks import Callback
@@ -13,7 +14,13 @@ logger = logging.getLogger(__name__)
 
 
 class WandbTrainingCallback(Callback):
-    def __init__(self, watch=True, watch_log="all", log_freq=100, log_graph=True):
+    def __init__(
+        self,
+        watch: bool = True,
+        watch_log: Optional[Literal["gradients", "parameters", "all"]] = "all",
+        log_freq: int = 100,
+        log_graph: bool = True,
+    ):
         super().__init__()
         self.watch = watch
         self.log_freq = log_freq
@@ -44,11 +51,19 @@ class WandbTrainingCallback(Callback):
             self.logger.experiment.unwatch(pl_module)
 
 
-class WandbOGBTrainingCallback(Callback):
-    def __init__(self, watch=True, watch_log="all", log_freq=100, log_graph=True):
+class WandbPlottingCallback(Callback):
+    def __init__(
+        self,
+        watch: bool = True,
+        watch_log: Optional[Literal["gradients", "parameters", "all"]] = "all",
+        log_freq: int = 100,
+        log_graph: bool = True,
+        prefix: Optional[str] = None,
+    ):
         super().__init__(watch=watch, watch_log=watch_log, log_freq=log_freq, log_graph=log_graph)
         self.tables = None
         self.num_figs = None
+        self.prefix = prefix or ""
 
     def setup(self, trainer, pl_module, stage=None):
         super().setup(trainer, pl_module, stage=stage)
@@ -80,7 +95,8 @@ class WandbOGBTrainingCallback(Callback):
                 plt.close(fig_)
 
             table.add_data(*data)
-            self.logger.log_table(key=f"{phase}_plots", columns=table.columns, data=table.data, step=current_epoch)
+            key = f"{self.prefix}{phase}_plots"
+            self.logger.log_table(key=key, columns=table.columns, data=table.data, step=current_epoch)
 
     def on_train_epoch_end(self, trainer, pl_module):
         self.on_epoch_end_plotting(trainer, pl_module, phase="train")

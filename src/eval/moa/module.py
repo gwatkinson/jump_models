@@ -24,17 +24,17 @@ class JumpMOAImageModule(LightningModule):
     dataset_name = "image"
     default_criterion = nn.CrossEntropyLoss
     additional_metrics = {
-        "MulticlassAUROC_top_1": MulticlassAUROC(num_classes=26, average="weighted"),
-        "MulticlassAccuracy_top_1": MulticlassAccuracy(num_classes=26, average="weighted", top_k=1),
-        "MulticlassAccuracy_top_3": MulticlassAccuracy(num_classes=26, average="weighted", top_k=3),
-        "MulticlassAccuracy_top_5": MulticlassAccuracy(num_classes=26, average="weighted", top_k=5),
-        "MulticlassAccuracy_top_10": MulticlassAccuracy(num_classes=26, average="weighted", top_k=10),
-        "MulticlassF1Score_top_1": MulticlassF1Score(num_classes=26, average="weighted", top_k=1),
-        "MulticlassF1Score_top_5": MulticlassF1Score(num_classes=26, average="weighted", top_k=5),
+        "AUROC": MulticlassAUROC(num_classes=26, average="weighted"),
+        "Accuracy_top_1": MulticlassAccuracy(num_classes=26, average="weighted", top_k=1),
+        "Accuracy_top_3": MulticlassAccuracy(num_classes=26, average="weighted", top_k=3),
+        "Accuracy_top_5": MulticlassAccuracy(num_classes=26, average="weighted", top_k=5),
+        "Accuracy_top_10": MulticlassAccuracy(num_classes=26, average="weighted", top_k=10),
+        "F1Score_top_1": MulticlassF1Score(num_classes=26, average="weighted", top_k=1),
+        "F1Score_top_5": MulticlassF1Score(num_classes=26, average="weighted", top_k=5),
     }
     plot_metrics = {
-        "MulticlassConfusionMatrix": MulticlassConfusionMatrix(num_classes=26, normalize=None),
-        "MulticlassConfusionMatrix_normalized": MulticlassConfusionMatrix(num_classes=26, normalize="true"),
+        "ConfusionMatrix": MulticlassConfusionMatrix(num_classes=26, normalize=None),
+        "ConfusionMatrix_normalized": MulticlassConfusionMatrix(num_classes=26, normalize="true"),
     }
 
     def __init__(
