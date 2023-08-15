@@ -15,11 +15,11 @@ from src.modules.images.timm_pretrained import CNNEncoder
 from src.modules.molecules.dgllife_gin import GINPretrainedWithLinearHead  # noqa: F401
 from src.modules.transforms import DefaultJUMPTransform
 from src.splitters import ScaffoldSplitter, StratifiedSplitter  # noqa: F401
+from src.utils import pylogger
+
+logger = pylogger.get_pylogger(__name__)
 
 load_dotenv()
-
-
-logger = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -87,7 +87,7 @@ callbacks = [
         watch_log="all",
         log_freq=50,
         log_graph=True,
-        prefix="jump_moa/image_graph/",
+        prefix="jump_moa/image/plots/",
         figsize=(16, 16),
         per_fmt=".1%",
         cmap="Blues_r",
