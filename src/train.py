@@ -1,5 +1,4 @@
 import logging
-from multiprocessing import util
 from typing import List, Optional, Tuple
 
 import hydra
@@ -11,6 +10,7 @@ from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
 
 from src import utils
+from src.eval import EvaluatorList
 
 pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 # ------------------------------------------------------------------------------------ #
@@ -70,8 +70,6 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
     trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=callbacks, logger=logger)
 
-    log.info(f"Current multiprocessor temp dir: {util.get_temp_dir()}")
-
     object_dict = {
         "cfg": cfg,
         "datamodule": datamodule,
@@ -105,6 +103,17 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
         log.info(f"Best ckpt path: {ckpt_path}")
 
     test_metrics = trainer.callback_metrics
+
+    if cfg.get("evaluate"):
+        log.info("Starting evaluation!")
+
+        log.info("Instantiating evaluators ...")
+        evaluator_list: Optional[EvaluatorList] = utils.instantiate_evaluator_list(
+            cfg.get("eval"), cross_modal_module=model
+        )
+
+        if evaluator_list is not None:
+            evaluator_list.run()
 
     # merge train and test metrics
     metric_dict = {**train_metrics, **test_metrics}
