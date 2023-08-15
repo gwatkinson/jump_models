@@ -1,11 +1,12 @@
-import logging
 from typing import Any, Optional
 
 import torch
 from lightning import LightningModule
 from torchmetrics import MeanMetric, MinMetric
 
-logger = logging.getLogger(__name__)
+from src.utils import pylogger
+
+logger = pylogger.get_pylogger(__name__)
 
 
 class BasicJUMPModule(LightningModule):

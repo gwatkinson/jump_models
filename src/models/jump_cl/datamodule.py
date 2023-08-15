@@ -1,7 +1,6 @@
 """Module containing the DataModules using the JUMP dataset."""
 
 import json
-import logging
 import os.path as osp
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -12,9 +11,10 @@ from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
 
 from src.models.jump_cl.dataset import MoleculeImageDataset
+from src.utils import pylogger
 from src.utils.io import load_load_df_from_parquet, load_metadata_df_from_csv
 
-py_logger = logging.getLogger(__name__)
+py_logger = pylogger.get_pylogger(__name__)
 
 
 class BasicJUMPDataModule(LightningDataModule):

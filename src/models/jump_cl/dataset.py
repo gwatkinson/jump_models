@@ -1,7 +1,6 @@
 """Module containing a torch Dataset that returns a molecule and an associated
 image."""
 
-import logging
 import random
 import time
 from typing import Callable, Dict, List, Optional
@@ -11,9 +10,10 @@ import torch
 from PIL import UnidentifiedImageError
 from torch.utils.data import Dataset
 
+from src.utils import pylogger
 from src.utils.io import load_image_paths_to_array
 
-py_logger = logging.getLogger(__name__)
+py_logger = pylogger.get_pylogger(__name__)
 
 default_channels = ["DNA", "AGP", "ER", "Mito", "RNA"]
 
