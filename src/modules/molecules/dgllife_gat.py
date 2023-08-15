@@ -1,11 +1,11 @@
 """Molecule encoder for the simple jump contrastive model."""
 
-import logging
-
 import dgllife
 import torch.nn as nn
 
-logger = logging.getLogger(__name__)
+from src.utils import pylogger
+
+logger = pylogger.get_pylogger(__name__)
 
 
 class GATPretrainedWithLinearHead(nn.Module):

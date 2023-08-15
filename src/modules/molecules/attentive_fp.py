@@ -1,11 +1,11 @@
 """Molecule encoder for the simple jump contrastive model."""
 
-import logging
-
 import torch.nn as nn
 from dgllife.model import AttentiveFPPredictor
 
-logger = logging.getLogger(__name__)
+from src.utils import pylogger
+
+logger = pylogger.get_pylogger(__name__)
 
 
 class AttentiveFPWithLinearHead(nn.Module):
