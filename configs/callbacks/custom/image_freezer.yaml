@@ -1,0 +1,16 @@
+image_freezer:
+  _target_: src.callbacks.freeze.BackboneFinetuningFromName
+
+  unfreeze_backbone_at_epoch: ???
+  backbone_name: image_encoder
+  group_name: image_encoder
+  lambda_func:
+    _target_: src.callbacks.freeze.multiplicative_func
+    a0: 1.5
+  backbone_initial_ratio_lr: 10e-2
+  backbone_initial_lr: null
+  should_align: True
+  initial_denom_lr: 10.0
+  train_bn: True
+  verbose: False
+  rounding: 12

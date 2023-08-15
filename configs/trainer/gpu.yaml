@@ -2,5 +2,5 @@ defaults:
   - default.yaml
 
 accelerator: gpu
-devices: 1
+devices: ???
 # precision: 16-mixed

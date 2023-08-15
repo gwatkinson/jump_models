@@ -1,0 +1,49 @@
+defaults:
+  - /trainer/gpu.yaml@idr_graph_retrieval.trainer
+
+idr_graph_retrieval:
+  evaluator:
+    _target_: src.eval.retrieval.evaluator.IDRRetrievalEvaluator
+    name: IDRRetrieval
+    visualize_kwargs: null
+
+
+  callbacks: null
+
+
+  model:
+    _target_: src.eval.retrieval.module.IDRRetrievalModule
+
+    example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
+
+
+  datamodule:
+    _target_: src.eval.retrieval.datamodule.IDRRetrievalDataModule
+
+    selected_compounds_path: ${paths.data_root_dir}/excape-db/selected_compounds.csv
+    image_metadata_path: ${paths.data_root_dir}/idr0033-rohban-pathways/processed_metadata.csv
+    data_root_dir: ${paths.data_root_dir}/screen_1751
+    image_batch_size: 256
+    compound_batch_size: 16
+    num_workers: 16
+    pin_memory: false
+    prefetch_factor: 3
+
+    compound_transform: ${data.compound_transform}
+    transform: ${data.transform}
+
+    compound_gene_col: Gene_Symbol
+    image_gene_col: "Gene Symbol"
+    col_fstring: "FileName_{channel}"
+    channels: null
+    target_col: "Activity_Flag"
+    smiles_col: "SMILES"
+    use_cache: False
+
+    mol_collate_fn: null
+    img_collate_fn: null
+
+
+  trainer:
+    default_root_dir: ${paths.output_dir}/eval/retrieval/idr/
+    devices: ${trainer.devices}

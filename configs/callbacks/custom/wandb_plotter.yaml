@@ -1,0 +1,8 @@
+wandb_plotter:
+  _target_: src.callbacks.wandb.WandbPlottingCallback
+  watch: True
+  watch_log: all # or "gradients", "parameters", "all"
+  log_freq: ???
+  log_graph: False
+  plot_every_n_epoch: 5
+  prefix: ???
