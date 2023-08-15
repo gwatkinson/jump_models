@@ -188,7 +188,7 @@ class OGBClassificationModule(LightningModule):
                 "optimizer": optimizer,
                 "lr_scheduler": {
                     "scheduler": scheduler,
-                    "monitor": "val/loss",
+                    "monitor": f"{self.prefix}/val/loss",
                     "interval": "epoch",
                     "frequency": 1,
                 },

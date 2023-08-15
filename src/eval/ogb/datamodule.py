@@ -1,6 +1,5 @@
 """Custom dataset for the OGB evaluation tasks."""
 
-import logging
 import os
 import os.path as osp
 import shutil
@@ -9,14 +8,15 @@ from typing import Any, Callable, Dict, List, Optional
 import pandas as pd
 import torch
 from lightning import LightningDataModule
-from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
 
+from src.utils import pylogger
 from src.utils.io import download_and_extract_zip
 
 OGB_DATASETS = ["bbbp", "esol", "hiv", "lipophilicity", "tox21", "toxcast"]
 
-logger = logging.getLogger(__name__)
+
+logger = pylogger.get_pylogger(__name__)
 
 
 class OGBDataset(Dataset):
@@ -27,6 +27,7 @@ class OGBDataset(Dataset):
         ids: List[str],
         smiles_col: str = "smiles",
         compound_transform: Optional[Callable] = None,
+        use_cache: bool = False,
     ):
         """Initializes the dataset.
 
@@ -53,16 +54,18 @@ class OGBDataset(Dataset):
 
         self.compound_transform = compound_transform
         self.cached_smiles = {}
+        self.use_cache = use_cache
 
     def __len__(self):
         return len(self.ids)
 
     def get_transformed_compound(self, compound):
-        if compound in self.cached_smiles:
+        if self.use_cache and compound in self.cached_smiles:
             return self.cached_smiles[compound]
         else:
             tr_compound = self.compound_transform(compound)
-            self.cached_smiles[compound] = tr_compound
+            if self.use_cache:
+                self.cached_smiles[compound] = tr_compound
             return tr_compound
 
     def __getitem__(self, idx: int):
@@ -105,7 +108,11 @@ class OGBBaseDataModule(LightningDataModule):
         targets: Optional[List[str]] = None,
         smiles_col: str = "smiles",
         split_type: Optional[str] = "scaffold",
-        dataloader_config: Optional[DictConfig] = None,
+        batch_size: int = 256,
+        num_workers: int = 16,
+        pin_memory: bool = False,
+        prefetch_factor: int = 3,
+        use_cache: bool = False,
     ):
         """Initializes the dataset.
 
@@ -133,10 +140,6 @@ class OGBBaseDataModule(LightningDataModule):
                 The type of split to use. Can be either "scaffold" or "random" depending on the original split.
                 Only used if dataset_folder is provided.
                 Defaults to "scaffold".
-            dataloader_config (Optional[DictConfig], optional):
-                The configuration for the dataloader.
-                Should contains the train, test, val keys with subkeys giving the dataloader parameters.
-                Defaults to None.
         """
 
         if self.dataset_name not in OGB_DATASETS:
@@ -162,25 +165,22 @@ class OGBBaseDataModule(LightningDataModule):
         self.val_ids: Optional[List[str]] = None
         self.test_ids: Optional[List[str]] = None
 
-        self.data_train: Optional[Dataset] = None
-        self.data_val: Optional[Dataset] = None
-        self.data_test: Optional[Dataset] = None
+        self.train_dataset: Optional[Dataset] = None
+        self.val_dataset: Optional[Dataset] = None
+        self.test_dataset: Optional[Dataset] = None
 
         # dataloader args
-        if dataloader_config is None:
-            self.dataloader_train_args = {}
-            self.dataloader_val_args = {}
-            self.dataloader_test_args = {}
-        else:
-            self.dataloader_train_args = OmegaConf.to_container(dataloader_config.train, resolve=True)
-            self.dataloader_val_args = OmegaConf.to_container(dataloader_config.val, resolve=True)
-            self.dataloader_test_args = OmegaConf.to_container(dataloader_config.test, resolve=True)
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+        self.pin_memory = pin_memory
+        self.prefetch_factor = prefetch_factor
 
         # targets
         self.compound_transform = compound_transform
         self.collate_fn = collate_fn
         self.targets = targets
         self.smiles_col = smiles_col
+        self.use_cache = use_cache
 
     def prepare_data(self) -> None:
         """Download data if needed.
@@ -225,8 +225,8 @@ class OGBBaseDataModule(LightningDataModule):
                 raise FileNotFoundError(f"Dataset files not found in {self.dataset_dir}.")
 
     def setup(self, stage: Optional[str] = None) -> None:
-        """Load data. Set variables: `self.data_train`, `self.data_val`,
-        `self.data_test`.
+        """Load data. Set variables: `self.train_dataset`, `self.val_dataset`,
+        `self.test_dataset`.
 
         This method is called by lightning with both `trainer.fit()` and
         `trainer.test()`, so be careful not to execute things like
@@ -238,55 +238,70 @@ class OGBBaseDataModule(LightningDataModule):
         if self.targets is None:
             self.targets = self.mapping.columns.drop([self.smiles_col, "mol_id"]).tolist()
 
-        if self.data_train is None:
+        if self.train_dataset is None:
             self.train_ids = pd.read_csv(self.train_ids_file, header=None).values.flatten().tolist()
-            self.data_train = OGBDataset(
+            self.train_dataset = OGBDataset(
                 mapping=self.mapping,
                 targets=self.targets,
                 ids=self.train_ids,
                 smiles_col=self.smiles_col,
                 compound_transform=self.compound_transform,
+                use_cache=self.use_cache,
             )
 
-        if self.data_val is None:
+        if self.val_dataset is None:
             self.val_ids = pd.read_csv(self.val_ids_file, header=None).values.flatten().tolist()
-            self.data_val = OGBDataset(
+            self.val_dataset = OGBDataset(
                 mapping=self.mapping,
                 targets=self.targets,
                 ids=self.val_ids,
                 smiles_col=self.smiles_col,
                 compound_transform=self.compound_transform,
+                use_cache=self.use_cache,
             )
 
-        if self.data_test is None:
+        if self.test_dataset is None:
             self.test_ids = pd.read_csv(self.test_ids_file, header=None).values.flatten().tolist()
-            self.data_test = OGBDataset(
+            self.test_dataset = OGBDataset(
                 mapping=self.mapping,
                 targets=self.targets,
                 ids=self.test_ids,
                 smiles_col=self.smiles_col,
                 compound_transform=self.compound_transform,
+                use_cache=self.use_cache,
             )
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
-            dataset=self.data_train,
+            dataset=self.train_dataset,
             collate_fn=self.collate_fn,
-            **self.dataloader_train_args,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
+            prefetch_factor=self.prefetch_factor,
+            shuffle=True,
         )
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
-            dataset=self.data_val,
+            dataset=self.val_dataset,
             collate_fn=self.collate_fn,
-            **self.dataloader_val_args,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
+            prefetch_factor=self.prefetch_factor,
+            shuffle=False,
         )
 
     def test_dataloader(self) -> DataLoader:
         return DataLoader(
-            dataset=self.data_test,
+            dataset=self.test_dataset,
             collate_fn=self.collate_fn,
-            **self.dataloader_test_args,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
+            prefetch_factor=self.prefetch_factor,
+            shuffle=False,
         )
 
     def teardown(self, stage: Optional[str] = None):
