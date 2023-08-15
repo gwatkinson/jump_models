@@ -8,6 +8,8 @@ debug.py
 /models/
 /*.pth
 /scripts/list_*.zsh
+src/pyidr
+
 
 # Lightning-Hydra-Template
 configs/local/default.yaml
