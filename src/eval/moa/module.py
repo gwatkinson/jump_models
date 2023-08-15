@@ -1,6 +1,7 @@
 """LightningModule for Jump MOA datasets evalulation."""
 # flake8: noqa
 
+import copy
 from functools import partial
 from typing import Any, Optional
 
@@ -38,9 +39,9 @@ class JumpMOAImageModule(LightningModule):
 
     def __init__(
         self,
-        cross_modal_module: Optional[LightningModule],
-        optimizer: torch.optim.Optimizer,
-        scheduler: torch.optim.lr_scheduler,
+        cross_modal_module: Optional[LightningModule] = None,
+        optimizer: Optional[torch.optim.Optimizer] = None,
+        scheduler: Optional[torch.optim.lr_scheduler.LRScheduler] = None,
         criterion: Optional[torch.nn.Module] = None,
         image_encoder: Optional[nn.Module] = None,
         image_encoder_attribute_name: str = "image_encoder",
@@ -55,10 +56,16 @@ class JumpMOAImageModule(LightningModule):
         self.save_hyperparameters(logger=False, ignore=["cross_modal_module", "criterion", "image_encoder"])
 
         # encoder
+        if not (image_encoder or (cross_modal_module and image_encoder_attribute_name)):
+            raise ValueError("Either image_encoder or cross_modal_module with attribute name must be provided.")
+
         if image_encoder is not None:
-            self.image_encoder = image_encoder
+            self.image_encoder = copy.deepcopy(image_encoder)
+            self.model_name = image_encoder.__class__.__name__
         else:
-            self.image_encoder = getattr(cross_modal_module, image_encoder_attribute_name)
+            self.image_encoder = copy.deepcopy(getattr(cross_modal_module, image_encoder_attribute_name))
+            self.model_name = self.image_encoder.__class__.__name__
+
         self.embedding_dim = self.image_encoder.out_dim
         self.head = nn.Linear(self.embedding_dim, self.num_classes)
 
@@ -111,6 +118,9 @@ class JumpMOAImageModule(LightningModule):
             "test": self.test_plot_metrics,
         }
 
+    def __repr__(self):
+        return f"""{self.__class__.__name__}({self.model_name}({self.embedding_dim}), num_classes={self.num_classes})"""
+
     def on_train_start(self):
         # by default lightning executes validation step sanity checks before training starts,
         # so it's worth to make sure validation metrics don't store results from these checks
@@ -131,9 +141,9 @@ class JumpMOAImageModule(LightningModule):
         loss = self.criterion(logits, targets)
 
         # update metrics
-        self.loss_dict[stage](loss)
-        self.plot_metrics_dict[stage](logits, targets)
-        other_metrics = self.other_metrics_dict[stage](logits, targets)
+        self.loss_dict[stage].update(loss)
+        self.plot_metrics_dict[stage].update(logits, targets)
+        self.other_metrics_dict[stage].update(logits, targets)
 
         # log metrics
         self.log(
@@ -144,7 +154,9 @@ class JumpMOAImageModule(LightningModule):
             prog_bar=True,
             batch_size=batch_size,
         )
-        self.log_dict(other_metrics, on_step=False, on_epoch=True, prog_bar=False, batch_size=batch_size)
+        self.log_dict(
+            self.other_metrics_dict[stage], on_step=False, on_epoch=True, prog_bar=False, batch_size=batch_size
+        )
 
         return loss, logits, targets
 

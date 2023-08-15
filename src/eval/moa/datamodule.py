@@ -1,4 +1,3 @@
-import logging
 import os.path as osp
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -6,14 +5,14 @@ from typing import Any, Callable, Dict, List, Optional
 import pandas as pd
 import torch
 from lightning.pytorch import LightningDataModule
-from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
 
 from src.modules.collate_fn import image_graph_label_collate_function, label_graph_collate_function
 from src.splitters import BaseSplitter
+from src.utils import pylogger
 from src.utils.io import load_image_paths_to_array
 
-logger = logging.getLogger(__name__)
+logger = pylogger.get_pylogger(__name__)
 
 
 class JumpMOADataset(Dataset):
@@ -152,11 +151,18 @@ class JumpMOADataModule(LightningDataModule):
         self,
         moa_load_df_path: str,
         split_path: str,
-        dataloader_config: Optional[DictConfig],
+        batch_size: int = 64,
+        num_workers: int = 4,
+        pin_memory: bool = False,
+        prefetch_factor: int = 2,
         force_split: bool = False,
         transform: Optional[Callable] = None,
         compound_transform: Optional[Callable] = None,
         collate_fn: Optional[Callable] = None,
+        target_col: str = "moa",
+        smiles_col: str = "smiles",
+        return_image: bool = True,
+        return_compound: bool = True,
         metadata_dir: Optional[str] = None,
         load_data_dir: Optional[str] = None,
         splitter: Optional[BaseSplitter] = None,
@@ -167,7 +173,6 @@ class JumpMOADataModule(LightningDataModule):
 
         self.moa_load_df_path = moa_load_df_path
         self.split_path = split_path
-        self.dataloader_config = dataloader_config
         self.force_split = force_split
 
         self.transform = transform
@@ -185,23 +190,19 @@ class JumpMOADataModule(LightningDataModule):
         self.splitter = splitter
         self.max_obs_per_class = max_obs_per_class
 
-        self.target_col = kwargs.get("target_col", "moa")
-        self.smiles_col = kwargs.get("smiles_col", "smiles")
-        self.return_image = kwargs.get("return_image", True)
-        self.return_compound = kwargs.get("return_compound", False)
+        self.target_col = target_col
+        self.smiles_col = smiles_col
+        self.return_image = return_image
+        self.return_compound = return_compound
         self.use_cache = kwargs.get("use_cache", True)
 
         self.got_default_collate_fn = False
 
         # dataloader args
-        if dataloader_config is None:
-            self.dataloader_train_args = {}
-            self.dataloader_val_args = {}
-            self.dataloader_test_args = {}
-        else:
-            self.dataloader_train_args = OmegaConf.to_container(dataloader_config.train, resolve=True)
-            self.dataloader_val_args = OmegaConf.to_container(dataloader_config.val, resolve=True)
-            self.dataloader_test_args = OmegaConf.to_container(dataloader_config.test, resolve=True)
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+        self.pin_memory = pin_memory
+        self.prefetch_factor = prefetch_factor
 
         self.moa_load_df: Optional[pd.DataFrame] = None
         self.train_dataset: Optional[Dataset] = None
@@ -256,11 +257,14 @@ class JumpMOADataModule(LightningDataModule):
 
     def setup(self, stage: Optional[str] = None, **kwargs):
         if self.moa_load_df is None:
+            logger.info(f"Loading MOA data from {self.moa_load_df_path}")
             self.moa_load_df = pd.read_csv(self.moa_load_df_path)
 
         if stage == "test" and self.test_dataset is None:
             test_ids = pd.read_csv(self.test_path, header=None).values.flatten().tolist()
             test_df = self.iloc[test_ids]
+
+            logger.info(f"Creating test dataset ({len(test_df)} rows)")
             self.test_dataset = JumpMOADataset(
                 moa_load_df=test_df,
                 transform=self.transform,
@@ -279,6 +283,7 @@ class JumpMOADataModule(LightningDataModule):
             train_df = self.moa_load_df.iloc[train_ids]
             val_df = self.moa_load_df.iloc[val_ids]
 
+            logger.info(f"Creating train and val datasets ({len(train_df)} and {len(val_df)} rows)")
             self.train_dataset = JumpMOADataset(
                 moa_load_df=train_df,
                 transform=self.transform,
@@ -304,31 +309,44 @@ class JumpMOADataModule(LightningDataModule):
             )
 
             if self.collate_fn is None and not self.got_default_collate_fn:
+                logger.info("Loading default collate function")
                 self.collate_fn = self.train_dataset.get_default_collate_fn()
                 self.got_default_collate_fn = True
 
     def train_dataloader(self, **kwargs) -> DataLoader:
-        args = kwargs or self.dataloader_train_args
         return DataLoader(
             dataset=self.train_dataset,
             collate_fn=self.collate_fn,
-            **args,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
+            prefetch_factor=self.prefetch_factor,
+            shuffle=True,
+            **kwargs,
         )
 
     def val_dataloader(self, **kwargs) -> DataLoader:
-        args = kwargs or self.dataloader_val_args
         return DataLoader(
             dataset=self.val_dataset,
             collate_fn=self.collate_fn,
-            **args,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
+            prefetch_factor=self.prefetch_factor,
+            shuffle=False,
+            **kwargs,
         )
 
     def test_dataloader(self, **kwargs) -> DataLoader:
-        args = kwargs or self.dataloader_test_args
         return DataLoader(
             dataset=self.test_dataset,
             collate_fn=self.collate_fn,
-            **args,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
+            prefetch_factor=self.prefetch_factor,
+            shuffle=False,
+            **kwargs,
         )
 
     def teardown(self, stage: Optional[str] = None):
