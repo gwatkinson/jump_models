@@ -1,6 +1,5 @@
 """Callbacks for freezing and unfreezing layers in a model."""
 
-import logging
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 import lightning.pytorch as pl
@@ -9,37 +8,9 @@ from lightning.pytorch.utilities.exceptions import MisconfigurationException
 from torch.nn import Module
 from torch.optim.optimizer import Optimizer
 
-logger = logging.getLogger(__name__)
+from src.utils import pylogger
 
-
-class OGBFreezer(BaseFinetuning):
-    def __init__(self, unfreeze_at_epoch=10):
-        super().__init__()
-        self._unfreeze_at_epoch = unfreeze_at_epoch
-
-    def on_fit_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
-        """
-        Raises:
-            MisconfigurationException:
-                If LightningModule has no nn.Module `backbone` attribute.
-        """
-        if hasattr(pl_module, "molecule_encoder") and isinstance(pl_module.molecule_encoder, Module):
-            return super().on_fit_start(trainer, pl_module)
-        raise MisconfigurationException("The LightningModule should have a nn.Module `molecule_encoder` attribute")
-
-    def freeze_before_training(self, pl_module):
-        """Freeze layers before training."""
-        self.freeze(pl_module.molecule_encoder)
-
-    def finetune_function(self, pl_module, current_epoch, optimizer):
-        """When `current_epoch` is 10, feature_extractor will start
-        training."""
-        if current_epoch == self._unfreeze_at_epoch:
-            self.unfreeze_and_add_param_group(
-                modules=pl_module.molecule_encoder,
-                optimizer=optimizer,
-                train_bn=True,
-            )
+logger = pylogger.get_pylogger(__name__)
 
 
 def multiplicative_func(a0: float) -> Callable[[int, float], float]:
@@ -55,10 +26,139 @@ def linear_func(a1: float, a0: float) -> Callable[[int, float], float]:
     return lambda epoch, lr: a1 * epoch + a0 * lr
 
 
+def _get_layer(pl_module, layer_names):
+    if isinstance(layer_names, str):
+        layer_names = [layer_names]
+
+    layer = pl_module
+    for name in layer_names:
+        layer = getattr(layer, name)
+    return layer
+
+
+def _has_layer(pl_module, layer_names):
+    if isinstance(layer_names, str):
+        layer_names = [layer_names]
+
+    layer = pl_module
+    for name in layer_names:
+        if not hasattr(layer, name):
+            return False
+        layer = getattr(layer, name)
+    return True
+
+
 default_image_backbone = ["image_encoder", "backbone"]
 default_image_entry = ["image_encoder", "entry"]
 default_molecule_backbone = ["molecule_encoder", "backbone"]
 default_lambda_func = multiplicative_func(1.5)
+
+
+class BackboneFinetuningFromName(BaseFinetuning):
+    def __init__(
+        self,
+        unfreeze_backbone_at_epoch: int = 10,
+        backbone_name: Union[str, List[str]] = "molecule_encoder",
+        group_name: Optional[str] = None,
+        lambda_func: Callable = default_lambda_func,
+        backbone_initial_ratio_lr: float = 10e-2,
+        backbone_initial_lr: Optional[float] = None,
+        should_align: bool = True,
+        initial_denom_lr: float = 10.0,
+        train_bn: bool = True,
+        verbose: bool = False,
+        rounding: int = 12,
+    ) -> None:
+        super().__init__()
+
+        self.unfreeze_backbone_at_epoch: int = unfreeze_backbone_at_epoch
+        self.backbone_name = backbone_name
+        self.group_name = group_name
+        self.lambda_func: Callable = lambda_func
+        self.backbone_initial_ratio_lr: float = backbone_initial_ratio_lr
+        self.backbone_initial_lr: Optional[float] = backbone_initial_lr
+        self.should_align: bool = should_align
+        self.initial_denom_lr: float = initial_denom_lr
+        self.train_bn: bool = train_bn
+        self.verbose: bool = verbose
+        self.rounding: int = rounding
+        self.previous_backbone_lr: Optional[float] = None
+
+    def state_dict(self) -> Dict[str, Any]:
+        return {
+            "internal_optimizer_metadata": self._internal_optimizer_metadata,
+            "previous_backbone_lr": self.previous_backbone_lr,
+        }
+
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+        self.previous_backbone_lr = state_dict["previous_backbone_lr"]
+        super().load_state_dict(state_dict)
+
+    def on_fit_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        if _has_layer(pl_module, self.backbone_name) and isinstance(_get_layer(pl_module, self.backbone_name), Module):
+            return super().on_fit_start(trainer, pl_module)
+        raise MisconfigurationException("The LightningModule should have a nn.Module `backbone` attribute")
+
+    def freeze_before_training(self, pl_module: "pl.LightningModule") -> None:
+        self.freeze(_get_layer(pl_module, self.backbone_name), train_bn=self.train_bn)
+
+    def finetune_function(self, pl_module: "pl.LightningModule", epoch: int, optimizer: Optimizer) -> None:
+        """Called when the epoch begins."""
+        if epoch == self.unfreeze_backbone_at_epoch:
+            current_lr = optimizer.param_groups[0]["lr"]
+            initial_backbone_lr = (
+                self.backbone_initial_lr
+                if self.backbone_initial_lr is not None
+                else current_lr * self.backbone_initial_ratio_lr
+            )
+            self.previous_backbone_lr = initial_backbone_lr
+            self.unfreeze_and_add_param_group(
+                _get_layer(pl_module, self.backbone_name),
+                optimizer,
+                initial_backbone_lr,
+                train_bn=self.train_bn,
+                initial_denom_lr=self.initial_denom_lr,
+                name=self.group_name,
+            )
+            if self.verbose:
+                logger.info(
+                    f"Current lr: {round(current_lr, self.rounding)}, "
+                    f"Backbone lr: {round(initial_backbone_lr, self.rounding)}"
+                )
+
+        elif epoch > self.unfreeze_backbone_at_epoch:
+            current_lr = optimizer.param_groups[0]["lr"]
+            next_current_backbone_lr = self.lambda_func(epoch + 1) * self.previous_backbone_lr
+            next_current_backbone_lr = (
+                current_lr
+                if (self.should_align and next_current_backbone_lr > current_lr)
+                else next_current_backbone_lr
+            )
+            optimizer.param_groups[-1]["lr"] = next_current_backbone_lr
+            self.previous_backbone_lr = next_current_backbone_lr
+            if self.verbose:
+                logger.info(
+                    f"Current lr: {round(current_lr, self.rounding)}, "
+                    f"Backbone lr: {round(next_current_backbone_lr, self.rounding)}"
+                )
+
+    @staticmethod
+    def unfreeze_and_add_param_group(
+        modules: Union[Module, Iterable[Union[Module, Iterable]]],
+        optimizer: Optimizer,
+        lr: Optional[float] = None,
+        initial_denom_lr: float = 10.0,
+        train_bn: bool = True,
+        name: Optional[str] = None,
+    ) -> None:
+        BaseFinetuning.make_trainable(modules)
+        params_lr = optimizer.param_groups[0]["lr"] if lr is None else float(lr)
+        denom_lr = initial_denom_lr if lr is None else 1.0
+        params = BaseFinetuning.filter_params(modules, train_bn=train_bn, requires_grad=True)
+        params = BaseFinetuning.filter_on_optimizer(optimizer, params)
+        if params:
+            new_lr = params_lr / denom_lr
+            optimizer.add_param_group({"params": params, "lr": new_lr, "name": name, "swa_lr": new_lr})
 
 
 class JUMPCLFreezer(BaseFinetuning):
@@ -168,21 +268,11 @@ class JUMPCLFreezer(BaseFinetuning):
         self.previous_molecule_backbone_lr = state_dict["previous_molecule_backbone_lr"]
         super().load_state_dict(state_dict)
 
-    @staticmethod
-    def _get_layer(pl_module, layer_names):
-        if isinstance(layer_names, str):
-            layer_names = [layer_names]
-
-        layer = pl_module
-        for name in layer_names:
-            layer = getattr(layer, name)
-        return layer
-
     def on_fit_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         # Check if the model has an image encoder
         try:
             logger.debug("Loading image backbone")
-            image_backbone = self._get_layer(pl_module, self.image_backbone)
+            image_backbone = _get_layer(pl_module, self.image_backbone)
             logger.info(f"{len(list(image_backbone.parameters()))} parameters in image backbone")
         except AttributeError:
             raise MisconfigurationException("The LightningModule does not have a valid image backbone")
@@ -190,7 +280,7 @@ class JUMPCLFreezer(BaseFinetuning):
         # Check if the model has a molecule encoder
         try:
             logger.debug("Loading molecule backbone")
-            molecule_backbone = self._get_layer(pl_module, self.molecule_backbone)
+            molecule_backbone = _get_layer(pl_module, self.molecule_backbone)
             logger.info(f"{len(list(molecule_backbone.parameters()))} parameters in molecule backbone")
         except AttributeError:
             raise MisconfigurationException("The LightningModule does not have a valid molecule backbone")
@@ -207,15 +297,15 @@ class JUMPCLFreezer(BaseFinetuning):
         """Freeze layers before training."""
         if self.unfreeze_image_backbone_at_epoch > 0:
             self.log_message("Freezing image encoder")
-            self.freeze(self._get_layer(pl_module, self.image_backbone), train_bn=self.train_bn)
+            self.freeze(_get_layer(pl_module, self.image_backbone), train_bn=self.train_bn)
 
             if self.image_entry:
                 self.log_message("Unfreezing image entry")
-                self.make_trainable(self._get_layer(pl_module, self.image_entry))
+                self.make_trainable(_get_layer(pl_module, self.image_entry))
 
         if self.unfreeze_molecule_backbone_at_epoch > 0:
             self.log_message("Freezing molecule encoder")
-            self.freeze(self._get_layer(pl_module, self.molecule_backbone), train_bn=self.train_bn)
+            self.freeze(_get_layer(pl_module, self.molecule_backbone), train_bn=self.train_bn)
 
     def finetune_function(self, pl_module, current_epoch, optimizer):
         """When unfreeze epoch is reached, unfreeze the layers and add the
@@ -228,7 +318,7 @@ class JUMPCLFreezer(BaseFinetuning):
 
             self.log_message(f"Unfreezing image encoder with lr {self.previous_image_backbone_lr}")
             self.unfreeze_and_add_param_group(
-                modules=self._get_layer(pl_module, self.image_backbone),
+                modules=_get_layer(pl_module, self.image_backbone),
                 optimizer=optimizer,
                 train_bn=self.train_bn,
                 lr=self.previous_image_backbone_lr,
@@ -255,7 +345,7 @@ class JUMPCLFreezer(BaseFinetuning):
 
             self.log_message(f"Unfreezing molecule encoder with lr {self.previous_molecule_backbone_lr}")
             self.unfreeze_and_add_param_group(
-                modules=self._get_layer(pl_module, self.molecule_backbone),
+                modules=_get_layer(pl_module, self.molecule_backbone),
                 optimizer=optimizer,
                 train_bn=self.train_bn,
                 lr=self.previous_molecule_backbone_lr,

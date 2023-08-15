@@ -1,7 +1,6 @@
 """Defines callbacks that add logging capabilities to the training process
 using the wandb logger."""
 
-import logging
 from typing import Literal, Optional
 
 import matplotlib.pyplot as plt
@@ -10,9 +9,10 @@ from lightning.pytorch.callbacks import Callback
 from lightning.pytorch.loggers import WandbLogger
 
 import wandb
+from src.utils import pylogger
 from src.utils.visualisation import pp_matrix
 
-logger = logging.getLogger(__name__)
+logger = pylogger.get_pylogger(__name__)
 
 
 class WandbTrainingCallback(Callback):
@@ -60,6 +60,7 @@ class WandbPlottingCallback(WandbTrainingCallback):
         watch_log: Optional[Literal["gradients", "parameters", "all"]] = "all",
         log_freq: int = 100,
         log_graph: bool = True,
+        plot_every_n_epoch: int = 2,
         prefix: Optional[str] = None,
         **kwargs,
     ):
@@ -116,10 +117,12 @@ class WandbPlottingCallback(WandbTrainingCallback):
             self.logger.log_table(key=key, columns=table.columns, data=table.data)
 
     def on_train_epoch_end(self, trainer, pl_module):
-        self.on_epoch_end_plotting(trainer, pl_module, phase="train")
+        if trainer.current_epoch % self.plot_every_n_epoch == 0 or trainer.current_epoch == trainer.max_epochs:
+            self.on_epoch_end_plotting(trainer, pl_module, phase="train")
 
     def on_validation_epoch_end(self, trainer, pl_module):
-        self.on_epoch_end_plotting(trainer, pl_module, phase="val")
+        if trainer.current_epoch % self.plot_every_n_epoch == 0 or trainer.current_epoch == trainer.max_epochs:
+            self.on_epoch_end_plotting(trainer, pl_module, phase="val")
 
     def on_test_epoch_end(self, trainer, pl_module):
         self.on_epoch_end_plotting(trainer, pl_module, phase="test")
