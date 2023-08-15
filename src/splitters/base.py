@@ -1,8 +1,9 @@
-import logging
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Tuple, Union
 
-py_logger = logging.getLogger(__name__)
+from src.utils import pylogger
+
+py_logger = pylogger.get_pylogger(__name__)
 
 
 class BaseSplitter(ABC):

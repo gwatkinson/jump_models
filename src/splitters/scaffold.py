@@ -4,7 +4,6 @@
 # See https://github.com/deepchem/deepchem/blob/master/deepchem/splits/tests/test_scaffold_splitter.py to use the scaffold splitter
 # from deepchem.splits.splitters import ScaffoldSplitter
 
-import logging
 import random
 from collections import defaultdict
 from typing import Dict, List
@@ -13,8 +12,9 @@ import datamol as dm
 from rdkit.Chem.Scaffolds.MurckoScaffold import MurckoScaffoldSmiles
 
 from src.splitters import BaseSplitter
+from src.utils import pylogger
 
-py_logger = logging.getLogger(__name__)
+py_logger = pylogger.get_pylogger(__name__)
 
 
 class ScaffoldSplitter(BaseSplitter):
