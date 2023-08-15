@@ -7,12 +7,13 @@ Then, there is the EvaluatorList class, which is used to evaluate a list of mode
 This allows for easy comparison of models on a list of downstream tasks.
 """
 
-import logging
 from typing import List, Optional, Union
 
 from lightning import LightningDataModule, LightningModule, Trainer
 
-logger = logging.getLogger(__name__)
+from src.utils.pylogger import get_pylogger
+
+logger = get_pylogger(__name__)
 
 
 class Evaluator:
@@ -27,48 +28,44 @@ class Evaluator:
         model: LightningModule,
         datamodule: LightningDataModule,
         trainer: Trainer,
-        finetune_kwargs: Optional[dict] = None,
-        evaluate_kwargs: Optional[dict] = None,
-        visualize_kwargs: Optional[dict] = None,
         name: Optional[str] = None,
+        visualize_kwargs: Optional[dict] = None,
     ):
-        super().__init__()
-        self.name = name
         self.model = model
         self.datamodule = datamodule
         self.trainer = trainer
 
-        self.finetune_kwargs = finetune_kwargs or {}
-        self.evaluate_kwargs = evaluate_kwargs or {}
+        self.name = name or self.model.__class__.__name__
+        self.prefix = f"({self.name}) " if self.name else ""
+
         self.visualize_kwargs = visualize_kwargs or {}
 
-    def finetune(self, **kwargs):
+    def finetune(self):
         """Finetune the model."""
-        logger.info(f"Finetuning {self.model} on {self.datamodule} with {self.trainer}")
-        self.trainer.fit(model=self.model, datamodule=self.datamodule, **kwargs)
+        logger.info(f"{self.prefix}Finetuning {self.model} on {self.datamodule} with {self.trainer}")
+        self.trainer.fit(model=self.model, datamodule=self.datamodule)
 
-    def evaluate(self, **kwargs):
+    def evaluate(self):
         """Evaluate the model."""
-        logger.info(f"Evaluating {self.model} on {self.datamodule} with {self.trainer}")
-        self.trainer.test(model=self.model, datamodule=self.datamodule, **kwargs)
+        logger.info(f"{self.prefix}Evaluating {self.model} on {self.datamodule} with {self.trainer}")
+        self.trainer.test(model=self.model, datamodule=self.datamodule)
 
     def visualize(self, **kwargs):
         """Create visualizations."""
-        logger.info(f"Visualizing {self.model} on {self.datamodule} with {self.trainer}")
+        logger.info(f"{self.prefix}Visualizing {self.model} on {self.datamodule} with {self.trainer}")
         pass  # To implement in subclasses
 
     def run(self):
         """Run the evaluator."""
-        self.finetune(**self.finetune_kwargs)
-        self.evaluate(**self.evaluate_kwargs)
+        self.finetune()
+        self.evaluate()
         self.visualize(**self.visualize_kwargs)
 
     def __repr__(self):
         """Returns a string representation of the Evaluator object."""
-        return f"""{"(" + str(self.name) + ") " if self.name else ""}{self.__class__.__name__}(
+        return f"""{self.prefix}{self.__class__.__name__}(
             datamodule={self.datamodule},
             model={self.model},
-            trainer={self.trainer}
         )"""
 
 
@@ -78,8 +75,11 @@ class EvaluatorList:
     def __init__(self, evaluators: List[Evaluator], name: Optional[str] = None):
         self.evaluators = evaluators
         self.name = name
+        self.prefix = f"({self.name}) " if self.name else ""
 
     def __getitem__(self, index: int) -> Evaluator:
+        if len(self) == 0:
+            raise IndexError("EvaluatorList is empty")
         return self.evaluators[index]
 
     def __len__(self) -> int:
@@ -111,15 +111,21 @@ class EvaluatorList:
         return self.__add__(other)
 
     def __repr__(self):
-        eval_str = "\n\t\t".join([str(evaluator) for evaluator in self.evaluators])
+        eval_str = "\n\t\t".join([evaluator.__repr__() for evaluator in self.evaluators])
 
-        return f"""({self.name}) {self.__class__.__name__}(
-            n_evaluators={len(self.evaluators)},
-            evaluators={eval_str}
-        )"""
+        return f"""{self.prefix}{self.__class__.__name__}(
+    n_evaluators={len(self.evaluators)},
+    evaluators=
+        {eval_str}
+)"""
 
     def run(self):
         """Run the evaluators."""
         logger.info(f"Running {self}")
+
+        if len(self) == 0:
+            logger.info("EvaluatorList is empty. Skipping.")
+            return
+
         for evaluator in self.evaluators:
             evaluator.run()
