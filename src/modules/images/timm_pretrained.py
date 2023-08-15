@@ -1,9 +1,9 @@
-import logging
-
 import timm
 import torch.nn as nn
 
-logger = logging.getLogger(__name__)
+from src.utils import pylogger
+
+logger = pylogger.get_pylogger(__name__)
 
 
 class CNNEncoder(nn.Module):
