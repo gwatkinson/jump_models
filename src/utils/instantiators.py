@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Optional
 
 import hydra
+import torch.nn as nn
 from lightning import Callback
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
@@ -48,3 +49,55 @@ def instantiate_loggers(logger_cfg: DictConfig) -> List[Logger]:
             logger.append(hydra.utils.instantiate(lg_conf))
 
     return logger
+
+
+def instantiate_evaluator_list(
+    evaluator_list_cfg: DictConfig,
+    cross_modal_module: nn.Module,
+    logger: Optional[List[Logger]] = None,
+    name: Optional[str] = None,
+):
+    """Instantiates evaluator list from config."""
+
+    from src.eval.evaluators import Evaluator, EvaluatorList
+
+    evaluators: List[Evaluator] = []
+
+    if not evaluator_list_cfg:
+        log.warning("No evaluator configs found! Skipping...")
+        return EvaluatorList(evaluators=evaluators)
+
+    if not isinstance(evaluator_list_cfg, DictConfig):
+        raise TypeError("Evaluator config must be a DictConfig!")
+
+    for ev_name, ev_conf in evaluator_list_cfg.items():
+        if isinstance(ev_conf, DictConfig):
+            if "model" in ev_conf:
+                module = hydra.utils.instantiate(ev_conf.model, cross_modal_module=cross_modal_module)
+            else:
+                raise ValueError("Evaluator config must contain a model!")
+
+            if "datamodule" in ev_conf:
+                datamodule = hydra.utils.instantiate(ev_conf.datamodule)
+            else:
+                raise ValueError("Evaluator config must contain a datamodule!")
+
+            if "callbacks" in ev_conf:
+                callbacks = instantiate_callbacks(ev_conf.callbacks)
+            else:
+                callbacks = []
+
+            if "trainer" in ev_conf:
+                trainer = hydra.utils.instantiate(ev_conf.trainer, callbacks=callbacks, logger=logger)
+            else:
+                trainer = None
+
+            if ev_conf.evaluator.name is None:
+                ev_conf.evaluator.name = ev_name
+
+            log.info(f"Instantiating evaluator <{ev_conf.model._target_}>")
+            evaluator = hydra.utils.instantiate(ev_conf.evaluator, model=module, datamodule=datamodule, trainer=trainer)
+
+            evaluators.append(evaluator)
+
+    return EvaluatorList(evaluators=evaluators, name=name)
