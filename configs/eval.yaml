@@ -10,6 +10,7 @@ defaults:
   - extras: default.yaml
   - hydra: default.yaml
   - eval: evaluators.yaml
+  - callbacks: none.yaml
   - experiment: null
 
 
