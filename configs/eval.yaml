@@ -10,6 +10,8 @@ defaults:
   - extras: default.yaml
   - hydra: default.yaml
   - eval: evaluators.yaml
+  - experiment: null
+
 
 
 task_name: "eval"
