@@ -74,6 +74,7 @@ class JumpMOADataset(Dataset):
         self.targets = self.moa_load_df[self.target_col].unique()
         self.targets.sort()
         self.target_to_num = {target: i for i, target in enumerate(self.targets)}
+        self.n_targets = len(self.targets)
 
         self.transform = transform
         self.compound_transform = compound_transform
@@ -168,6 +169,7 @@ class JumpMOADataModule(LightningDataModule):
         load_data_dir: Optional[str] = None,
         splitter: Optional[BaseSplitter] = None,
         max_obs_per_class: int = 1000,
+        min_obs_per_class: int = 500,
         data_root_dir: Optional[str] = None,
         **kwargs,
     ):
@@ -192,12 +194,13 @@ class JumpMOADataModule(LightningDataModule):
 
         self.splitter = splitter
         self.max_obs_per_class = max_obs_per_class
+        self.min_obs_per_class = min_obs_per_class
 
         self.target_col = target_col
         self.smiles_col = smiles_col
         self.return_image = return_image
         self.return_compound = return_compound
-        self.use_cache = kwargs.get("use_cache", True)
+        self.use_cache = kwargs.get("use_cache", False)
 
         self.got_default_collate_fn = False
 
@@ -237,7 +240,12 @@ class JumpMOADataModule(LightningDataModule):
 
             # ? filter on other things ? (trt, platetype, etc.), equalize classes ?
             moa_load_df = moa_load_df.groupby("moa", as_index=False).apply(
-                lambda x: x.sample(min(self.max_obs_per_class, len(x)), replace=False)
+                lambda x: x.sample(
+                    min(
+                        self.max_obs_per_class, (len(x) > self.min_obs_per_class) * len(x)
+                    ),  # 0 if len(x) <= min_obs_per_class else len(x)
+                    replace=False,
+                )
             )
 
             logger.info(f"Saving MOA data to {self.moa_load_df_path} ({len(moa_load_df)} rows)")
@@ -262,6 +270,7 @@ class JumpMOADataModule(LightningDataModule):
         if self.moa_load_df is None:
             logger.info(f"Loading MOA data from {self.moa_load_df_path}")
             self.moa_load_df = pd.read_csv(self.moa_load_df_path)
+            self.num_classes = self.moa_load_df[self.target_col].nunique()
 
         if stage == "test" and self.test_dataset is None:
             test_ids = pd.read_csv(self.test_path, header=None).values.flatten().tolist()

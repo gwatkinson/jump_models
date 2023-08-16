@@ -84,14 +84,18 @@ class BackboneFinetuningFromName(BaseFinetuning):
         self.rounding: int = rounding
         self.previous_backbone_lr: Optional[float] = None
 
+        self.is_aligned: bool = False
+
     def state_dict(self) -> Dict[str, Any]:
         return {
             "internal_optimizer_metadata": self._internal_optimizer_metadata,
             "previous_backbone_lr": self.previous_backbone_lr,
+            "is_aligned": self.is_aligned,
         }
 
     def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
         self.previous_backbone_lr = state_dict["previous_backbone_lr"]
+        self.is_aligned = state_dict["is_aligned"]
         super().load_state_dict(state_dict)
 
     def on_fit_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
@@ -129,18 +133,23 @@ class BackboneFinetuningFromName(BaseFinetuning):
         elif epoch > self.unfreeze_backbone_at_epoch:
             current_lr = optimizer.param_groups[0]["lr"]
             epoch_diff = epoch - self.unfreeze_backbone_at_epoch
-            next_current_backbone_lr = self.lambda_func(epoch_diff, self.previous_backbone_lr)
-            next_current_backbone_lr = (
-                current_lr
-                if (self.should_align and next_current_backbone_lr > current_lr)
-                else next_current_backbone_lr
-            )
-            optimizer.param_groups[-1]["lr"] = next_current_backbone_lr
-            self.previous_backbone_lr = next_current_backbone_lr
+            next_backbone_lr = self.lambda_func(epoch_diff, self.previous_backbone_lr)
+
+            if self.is_aligned or next_backbone_lr > current_lr:
+                self.is_aligned = True
+            else:
+                self.is_aligned = False
+
+            self.previous_backbone_lr = current_lr if (self.should_align and self.is_aligned) else next_backbone_lr
+
+            for param_group in optimizer.param_groups:
+                if param_group.get("name") == self.group_name:
+                    param_group["lr"] = self.previous_backbone_lr
+
             if self.verbose:
                 logger.info(
                     f"Current lr: {round(current_lr, self.rounding)}, "
-                    f"Backbone lr: {round(next_current_backbone_lr, self.rounding)}"
+                    f"Backbone lr: {round(self.previous_backbone_lr, self.rounding)}"
                 )
 
     @staticmethod

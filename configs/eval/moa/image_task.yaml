@@ -1,6 +1,6 @@
 defaults:
   - /model/optimizer/adam.yaml@moa_image_task.model.optimizer
-  - /model/scheduler/cosine_annealing_warm_restart.yaml@moa_image_task.model.scheduler
+  - /model/scheduler/exponential.yaml@moa_image_task.model.scheduler
   - /trainer/gpu.yaml@moa_image_task.trainer
   - /callbacks/eval/moa.yaml@moa_image_task.callbacks  #! This adds the callbacks
 
@@ -17,14 +17,16 @@ moa_image_task:
 
     image_freezer:
       unfreeze_backbone_at_epoch: 11
+      backbone_initial_ratio_lr: 5e-2
       group_name: moa_image_encoder_unfrozen
+
 
 
   datamodule:
     _target_: src.eval.moa.datamodule.JumpMOADataModule
 
-    moa_load_df_path: ${paths.data_root_dir}/jump/models/eval/moa/image_task/moa_1024.csv
-    split_path: ${paths.data_root_dir}/jump/models/eval/moa/image_task/splits/moa_1024/
+    moa_load_df_path: ${paths.data_root_dir}/jump/models/eval/moa/image_task/moa_500_1024.csv
+    split_path: ${paths.data_root_dir}/jump/models/eval/moa/image_task/splits/moa_500_1024/
 
     batch_size: 256
     num_workers: 16
@@ -44,6 +46,7 @@ moa_image_task:
       test: 0.1
 
     max_obs_per_class: 1024
+    min_obs_per_class: 500
 
     target_col: moa
     return_image: True
@@ -61,10 +64,10 @@ moa_image_task:
     _target_: src.eval.moa.module.JumpMOAImageModule
 
     lr: 1e-2
+    num_classes: 9  # when min is set to 500, else 26
 
     scheduler:
-      T_0: 10
-      T_mult: 5
+      gamma: 0.92
 
     example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
 

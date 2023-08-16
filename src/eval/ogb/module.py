@@ -135,7 +135,7 @@ class OGBClassificationModule(LightningModule):
     def extract(self, compound):
         return self.molecule_encoder(compound)
 
-    def forward(self, compound, label=None):
+    def forward(self, compound, **kwargs):
         return self.model(compound)
 
     def model_step(self, batch: Any, stage: str = "train", on_step_loss=True):
@@ -210,9 +210,8 @@ class OGBClassificationModule(LightningModule):
 
         group_to_keep = [group["name"] for group in filtered_params_groups if group_lens[group["name"]] > 0]
 
-        logger.info(f"Number of params in each groups:\n{params_len}")
-        logger.info(f"Number of require grad params in each groups:\n{group_lens}")
-        logger.info(f"Params groups to keep:\n{group_to_keep}")
+        logger.info(f"Number of params in each groups: {params_len}")
+        logger.info(f"Number of require grad params in each groups: {group_lens}")
 
         optimizer = self.optimizer(
             [group for group in params_groups if group["name"] in group_to_keep],
