@@ -9,6 +9,8 @@ debug.py
 /*.pth
 /scripts/list_*.zsh
 src/pyidr
+/.hydra/
+/jump_moa/
 
 
 # Lightning-Hydra-Template
