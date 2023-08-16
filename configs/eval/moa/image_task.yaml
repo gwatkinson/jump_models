@@ -1,5 +1,5 @@
 defaults:
-  - /model/optimizer/adam.yaml@moa_image_task.model.optimizer
+  - /model/optimizer/adamax.yaml@moa_image_task.model.optimizer
   - /model/scheduler/exponential.yaml@moa_image_task.model.scheduler
   - /trainer/gpu.yaml@moa_image_task.trainer
   - /callbacks/eval/moa.yaml@moa_image_task.callbacks  #! This adds the callbacks

@@ -174,7 +174,10 @@ class JumpMOAImageModule(LightningModule):
         return loss, logits, targets
 
     def training_step(self, batch: Any, batch_idx: int):
-        loss, _preds, _targets = self.model_step(batch, stage="train", on_step_loss=True)
+        out = self.model_step(batch, stage="train", on_step_loss=True)
+        if out is None:
+            return None
+        loss, _preds, _targets = out
         return loss
 
     def on_train_epoch_end(self):
