@@ -124,11 +124,11 @@ class BackboneFinetuningFromName(BaseFinetuning):
                 initial_denom_lr=self.initial_denom_lr,
                 name=self.group_name,
             )
-            if self.verbose:
-                logger.info(
-                    f"Current lr: {round(current_lr, self.rounding)}, "
-                    f"Backbone lr: {round(initial_backbone_lr, self.rounding)}"
-                )
+
+            logger.info(
+                f"Current lr: {round(current_lr, self.rounding)}, "
+                f"Backbone lr: {round(initial_backbone_lr, self.rounding)}"
+            )
 
         elif epoch > self.unfreeze_backbone_at_epoch:
             current_lr = optimizer.param_groups[0]["lr"]
