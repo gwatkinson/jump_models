@@ -53,7 +53,6 @@ bbbp:
       num_virtual_nodes: 0
       explicit_hydrogens: False
 
-
     split_type: scaffold
 
     smiles_col: smiles

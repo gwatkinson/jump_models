@@ -10,6 +10,7 @@ import torch
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 
+from src.modules.collate_fn import label_graph_collate_function
 from src.utils import pylogger
 from src.utils.io import download_and_extract_zip
 
@@ -92,6 +93,9 @@ class OGBDataset(Dataset):
         y = torch.tensor(y)
 
         return {"compound": tr_compound, "label": y}
+
+    def get_default_collate_fn(self):
+        return label_graph_collate_function
 
 
 class OGBBaseDataModule(LightningDataModule):
@@ -178,6 +182,7 @@ class OGBBaseDataModule(LightningDataModule):
         # targets
         self.compound_transform = compound_transform
         self.collate_fn = collate_fn
+        self.got_default_collate_fn = False
         self.targets = targets
         self.smiles_col = smiles_col
         self.use_cache = use_cache
@@ -248,6 +253,11 @@ class OGBBaseDataModule(LightningDataModule):
                 compound_transform=self.compound_transform,
                 use_cache=self.use_cache,
             )
+
+        if self.collate_fn is None and not self.got_default_collate_fn:
+            logger.info("Loading default collate function")
+            self.collate_fn = self.train_dataset.get_default_collate_fn()
+            self.got_default_collate_fn = True
 
         if self.val_dataset is None:
             self.val_ids = pd.read_csv(self.val_ids_file, header=None).values.flatten().tolist()

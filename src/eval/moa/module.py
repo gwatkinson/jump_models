@@ -151,7 +151,7 @@ class JumpMOAImageModule(LightningModule):
         loss = self.criterion(logits, targets)
 
         # update metrics
-        self.loss_dict[stage](loss)
+        self.loss_dict[stage].update(loss)
         self.plot_metrics_dict[stage].update(logits, targets)
         self.other_metrics_dict[stage].update(logits, targets)
 
@@ -167,6 +167,9 @@ class JumpMOAImageModule(LightningModule):
         self.log_dict(
             self.other_metrics_dict[stage], on_step=False, on_epoch=True, prog_bar=False, batch_size=batch_size
         )
+
+        if not torch.isfinite(loss):
+            return None
 
         return loss, logits, targets
 
