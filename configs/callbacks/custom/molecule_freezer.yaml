@@ -3,7 +3,7 @@ molecule_freezer:
 
   unfreeze_backbone_at_epoch: ???
   backbone_name: molecule_encoder
-  group_name: molecule_encoder
+  group_name: molecule_encoder_unfrozen
   lambda_func:
     _target_: src.callbacks.freeze.multiplicative_func
     a0: 1.5

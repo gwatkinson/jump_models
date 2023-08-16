@@ -70,19 +70,6 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
     trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=callbacks, logger=logger)
 
-    object_dict = {
-        "cfg": cfg,
-        "datamodule": datamodule,
-        "model": model,
-        "callbacks": callbacks,
-        "logger": logger,
-        "trainer": trainer,
-    }
-
-    if logger:
-        log.info("Logging hyperparameters!")
-        utils.log_hyperparameters(object_dict)
-
     if cfg.get("compile"):
         log.info("Compiling model!")
         model = torch.compile(model)
@@ -119,6 +106,22 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
     # merge train and test metrics
     metric_dict = {**train_metrics, **test_metrics}
+
+    object_dict = {
+        "cfg": cfg,
+        "datamodule": datamodule,
+        "model": model,
+        "callbacks": callbacks,
+        "logger": logger,
+        "trainer": trainer,
+    }
+
+    if evaluator_list is not None:
+        object_dict["evaluators"] = evaluator_list
+
+    if logger:
+        log.info("Logging hyperparameters!")
+        utils.log_hyperparameters(object_dict)
 
     return metric_dict, object_dict
 

@@ -74,7 +74,7 @@ class BackboneFinetuningFromName(BaseFinetuning):
         self.unfreeze_backbone_at_epoch: int = unfreeze_backbone_at_epoch
         self.backbone_name = backbone_name
         self.group_name = group_name
-        self.lambda_func: Callable = lambda_func
+        self.lambda_func: Callable[[int, float], float] = lambda_func
         self.backbone_initial_ratio_lr: float = backbone_initial_ratio_lr
         self.backbone_initial_lr: Optional[float] = backbone_initial_lr
         self.should_align: bool = should_align
@@ -128,7 +128,8 @@ class BackboneFinetuningFromName(BaseFinetuning):
 
         elif epoch > self.unfreeze_backbone_at_epoch:
             current_lr = optimizer.param_groups[0]["lr"]
-            next_current_backbone_lr = self.lambda_func(epoch + 1) * self.previous_backbone_lr
+            epoch_diff = epoch - self.unfreeze_backbone_at_epoch
+            next_current_backbone_lr = self.lambda_func(epoch_diff, self.previous_backbone_lr)
             next_current_backbone_lr = (
                 current_lr
                 if (self.should_align and next_current_backbone_lr > current_lr)

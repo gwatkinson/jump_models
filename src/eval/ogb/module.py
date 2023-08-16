@@ -54,7 +54,7 @@ class OGBClassificationModule(LightningModule):
 
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
-        self.save_hyperparameters(logger=False, ignore=["cross_modal_module", "criterion"])
+        self.save_hyperparameters(logger=False)
 
         # encoder
         # self.cross_modal_module = cross_modal_module
@@ -181,14 +181,46 @@ class OGBClassificationModule(LightningModule):
         Examples:
             https://lightning.ai/docs/pytorch/latest/common/lightning_module.html#configure-optimizers
         """
-        optimizer = self.optimizer(params=filter(lambda p: p.requires_grad, self.parameters()))
+        params_groups = [
+            {
+                "params": list(self.head.parameters()),
+                "name": f"{self.log_prefix}_head",
+            },
+            {
+                "params": list(self.molecule_encoder.parameters()),
+                "name": f"{self.log_prefix}_molecule_encoder",
+            },
+        ]
+        filtered_params_groups = [
+            {
+                "params": list(filter(lambda p: p.requires_grad, group["params"])),
+                "name": group["name"],
+            }
+            for group in params_groups
+        ]
+
+        params_len = {group["name"]: len(group["params"]) for group in params_groups}
+        group_lens = {group["name"]: len(group["params"]) for group in filtered_params_groups}
+
+        group_to_keep = [group["name"] for group in filtered_params_groups if group_lens[group["name"]] > 0]
+
+        logger.info(f"Number of params in each groups:\n{params_len}")
+        logger.info(f"Number of require grad params in each groups:\n{group_lens}")
+        logger.info(f"Params groups to keep:\n{group_to_keep}")
+
+        optimizer = self.optimizer(
+            [group for group in params_groups if group["name"] in group_to_keep],
+            lr=self.lr,
+        )
+
+        # optimizer = self.optimizer(params=filter(lambda p: p.requires_grad, self.parameters()))
         if self.scheduler is not None:
             scheduler = self.scheduler(optimizer=optimizer)
             return {
                 "optimizer": optimizer,
                 "lr_scheduler": {
                     "scheduler": scheduler,
-                    "monitor": f"{self.prefix}/val/loss",
+                    "monitor": f"{self.log_prefix}/val/loss",
                     "interval": "epoch",
                     "frequency": 1,
                 },

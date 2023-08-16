@@ -14,6 +14,7 @@ tox21:
   callbacks:
     molecule_freezer:
       unfreeze_backbone_at_epoch: 11
+      group_name: tox21_molecule_unfrozen
 
     early_stopping:
       monitor: ogb/tox21/image/val/loss

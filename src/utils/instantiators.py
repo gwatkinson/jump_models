@@ -55,6 +55,7 @@ def instantiate_evaluator_list(
     evaluator_list_cfg: DictConfig,
     cross_modal_module: nn.Module,
     logger: Optional[List[Logger]] = None,
+    ckpt_path: Optional[str] = None,
     name: Optional[str] = None,
 ):
     """Instantiates evaluator list from config."""

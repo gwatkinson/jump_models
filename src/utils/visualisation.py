@@ -140,13 +140,13 @@ def insert_totals(df_cm):
 def pp_matrix(
     df_cm,
     annot=True,
-    cmap="Oranges",
+    cmap="Oranges_r",
     fmt=".2f",
     per_fmt=".1%",
-    fz=11,
+    fz=10,
     lw=0.5,
     cbar=False,
-    figsize=(8, 8),
+    figsize=(16, 16),
     show_null_values=0,
     pred_val_axis="y",
 ):

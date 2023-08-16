@@ -53,7 +53,7 @@ class JumpMOAImageModule(LightningModule):
 
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
-        self.save_hyperparameters(logger=False, ignore=["cross_modal_module", "criterion", "image_encoder"])
+        self.save_hyperparameters(logger=False)
 
         # encoder
         if not (image_encoder or (cross_modal_module and image_encoder_attribute_name)):
@@ -180,21 +180,45 @@ class JumpMOAImageModule(LightningModule):
         pass
 
     def configure_optimizers(self):
-        """Choose what optimizers and learning-rate schedulers to use in your
-        optimization. Normally you'd need one. But in the case of GANs or
-        similar you might have multiple.
+        params_groups = [
+            {
+                "params": list(self.head.parameters()),
+                "name": "moa_image_head",
+            },
+            {
+                "params": list(self.image_encoder.parameters()),
+                "name": "moa_image_encoder",
+            },
+        ]
+        filtered_params_groups = [
+            {
+                "params": list(filter(lambda p: p.requires_grad, group["params"])),
+                "name": group["name"],
+            }
+            for group in params_groups
+        ]
 
-        Examples:
-            https://lightning.ai/docs/pytorch/latest/common/lightning_module.html#configure-optimizers
-        """
-        optimizer = self.optimizer(params=filter(lambda p: p.requires_grad, self.parameters()))
+        params_len = {group["name"]: len(group["params"]) for group in params_groups}
+        group_lens = {group["name"]: len(group["params"]) for group in filtered_params_groups}
+
+        group_to_keep = [group["name"] for group in filtered_params_groups if group_lens[group["name"]] > 0]
+
+        logger.info(f"Number of params in each groups:\n{params_len}")
+        logger.info(f"Number of require grad params in each groups:\n{group_lens}")
+        logger.info(f"Params groups to keep:\n{group_to_keep}")
+
+        optimizer = self.optimizer(
+            [group for group in params_groups if group["name"] in group_to_keep],
+            lr=self.lr,
+        )
+        # optimizer = self.optimizer(params=filter(lambda p: p.requires_grad, self.parameters()))
         if self.scheduler is not None:
             scheduler = self.scheduler(optimizer=optimizer)
             return {
                 "optimizer": optimizer,
                 "lr_scheduler": {
                     "scheduler": scheduler,
-                    "monitor": "val/loss",
+                    "monitor": "jump_moa/image/val/loss",
                     "interval": "epoch",
                     "frequency": 1,
                 },
@@ -229,9 +253,7 @@ class JumpMOAImageGraphModule(JumpMOAImageModule):
             example_input=example_input,
             example_input_path=example_input_path,
         )
-        self.save_hyperparameters(
-            logger=False, ignore=["cross_modal_module", "criterion", "image_encoder", "molecule_encoder"]
-        )
+        self.save_hyperparameters(logger=False)
 
         # encoders and head
         if molecule_encoder is not None:
@@ -255,3 +277,53 @@ class JumpMOAImageGraphModule(JumpMOAImageModule):
     def forward(self, image, compound, label=None):
         emb = self.extract(image, compound)
         return self.head(emb)
+
+    def configure_optimizers(self):
+        params_groups = [
+            {
+                "params": list(self.head.parameters()),
+                "name": "moa_image_graph_head",
+            },
+            {
+                "params": list(self.image_encoder.parameters()),
+                "name": "moa_image_encoder",
+            },
+            {
+                "params": list(self.molecule_encoder.parameters()),
+                "name": "moa_molecule_encoder",
+            },
+        ]
+        filtered_params_groups = [
+            {
+                "params": list(filter(lambda p: p.requires_grad, group["params"])),
+                "name": group["name"],
+            }
+            for group in params_groups
+        ]
+
+        params_len = {group["name"]: len(group["params"]) for group in params_groups}
+        group_lens = {group["name"]: len(group["params"]) for group in filtered_params_groups}
+
+        group_to_keep = [group["name"] for group in filtered_params_groups if group_lens[group["name"]] > 0]
+
+        logger.info(f"Number of params in each groups:\n{params_len}")
+        logger.info(f"Number of require grad params in each groups:\n{group_lens}")
+        logger.info(f"Params groups to keep:\n{group_to_keep}")
+
+        optimizer = self.optimizer(
+            [group for group in params_groups if group["name"] in group_to_keep],
+            lr=self.lr,
+        )
+        # optimizer = self.optimizer(params=filter(lambda p: p.requires_grad, self.parameters()))
+        if self.scheduler is not None:
+            scheduler = self.scheduler(optimizer=optimizer)
+            return {
+                "optimizer": optimizer,
+                "lr_scheduler": {
+                    "scheduler": scheduler,
+                    "monitor": "jump_moa/image/val/loss",
+                    "interval": "epoch",
+                    "frequency": 1,
+                },
+            }
+        return {"optimizer": optimizer}

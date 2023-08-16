@@ -14,6 +14,7 @@ bbbp:
   callbacks:
     molecule_freezer:
       unfreeze_backbone_at_epoch: 11
+      group_name: bbbp_molecule_unfrozen
 
     early_stopping:
       monitor: ogb/bbbp/image/val/loss

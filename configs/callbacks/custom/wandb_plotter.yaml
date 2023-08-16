@@ -3,6 +3,6 @@ wandb_plotter:
   watch: True
   watch_log: all # or "gradients", "parameters", "all"
   log_freq: ???
+  plot_every_n_epoch: ???
   log_graph: False
-  plot_every_n_epoch: 5
   prefix: ???

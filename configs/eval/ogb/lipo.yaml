@@ -14,6 +14,7 @@ lipo:
   callbacks:
     molecule_freezer:
       unfreeze_backbone_at_epoch: 11
+      group_name: lipo_molecule_unfrozen
 
     early_stopping:
       monitor: ogb/lipo/image/val/loss

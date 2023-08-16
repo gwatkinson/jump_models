@@ -14,6 +14,7 @@ hiv:
   callbacks:
     molecule_freezer:
       unfreeze_backbone_at_epoch: 11
+      group_name: hiv_molecule_unfrozen
 
     early_stopping:
       monitor: ogb/hiv/image/val/loss

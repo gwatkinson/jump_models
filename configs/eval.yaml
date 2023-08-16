@@ -2,15 +2,19 @@
 
 defaults:
   - _self_
-  - data: jump_cl.yaml # choose datamodule with `test_dataloader()` for evaluation
+  - data: jump_cl.yaml
   - model: jump_cl.yaml
-  - logger: wandb
+  - logger: wandb # set logger here or use command line (e.g. `python train.py logger=tensorboard`)
   - trainer: gpu.yaml
   - paths: default.yaml
   - extras: default.yaml
   - hydra: default.yaml
+  - eval: evaluators.yaml
+
 
 task_name: "eval"
+
+evaluate: True
 
 tags: ["dev"]
 

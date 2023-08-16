@@ -17,6 +17,7 @@ moa_image_task:
 
     image_freezer:
       unfreeze_backbone_at_epoch: 11
+      group_name: moa_image_encoder_unfrozen
 
 
   datamodule:
@@ -34,6 +35,7 @@ moa_image_task:
 
     metadata_dir: ${paths.raw_metadata_path}
     load_data_dir: ${paths.load_data_path}
+    data_root_dir: null
 
     splitter:
       _target_: src.splitters.StratifiedSplitter

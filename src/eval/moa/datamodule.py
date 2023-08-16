@@ -63,6 +63,7 @@ class JumpMOADataset(Dataset):
         self.channels = channels or ["DNA", "AGP", "ER", "Mito", "RNA"]
         self.return_image = return_image
         self.return_compound = return_compound
+        self.data_root_dir = data_root_dir
 
         if data_root_dir:
             for channel in self.channels:
@@ -167,6 +168,7 @@ class JumpMOADataModule(LightningDataModule):
         load_data_dir: Optional[str] = None,
         splitter: Optional[BaseSplitter] = None,
         max_obs_per_class: int = 1000,
+        data_root_dir: Optional[str] = None,
         **kwargs,
     ):
         super().__init__()
@@ -182,6 +184,7 @@ class JumpMOADataModule(LightningDataModule):
 
         self.metadata_dir = metadata_dir
         self.load_data_dir = load_data_dir
+        self.data_root_dir = data_root_dir
 
         self.train_path = Path(self.split_path) / "train.csv"
         self.val_path = Path(self.split_path) / "val.csv"
@@ -274,6 +277,7 @@ class JumpMOADataModule(LightningDataModule):
                 target_col=self.target_col,
                 smiles_col=self.smiles_col,
                 use_cache=self.use_cache,
+                data_root_dir=self.data_root_dir,
                 **kwargs,
             )
 
@@ -293,6 +297,7 @@ class JumpMOADataModule(LightningDataModule):
                 target_col=self.target_col,
                 smiles_col=self.smiles_col,
                 use_cache=self.use_cache,
+                data_root_dir=self.data_root_dir,
                 **kwargs,
             )
 
@@ -305,6 +310,7 @@ class JumpMOADataModule(LightningDataModule):
                 target_col=self.target_col,
                 smiles_col=self.smiles_col,
                 use_cache=self.use_cache,
+                data_root_dir=self.data_root_dir,
                 **kwargs,
             )
 

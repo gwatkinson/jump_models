@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import hydra
 import pyrootutils
@@ -7,6 +7,7 @@ from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
 
 from src import utils
+from src.eval import EvaluatorList
 
 pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 # ------------------------------------------------------------------------------------ #
@@ -59,25 +60,34 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
     trainer: Trainer = hydra.utils.instantiate(cfg.trainer, logger=logger)
 
+    log.info("Starting testing!")
+    trainer.test(model=model, datamodule=datamodule, ckpt_path=cfg.ckpt_path)
+
+    log.info("Starting evaluation!")
+    log.info("Instantiating evaluators ...")
+    evaluator_list: Optional[EvaluatorList] = utils.instantiate_evaluator_list(
+        cfg.get("eval"),
+        cross_modal_module=model,
+        logger=logger,
+    )
+
+    if evaluator_list is not None:
+        evaluator_list.run()
+
+    metric_dict = trainer.callback_metrics
+
     object_dict = {
         "cfg": cfg,
         "datamodule": datamodule,
         "model": model,
         "logger": logger,
         "trainer": trainer,
+        "evaluators": evaluator_list,
     }
 
     if logger:
         log.info("Logging hyperparameters!")
         utils.log_hyperparameters(object_dict)
-
-    log.info("Starting testing!")
-    trainer.test(model=model, datamodule=datamodule, ckpt_path=cfg.ckpt_path)
-
-    # for predictions use trainer.predict(...)
-    # predictions = trainer.predict(model=model, dataloaders=dataloaders, ckpt_path=cfg.ckpt_path)
-
-    metric_dict = trainer.callback_metrics
 
     return metric_dict, object_dict
 
