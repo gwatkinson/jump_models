@@ -82,7 +82,7 @@ callbacks:
 logger:
   wandb:
     tags: ${tags}
-    project: "jump_models"
-    group: "med_jump_cl"
+    project: "med_jump_cl"
+    group: "default"
     job_type: ""
     log_model: True

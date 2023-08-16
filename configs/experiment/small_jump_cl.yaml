@@ -76,7 +76,7 @@ callbacks:
 logger:
   wandb:
     tags: ${tags}
-    project: "jump_models"
-    group: "small_jump_cl"
+    project: "small_jump_cl"
+    group: "default"
     job_type: ""
     log_model: True
