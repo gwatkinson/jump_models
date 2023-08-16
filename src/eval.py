@@ -4,7 +4,7 @@ import hydra
 import pyrootutils
 from lightning import LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
-from omegaconf import DictConfig, open_dict
+from omegaconf import DictConfig  # open_dict
 
 from src import utils
 from src.eval import EvaluatorList
@@ -51,13 +51,13 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info(f"Instantiating datamodule <{cfg.data._target_}>")
     datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
 
-    log.info(f"Instantiating model <{cfg.model._target_}> from checkpoint {cfg.ckpt_path}")
-
+    # log.info(f"Instantiating model <{cfg.model._target_}> from checkpoint {cfg.ckpt_path}")
     # Add load_from_checkpoint to model
-    cfg.model["_target_"] += ".load_from_checkpoint"
-    with open_dict(cfg.model):
-        cfg.model["checkpoint_path"] = cfg.ckpt_path
+    # cfg.model["_target_"] += ".load_from_checkpoint"
+    # with open_dict(cfg.model):
+    #     cfg.model["checkpoint_path"] = cfg.ckpt_path
 
+    log.info(f"Instantiating model <{cfg.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(cfg.model)
 
     log.info("Instantiating loggers...")
@@ -67,7 +67,7 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     trainer: Trainer = hydra.utils.instantiate(cfg.trainer, logger=logger)
 
     log.info("Starting testing!")
-    trainer.test(model=model, datamodule=datamodule, ckpt_path=cfg.ckpt_path)
+    trainer.test(model=model, datamodule=datamodule, ckpt_path=cfg.ckpt_path)  # ? This is enough to load the weights ?
 
     log.info("Starting evaluation!")
     log.info("Instantiating evaluators ...")

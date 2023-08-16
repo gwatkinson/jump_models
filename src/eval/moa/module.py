@@ -18,6 +18,10 @@ from torchmetrics.classification import (
     MulticlassRecall,
 )
 
+from src.utils import pylogger
+
+logger = pylogger.get_pylogger(__name__)
+
 
 class JumpMOAImageModule(LightningModule):
     num_classes = 26

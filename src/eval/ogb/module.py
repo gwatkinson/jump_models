@@ -18,7 +18,11 @@ from torchmetrics.classification import (
 )
 from torchmetrics.regression import MeanAbsoluteError, MeanSquaredError, R2Score
 
+from src.utils import pylogger
+
 RMSE = partial(MeanSquaredError, squared=False)
+
+logger = pylogger.get_pylogger(__name__)
 
 
 class OGBClassificationModule(LightningModule):
