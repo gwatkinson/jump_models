@@ -52,6 +52,7 @@ class OGBClassificationModule(LightningModule):
         molecule_encoder_attribute_name: str = "molecule_encoder",
         example_input: Optional[torch.Tensor] = None,
         example_input_path: Optional[str] = None,
+        lr: float = 1e-3,
         **kwargs,
     ):
         super().__init__()
@@ -65,6 +66,7 @@ class OGBClassificationModule(LightningModule):
         self.molecule_encoder = getattr(cross_modal_module, molecule_encoder_attribute_name)
         self.embedding_dim = getattr(self.molecule_encoder, "out_dim", None)
         self.head = nn.Linear(self.embedding_dim, self.out_dim)
+        self.lr = lr
 
         # model
         self.model = nn.Sequential(

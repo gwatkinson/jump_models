@@ -51,6 +51,7 @@ class JumpMOAImageModule(LightningModule):
         image_encoder_attribute_name: str = "image_encoder",
         example_input: Optional[torch.Tensor] = None,
         example_input_path: Optional[str] = None,
+        lr: float = 1e-3,
         **kwargs,
     ):
         super().__init__()
@@ -75,6 +76,7 @@ class JumpMOAImageModule(LightningModule):
 
         self.embedding_dim = self.image_encoder.out_dim
         self.head = nn.Linear(self.embedding_dim, self.num_classes)
+        self.lr = lr
 
         # loss function
         if criterion is None:

@@ -27,8 +27,7 @@ tox21:
   model:
     _target_: src.eval.ogb.module.Tox21Module
 
-    optimizer:
-      lr: 1e-2
+    lr: 1e-2
 
     scheduler:
       T_0: 10

@@ -27,8 +27,7 @@ lipo:
   model:
     _target_: src.eval.ogb.module.LipoModule
 
-    optimizer:
-      lr: 1e-2
+    lr: 1e-2
 
     scheduler:
       T_0: 10

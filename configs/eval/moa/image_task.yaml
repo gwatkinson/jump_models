@@ -60,8 +60,7 @@ moa_image_task:
   model:
     _target_: src.eval.moa.module.JumpMOAImageModule
 
-    optimizer:
-      lr: 1e-2
+    lr: 1e-2
 
     scheduler:
       T_0: 10
