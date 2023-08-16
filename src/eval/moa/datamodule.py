@@ -265,7 +265,7 @@ class JumpMOADataModule(LightningDataModule):
 
         if stage == "test" and self.test_dataset is None:
             test_ids = pd.read_csv(self.test_path, header=None).values.flatten().tolist()
-            test_df = self.iloc[test_ids]
+            test_df = self.moa_load_df.iloc[test_ids]
 
             logger.info(f"Creating test dataset ({len(test_df)} rows)")
             self.test_dataset = JumpMOADataset(

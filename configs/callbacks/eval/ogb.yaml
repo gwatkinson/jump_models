@@ -2,7 +2,6 @@ defaults:
   - /callbacks/lightning/rich_progress_bar@_here_
   - /callbacks/lightning/model_checkpoint@_here_
   - /callbacks/lightning/early_stopping@_here_
-  - /callbacks/custom/wandb_watcher@_here_
   - /callbacks/custom/molecule_freezer@_here_
   - /callbacks/lightning/lr_monitor@_here_
 
@@ -20,6 +19,3 @@ early_stopping:
   patience: 10
   min_delta: 0
   mode: min
-
-wandb_watcher:
-  log_freq: 50

@@ -21,6 +21,7 @@ early_stopping:
   mode: min
 
 wandb_plotter:
+  watch: False
   log_freq: 50
   plot_every_n_epoch: 5
   prefix: jump_moa/image/plots
