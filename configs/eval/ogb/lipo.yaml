@@ -12,12 +12,14 @@ lipo:
 
 
   callbacks:
-    dataset_name: lipo
-
     molecule_freezer:
       unfreeze_backbone_at_epoch: 11
 
+    early_stopping:
+      monitor: ogb/lipo/image/val/loss
+
     model_checkpoint:
+      monitor: ogb/lipo/image/val/loss
       dirpath: ${eval.lipo.trainer.default_root_dir}/checkpoints
 
 

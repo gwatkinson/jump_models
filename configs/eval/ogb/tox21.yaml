@@ -12,12 +12,14 @@ tox21:
 
 
   callbacks:
-    dataset_name: tox21
-
     molecule_freezer:
       unfreeze_backbone_at_epoch: 11
 
+    early_stopping:
+      monitor: ogb/tox21/image/val/loss
+
     model_checkpoint:
+      monitor: ogb/tox21/image/val/loss
       dirpath: ${eval.tox21.trainer.default_root_dir}/checkpoints
 
 

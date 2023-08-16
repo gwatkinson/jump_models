@@ -12,12 +12,14 @@ bbbp:
 
 
   callbacks:
-    dataset_name: bbbp
-
     molecule_freezer:
       unfreeze_backbone_at_epoch: 11
 
+    early_stopping:
+      monitor: ogb/bbbp/image/val/loss
+
     model_checkpoint:
+      monitor: ogb/bbbp/image/val/loss
       dirpath: ${eval.bbbp.trainer.default_root_dir}/checkpoints
 
 

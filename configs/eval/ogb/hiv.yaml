@@ -12,12 +12,14 @@ hiv:
 
 
   callbacks:
-    dataset_name: hiv
-
     molecule_freezer:
       unfreeze_backbone_at_epoch: 11
 
+    early_stopping:
+      monitor: ogb/hiv/image/val/loss
+
     model_checkpoint:
+      monitor: ogb/hiv/image/val/loss
       dirpath: ${eval.hiv.trainer.default_root_dir}/checkpoints
 
 

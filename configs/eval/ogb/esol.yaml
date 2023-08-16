@@ -12,12 +12,14 @@ esol:
 
 
   callbacks:
-    dataset_name: esol
-
     molecule_freezer:
       unfreeze_backbone_at_epoch: 11
 
+    early_stopping:
+      monitor: ogb/esol/image/val/loss
+
     model_checkpoint:
+      monitor: ogb/esol/image/val/loss
       dirpath: ${eval.esol.trainer.default_root_dir}/checkpoints
 
 

@@ -6,18 +6,17 @@ defaults:
   - /callbacks/custom/molecule_freezer@_here_
   - /callbacks/lightning/lr_monitor@_here_
 
-dataset_name: ???
 
 model_checkpoint:
   dirpath: ???
   filename: "moa_epoch_{epoch:03d}"
-  monitor: ogb/${callbacks.eval.ogb.dataset_name}/image/val/loss
+  monitor: ???
   mode: min
   save_last: True
   auto_insert_metric_name: False
 
 early_stopping:
-  monitor: ogb/${callbacks.eval.ogb.dataset_name}/image/val/loss
+  monitor: ???
   patience: 10
   min_delta: 0
   mode: min
