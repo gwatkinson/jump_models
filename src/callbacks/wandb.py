@@ -28,6 +28,7 @@ class WandbTrainingCallback(Callback):
         self.log_freq = log_freq
         self.watch_log = watch_log
         self.log_graph = log_graph
+        self.no_logger = False
 
         self.logger = None
 
@@ -42,14 +43,14 @@ class WandbTrainingCallback(Callback):
 
             if self.logger is None:
                 py_logger.warning("No WandbLogger found. WandbCallback will not log anything.")
-                self.watch = False
+                self.no_logger = True
 
     def on_train_start(self, trainer, pl_module):
-        if self.watch:
+        if self.watch and not self.no_logger:
             self.logger.watch(pl_module, log=self.watch_log, log_freq=self.log_freq, log_graph=self.log_graph)
 
     def on_train_end(self, trainer, pl_module):
-        if self.watch:
+        if self.watch and not self.no_logger:
             self.logger.experiment.unwatch(pl_module)
 
 
@@ -68,6 +69,7 @@ class WandbPlottingCallback(WandbTrainingCallback):
         self.tables = None
         self.num_figs = None
         self.kwargs = kwargs
+        self.plot_every_n_epoch = plot_every_n_epoch
 
         if prefix is None:
             self.prefix = ""
@@ -79,21 +81,22 @@ class WandbPlottingCallback(WandbTrainingCallback):
     def setup(self, trainer, pl_module, stage=None):
         super().setup(trainer, pl_module, stage=stage)
 
-        if self.tables is None:
-            plot_metrics = pl_module.train_plot_metrics
-            columns = ["epoch", *[k.replace("train/", "") for k in plot_metrics.keys()]]
-            self.tables = {
-                "train": wandb.Table(columns=columns),
-                "val": wandb.Table(columns=columns),
-                "test": wandb.Table(columns=columns),
-            }
+        if not self.no_logger:
+            if self.tables is None:
+                plot_metrics = pl_module.train_plot_metrics
+                columns = ["epoch", *[k.replace("train/", "") for k in plot_metrics.keys()]]
+                self.tables = {
+                    "train": wandb.Table(columns=columns),
+                    "val": wandb.Table(columns=columns),
+                    "test": wandb.Table(columns=columns),
+                }
 
-        if self.num_figs is None:
-            plot_metrics = pl_module.train_plot_metrics
-            self.num_figs = len(plot_metrics)
+            if self.num_figs is None:
+                plot_metrics = pl_module.train_plot_metrics
+                self.num_figs = len(plot_metrics)
 
     def on_epoch_end_plotting(self, trainer, pl_module, phase="train"):
-        if self.num_figs > 0:
+        if not self.no_logger and self.num_figs > 0:
             plot_metrics = getattr(pl_module, f"{phase}_plot_metrics")
             current_epoch = trainer.current_epoch
             table = self.tables[phase]
@@ -117,12 +120,17 @@ class WandbPlottingCallback(WandbTrainingCallback):
             self.logger.log_table(key=key, columns=table.columns, data=table.data)
 
     def on_train_epoch_end(self, trainer, pl_module):
-        if trainer.current_epoch % self.plot_every_n_epoch == 0 or trainer.current_epoch == trainer.max_epochs:
+        if not self.no_logger and (
+            trainer.current_epoch % self.plot_every_n_epoch == 0 or trainer.current_epoch == trainer.max_epochs
+        ):
             self.on_epoch_end_plotting(trainer, pl_module, phase="train")
 
     def on_validation_epoch_end(self, trainer, pl_module):
-        if trainer.current_epoch % self.plot_every_n_epoch == 0 or trainer.current_epoch == trainer.max_epochs:
+        if not self.no_logger and (
+            trainer.current_epoch % self.plot_every_n_epoch == 0 or trainer.current_epoch == trainer.max_epochs
+        ):
             self.on_epoch_end_plotting(trainer, pl_module, phase="val")
 
     def on_test_epoch_end(self, trainer, pl_module):
-        self.on_epoch_end_plotting(trainer, pl_module, phase="test")
+        if not self.no_logger:
+            self.on_epoch_end_plotting(trainer, pl_module, phase="test")
