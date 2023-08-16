@@ -49,7 +49,7 @@ class BasicJUMPModule(LightningModule):
 
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
-        self.save_hyperparameters(logger=False)
+        self.save_hyperparameters(logger=False, ignore=["image_encoder", "molecule_encoder", "criterion"])
 
         # encoders
         self.image_encoder = image_encoder

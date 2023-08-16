@@ -57,7 +57,7 @@ class IDRRetrievalModule(LightningModule):
     ):
         super().__init__()
 
-        self.save_hyperparameters(logger=False)
+        self.save_hyperparameters(logger=False, ignore=["cross_modal_module", "image_encoder", "molecule_encoder"])
 
         if not (image_encoder or (cross_modal_module and image_encoder_attribute_name)):
             raise ValueError("Either image_encoder or cross_modal_module must be provided.")

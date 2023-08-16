@@ -53,7 +53,10 @@ class JumpMOAImageModule(LightningModule):
 
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
-        self.save_hyperparameters(logger=False)
+        self.save_hyperparameters(
+            logger=False,
+            ignore=["cross_modal_module", "optimizer", "criterion", "image_encoder", "image_encoder_attribute_name"],
+        )
 
         # encoder
         if not (image_encoder or (cross_modal_module and image_encoder_attribute_name)):
@@ -253,7 +256,9 @@ class JumpMOAImageGraphModule(JumpMOAImageModule):
             example_input=example_input,
             example_input_path=example_input_path,
         )
-        self.save_hyperparameters(logger=False)
+        self.save_hyperparameters(
+            logger=False, ignore=["cross_modal_module", "image_encoder", "molecule_encoder", "criterion"]
+        )
 
         # encoders and head
         if molecule_encoder is not None:
