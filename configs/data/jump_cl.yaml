@@ -29,6 +29,9 @@ splitter:
   val: ???
   retrieval: 0
 
+
+use_compond_cache: False
+
 # example: ${paths.split_path}/small_test/
 split_path: ???
 

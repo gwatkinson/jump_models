@@ -55,6 +55,7 @@ class BasicJUMPDataModule(LightningDataModule):
         compound_transform: Optional[Callable] = None,
         collate_fn: Optional[Callable] = None,
         image_sampler: Optional[Callable[[List[str]], str]] = None,
+        use_compond_cache: bool = False,
         **kwargs,
     ):
         """Initialize a BasicJUMPDataModule instance.
@@ -124,6 +125,7 @@ class BasicJUMPDataModule(LightningDataModule):
         self.split_path = split_path
         self.image_metadata_path = image_metadata_path
         self.compound_metadata_path = compound_metadata_path
+        self.use_compond_cache = use_compond_cache
 
         # split paths
         self.force_split = force_split
@@ -362,6 +364,7 @@ class BasicJUMPDataModule(LightningDataModule):
                 sampler=self.image_sampler,
                 channels=self.channels,
                 col_fstring=self.col_fstring,
+                use_compond_cache=self.use_compond_cache,
             )
 
         if self.val_dataset is None:
@@ -376,6 +379,7 @@ class BasicJUMPDataModule(LightningDataModule):
                 sampler=self.image_sampler,
                 channels=self.channels,
                 col_fstring=self.col_fstring,
+                use_compond_cache=self.use_compond_cache,
             )
 
         if stage == "test" and self.test_dataset is None:
@@ -390,6 +394,7 @@ class BasicJUMPDataModule(LightningDataModule):
                 sampler=self.image_sampler,
                 channels=self.channels,
                 col_fstring=self.col_fstring,
+                use_compond_cache=self.use_compond_cache,
             )
 
     def train_dataloader(self) -> DataLoader:

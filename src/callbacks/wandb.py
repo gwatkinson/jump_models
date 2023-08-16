@@ -12,7 +12,7 @@ import wandb
 from src.utils import pylogger
 from src.utils.visualisation import pp_matrix
 
-logger = pylogger.get_pylogger(__name__)
+py_logger = pylogger.get_pylogger(__name__)
 
 
 class WandbTrainingCallback(Callback):
@@ -41,7 +41,7 @@ class WandbTrainingCallback(Callback):
                     break
 
             if self.logger is None:
-                logger.warning("No WandbLogger found. WandbCallback will not log anything.")
+                py_logger.warning("No WandbLogger found. WandbCallback will not log anything.")
                 self.watch = False
 
     def on_train_start(self, trainer, pl_module):

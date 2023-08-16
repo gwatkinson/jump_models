@@ -32,7 +32,7 @@ class MoleculeImageDataset(Dataset):
         channels: List[str] = default_channels,
         col_fstring: str = "FileName_Orig{channel}",
         max_tries: int = 10,
-        use_compond_cache: bool = True,
+        use_compond_cache: bool = False,
     ):
         """Initializes the dataset.
 

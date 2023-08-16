@@ -109,7 +109,9 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
         log.info("Instantiating evaluators ...")
         evaluator_list: Optional[EvaluatorList] = utils.instantiate_evaluator_list(
-            cfg.get("eval"), cross_modal_module=model
+            cfg.get("eval"),
+            cross_modal_module=model,
+            logger=logger,
         )
 
         if evaluator_list is not None:
