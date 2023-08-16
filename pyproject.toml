@@ -22,7 +22,7 @@ rich = "^13.4.2"
 pydantic = "<2.0"
 hydra-optuna-sweeper = "^1.2.0"
 tables = "^3.8.0"
-omero-upload = "^0.4.0"
+# omero-upload = "^0.4.0"
 
 
 [tool.poetry.group.torch.dependencies]
