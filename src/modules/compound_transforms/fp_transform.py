@@ -29,7 +29,7 @@ class FPTransform:
         else:
             raise ValueError(f"Unknown compound_str_type: {self.compound_str_type}")
 
-        return mol
+        return dm.to_inchi(mol)
 
     def __call__(self, compound_str: str):
         mol = self.convert_str_to_mol(compound_str)
