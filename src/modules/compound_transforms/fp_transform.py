@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 import datamol as dm
-import molfeat
+from molfeat.molfeat.trans.concat import FeatConcat
 
 
 class FPTransform:
@@ -15,7 +15,7 @@ class FPTransform:
         self.compound_str_type = compound_str_type
         self.params = params or ({"ecfp": {"radius": 2}} if "ecfp" in self.fps else {})
 
-        self.mol_to_feat = molfeat.trans.concat.FeatConcat(fps, params=params)
+        self.mol_to_feat = FeatConcat(fps, params=params)
 
     def convert_str_to_mol(self, compound_str: str):
         if self.compound_str_type.lower() == "inchi":
