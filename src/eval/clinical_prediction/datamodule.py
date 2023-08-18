@@ -1,5 +1,7 @@
 """Custom dataset for the OGB evaluation tasks."""
 
+# flake8: noqa
+
 import os
 import os.path as osp
 import shutil
@@ -57,6 +59,7 @@ class HINTDataset(Dataset):
         self.smiles_col = smiles_col
 
         self.compound_transform = compound_transform
+
         self.cached_smiles = {}
         self.use_cache = use_cache
 
@@ -184,6 +187,9 @@ class OGBBaseDataModule(LightningDataModule):
 
         # targets
         self.compound_transform = compound_transform
+        if self.compound_transform is not None:
+            self.compound_transform.compound_str_type = "smiles"
+
         self.collate_fn = collate_fn
         self.got_default_collate_fn = False
         self.targets = targets

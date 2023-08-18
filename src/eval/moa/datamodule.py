@@ -181,6 +181,8 @@ class JumpMOADataModule(LightningDataModule):
 
         self.transform = transform
         self.compound_transform = compound_transform
+        if self.compound_transform is not None:
+            self.compound_transform.compound_str_type = "smiles"
 
         self.collate_fn = collate_fn
 

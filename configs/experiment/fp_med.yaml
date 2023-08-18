@@ -1,17 +1,13 @@
 # @package _global_
 
-# to execute this experiment run:
-# python train.py experiment=med_jump_cl
 
 defaults:
   - override /data: jump_cl.yaml
-  - override /data/compound_transform: dgllife_gin.yaml
-  - override /model: jump_cl.yaml
+  - override /model: fp_resnet.yaml
   - override /model/image_encoder: resnet18.yaml
-  - override /model/molecule_encoder: gin_infomax.yaml
   - override /model/optimizer: adam.yaml
   - override /model/scheduler: cosine_annealing_warm_restart.yaml
-  - override /callbacks: jump.yaml
+  - override /callbacks: default.yaml
   - override /trainer: gpu.yaml
   - override /logger: many_loggers.yaml
   - override /eval: evaluators.yaml
@@ -21,8 +17,8 @@ defaults:
 
 tags:
   - med_jump_cl
-  - simple_contrastive_training
-  - ${model.molecule_encoder.pretrained_name}
+  - fingerprints
+  - clip_like
   - ${model.image_encoder.instance_model_name}
 
 seed: 12345
@@ -35,44 +31,41 @@ trainer:
   min_epochs: 0
   max_epochs: 50
   log_every_n_steps: 1
-  gradient_clip_val: null # 0.5
-  num_sanity_val_steps: 1
+  # gradient_clip_val: 0.5
+  num_sanity_val_steps: 2
   # reload_dataloaders_every_n_epochs: 1
 
   devices: ???
 
-
 data:
   batch_size: 512
   num_workers: 24
-  prefetch_factor: 2
+  prefetch_factor: 3
   drop_last: True
 
   transform:
-    size: 256
+    size: 128
 
   splitter:
     train: 25_000
     test: 3000
     val: 2000
 
-  split_path: ${paths.split_path}/med_jump_cl/
+  split_path: ${paths.split_path}/fp_med/
 
 
 model:
   embedding_dim: 512
-  lr: 5e-3
-
-  monitor: val/loss  # metric to monitor for some schedulers
-  interval: epoch    # epoch or step
-  frequency: 1       # how often to call the scheduler wrt interval
+  lr: 1e-2
 
   scheduler:
-    T_0: 7
+    T_0: 15
     T_mult: 2
 
-  example_input_path: ${paths.data_root_dir}/jump/models/example_batch/simple_jump_cl/batch.pth
+  optimizer:
+    weight_decay: 1e-3
 
+  example_input_path: null
 
 callbacks:
   wandb_watcher:
@@ -83,7 +76,7 @@ callbacks:
 logger:
   wandb:
     tags: ${tags}
-    project: "med_jump_cl"
+    project: "fp_med"
     group: null
     job_type: ""
     log_model: True

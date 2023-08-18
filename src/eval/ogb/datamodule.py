@@ -181,6 +181,9 @@ class OGBBaseDataModule(LightningDataModule):
 
         # targets
         self.compound_transform = compound_transform
+        if self.compound_transform is not None:
+            self.compound_transform.compound_str_type = "smiles"
+
         self.collate_fn = collate_fn
         self.got_default_collate_fn = False
         self.targets = targets

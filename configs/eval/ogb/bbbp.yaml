@@ -46,12 +46,8 @@ bbbp:
     pin_memory: False
     prefetch_factor: 2
 
-    compound_transform:
-      _target_: src.modules.compound_transforms.dgllife_transform.DGLPretrainedFromSmiles
-      add_self_loop: True
-      canonical_atom_order: True
-      num_virtual_nodes: 0
-      explicit_hydrogens: False
+
+    compound_transform: ${data.compound_transform}
 
     split_type: scaffold
 

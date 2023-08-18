@@ -2,7 +2,7 @@ from typing import Any, Optional
 
 import torch
 from lightning import LightningModule
-from torchmetrics import MeanMetric, MinMetric
+from torchmetrics import MeanMetric
 
 from src.utils import pylogger
 
@@ -55,10 +55,24 @@ class BasicJUMPModule(LightningModule):
         self.image_encoder = image_encoder
         self.molecule_encoder = molecule_encoder
         self.criterion = criterion
-        self.image_backbone = getattr(self.image_encoder, image_backbone)
-        self.image_head = getattr(self.image_encoder, image_head)
-        self.molecule_backbone = getattr(self.molecule_encoder, molecule_backbone)
-        self.molecule_head = getattr(self.molecule_encoder, molecule_head)
+
+        if image_backbone is not None:
+            self.image_backbone = getattr(self.image_encoder, image_backbone)
+        else:
+            self.image_backbone = None
+        if molecule_backbone is not None:
+            self.molecule_backbone = getattr(self.molecule_encoder, molecule_backbone)
+        else:
+            self.molecule_backbone = None
+
+        if image_head is not None:
+            self.image_head = getattr(self.image_encoder, image_head)
+        else:
+            self.image_head = None
+        if molecule_head is not None:
+            self.molecule_head = getattr(self.molecule_encoder, molecule_head)
+        else:
+            self.molecule_head = None
 
         # embedding dim
         self.embedding_dim = embedding_dim
@@ -149,35 +163,50 @@ class BasicJUMPModule(LightningModule):
         pass
 
     def configure_optimizers(self):
-        """Choose what optimizers and learning-rate schedulers to use in your
-        optimization. Normally you'd need one. But in the case of GANs or
-        similar you might have multiple.
+        params_groups = []
 
-        Examples:
-            https://lightning.ai/docs/pytorch/latest/common/lightning_module.html#configure-optimizers
-        """
-        params_groups = [
-            {
-                "params": list(self.image_head.parameters()),
-                "name": "image_projection_head",
-            },
-            {
-                "params": list(self.molecule_head.parameters()),
-                "name": "molecule_projection_head",
-            },
-            {
-                "params": list(self.criterion.parameters()),
-                "name": "criterion",
-            },
-            {
-                "params": list(self.image_backbone.parameters()),
-                "name": "image_encoder",
-            },
-            {
-                "params": list(self.molecule_backbone.parameters()),
-                "name": "molecule_encoder",
-            },
-        ]
+        if self.image_head is not None and self.image_backbone is not None:
+            params_groups.append(
+                {
+                    "params": list(self.image_head.parameters()),
+                    "name": "image_projection_head",
+                }
+            )
+            params_groups.append(
+                {
+                    "params": list(self.image_backbone.parameters()),
+                    "name": "image_encoder",
+                }
+            )
+        else:
+            params_groups.append(
+                {
+                    "params": list(self.image_encoder.parameters()),
+                    "name": "image_encoder",
+                }
+            )
+
+        if self.molecule_head is not None and self.molecule_backbone is not None:
+            params_groups.append(
+                {
+                    "params": list(self.molecule_head.parameters()),
+                    "name": "molecule_projection_head",
+                }
+            )
+            params_groups.append(
+                {
+                    "params": list(self.molecule_backbone.parameters()),
+                    "name": "molecule_encoder",
+                }
+            )
+        else:
+            params_groups.append(
+                {
+                    "params": list(self.molecule_encoder.parameters()),
+                    "name": "molecule_encoder",
+                }
+            )
+
         filtered_params_groups = [
             {
                 "params": list(filter(lambda p: p.requires_grad, group["params"])),

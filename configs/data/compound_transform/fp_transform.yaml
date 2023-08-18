@@ -1,0 +1,10 @@
+_target_: src.modules.compound_transforms.fp_transform.FPTransform
+fps:
+  - maccs
+  - ecfp
+compound_str_type: smiles
+params:
+  ecfp:
+    radius: 2
+
+

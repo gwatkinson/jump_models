@@ -22,6 +22,7 @@ defaults:
 tags:
   - med_jump_cl
   - simple_contrastive_training
+  - from_scratch
   - ${model.molecule_encoder.pretrained_name}
   - ${model.image_encoder.instance_model_name}
 
@@ -33,7 +34,7 @@ evaluate: True
 
 trainer:
   min_epochs: 0
-  max_epochs: 50
+  max_epochs: 100
   log_every_n_steps: 1
   gradient_clip_val: null # 0.5
   num_sanity_val_steps: 1
@@ -49,7 +50,7 @@ data:
   drop_last: True
 
   transform:
-    size: 384
+    size: 128
 
   splitter:
     train: 25_000
@@ -63,7 +64,7 @@ data:
 
 model:
   embedding_dim: 512
-  lr: 1e-2
+  lr: 1e-3
 
   monitor: val/loss  # metric to monitor for some schedulers
   interval: epoch    # epoch or step
@@ -85,7 +86,7 @@ callbacks:
 logger:
   wandb:
     tags: ${tags}
-    project: "med_jump_cl"
-    group: null
-    job_type: ""
+    project: med_jump_cl
+    group: from_scratch
+    job_type: from_scratch
     log_model: True

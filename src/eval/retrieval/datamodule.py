@@ -33,6 +33,7 @@ class IDRRetrievalMoleculeDataset(Dataset):
         self.target_to_num = {"A": 1, "N": 0}
 
         self.compound_transform = compound_transform
+
         self.use_cache = use_cache
         self.compound_cache = {}
 
@@ -148,6 +149,8 @@ class IDRRetrievalDataModule(LightningDataModule):
 
         self.transform = transform
         self.compound_transform = compound_transform
+        if self.compound_transform is not None:
+            self.compound_transform.compound_str_type = "smiles"
 
         self.mol_collate_fn = mol_collate_fn
         self.got_default_mol_collate_fn = False

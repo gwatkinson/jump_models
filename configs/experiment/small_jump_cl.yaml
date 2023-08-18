@@ -20,7 +20,7 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 tags:
-  - med_jump_cl
+  - small_jump_cl
   - simple_contrastive_training
   - ${model.molecule_encoder.pretrained_name}
   - ${model.image_encoder.instance_model_name}

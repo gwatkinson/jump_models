@@ -12,20 +12,19 @@ class DGLTransform:
     """Base class for a compound transform that converts a compound string into
     a DGLGraph."""
 
-    compound_str_type = None
-    af = None
-    bf = None
-
     def __init__(
         self,
+        compound_str_type: str = "smiles",
+        atom_featurizer=None,
+        bond_featurizer=None,
         add_self_loop: bool = True,
         canonical_atom_order: bool = True,
         num_virtual_nodes: int = 0,
         explicit_hydrogens: bool = False,
     ):
         self.compound_str_type = self.compound_str_type
-        self.atom_featurizer = self.af()
-        self.bond_featurizer = self.bf(self_loop=add_self_loop)
+        self.atom_featurizer = self.atom_featurizer()
+        self.bond_featurizer = self.bond_featurizer(self_loop=add_self_loop)
         self.add_self_loop = add_self_loop
         self.canonical_atom_order = canonical_atom_order
         self.num_virtual_nodes = num_virtual_nodes
@@ -41,13 +40,13 @@ class DGLTransform:
         )
 
     def convert_str_to_mol(self, compound_str: str):
-        if self.compound_str_type == "inchi":
+        if self.compound_str_type.lower() == "inchi":
             return dm.from_inchi(compound_str)
-        elif self.compound_str_type == "smiles":
+        elif self.compound_str_type.lower() == "smiles":
             return dm.to_mol(compound_str)
-        elif self.compound_str_type == "selfies":
+        elif self.compound_str_type.lower() == "selfies":
             return dm.from_selfies(compound_str)
-        elif self.compound_str_type == "smarts":
+        elif self.compound_str_type.lower() == "smarts":
             return dm.from_smarts(compound_str)
 
         raise ValueError(f"Unknown compound_str_type: {self.compound_str_type}")
@@ -63,8 +62,8 @@ class DGLCanonicalFromInchi(DGLTransform):
     CanonicalAtomFeaturizer and CanonicalBondFeaturizer."""
 
     compound_str_type = "inchi"
-    af = CanonicalAtomFeaturizer
-    bf = CanonicalBondFeaturizer
+    atom_featurizer = CanonicalAtomFeaturizer
+    bond_featurizer = CanonicalBondFeaturizer
 
 
 class DGLCanonicalFromSmiles(DGLTransform):
@@ -72,8 +71,8 @@ class DGLCanonicalFromSmiles(DGLTransform):
     CanonicalAtomFeaturizer and CanonicalBondFeaturizer."""
 
     compound_str_type = "smiles"
-    af = CanonicalAtomFeaturizer
-    bf = CanonicalBondFeaturizer
+    atom_featurizer = CanonicalAtomFeaturizer
+    bond_featurizer = CanonicalBondFeaturizer
 
 
 class DGLPretrainedFromInchi(DGLTransform):
@@ -81,8 +80,8 @@ class DGLPretrainedFromInchi(DGLTransform):
     PretrainAtomFeaturizer and PretrainBondFeaturizer."""
 
     compound_str_type = "inchi"
-    af = PretrainAtomFeaturizer
-    bf = PretrainBondFeaturizer
+    atom_featurizer = PretrainAtomFeaturizer
+    bond_featurizer = PretrainBondFeaturizer
 
 
 class DGLPretrainedFromSmiles(DGLTransform):
@@ -90,5 +89,5 @@ class DGLPretrainedFromSmiles(DGLTransform):
     PretrainAtomFeaturizer and PretrainBondFeaturizer."""
 
     compound_str_type = "smiles"
-    af = PretrainAtomFeaturizer
-    bf = PretrainBondFeaturizer
+    atom_featurizer = PretrainAtomFeaturizer
+    bond_featurizer = PretrainBondFeaturizer
