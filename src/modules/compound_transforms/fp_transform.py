@@ -33,5 +33,5 @@ class FPTransform:
 
     def __call__(self, compound_str: str):
         mol = self.convert_str_to_mol(compound_str)
-        feats = self.mol_to_feat(mol)
+        feats = self.mol_to_feat(mol).squeeze().astype("float32")
         return feats
