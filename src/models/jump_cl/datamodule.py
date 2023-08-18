@@ -56,6 +56,7 @@ class BasicJUMPDataModule(LightningDataModule):
         collate_fn: Optional[Callable] = None,
         image_sampler: Optional[Callable[[List[str]], str]] = None,
         use_compond_cache: bool = False,
+        data_root_dir: Optional[str] = None,
         **kwargs,
     ):
         """Initialize a BasicJUMPDataModule instance.
@@ -100,6 +101,7 @@ class BasicJUMPDataModule(LightningDataModule):
         # metadata
         self.load_df: Optional[pd.DataFrame] = None
         self.compound_dict: Optional[Dict[str, List[str]]] = None
+        self.data_root_dir = data_root_dir
 
         # split ids
         self.train_cpds: Optional[List] = None
@@ -332,6 +334,12 @@ class BasicJUMPDataModule(LightningDataModule):
         if self.load_df is None:
             py_logger.info(f"Loading image metadata df from {self.image_metadata_path}")
             self.load_df = load_load_df_from_parquet(self.image_metadata_path)
+            if self.data_root_dir is not None:
+                for channel in self.channels:
+                    self.load_df.loc[:, f"FileName_Orig{channel}"] = self.load_df[
+                        f"FileName_Orig{channel}"
+                    ].str.replace("/projects/", self.data_root_dir)
+
             self.image_list = self.load_df.index.tolist()
             self.n_images = len(self.image_list)
 

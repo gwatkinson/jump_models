@@ -4,7 +4,9 @@
 root_dir: ${oc.env:PROJECT_ROOT}
 
 # metadata path
-data_root_dir: /projects/cpjump1
+projects_dir: /projects
+data_root_dir: ${paths.projects_dir}/cpjump1
+
 
 metadata_path: ${paths.data_root_dir}/jump/models/metadata
 raw_metadata_path: ${paths.data_root_dir}/jump/metadata

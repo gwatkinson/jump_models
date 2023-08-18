@@ -2,7 +2,7 @@ _target_: src.modules.compound_transforms.fp_transform.FPTransform
 fps:
   - maccs
   - ecfp
-compound_str_type: smiles
+compound_str_type: inchi
 params:
   ecfp:
     radius: 2
