@@ -1,3 +1,5 @@
+from typing import Literal
+
 import datamol as dm
 from dgllife.utils import (
     CanonicalAtomFeaturizer,
@@ -14,7 +16,7 @@ class DGLTransform:
 
     def __init__(
         self,
-        compound_str_type: str = "smiles",
+        compound_str_type: Literal["inchi", "smiles", "selfies", "smarts"] = "smiles",
         atom_featurizer=None,
         bond_featurizer=None,
         add_self_loop: bool = True,
@@ -40,16 +42,16 @@ class DGLTransform:
         )
 
     def convert_str_to_mol(self, compound_str: str):
-        if self.compound_str_type.lower() == "inchi":
+        if self.compound_str_type == "inchi":
             return dm.from_inchi(compound_str)
-        elif self.compound_str_type.lower() == "smiles":
+        elif self.compound_str_type == "smiles":
             return dm.to_mol(compound_str)
-        elif self.compound_str_type.lower() == "selfies":
+        elif self.compound_str_type == "selfies":
             return dm.from_selfies(compound_str)
-        elif self.compound_str_type.lower() == "smarts":
+        elif self.compound_str_type == "smarts":
             return dm.from_smarts(compound_str)
-
-        raise ValueError(f"Unknown compound_str_type: {self.compound_str_type}")
+        else:
+            raise ValueError(f"Unknown compound_str_type: {self.compound_str_type}")
 
     def __call__(self, compound_str: str):
         mol = self.convert_str_to_mol(compound_str)

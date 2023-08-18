@@ -35,5 +35,7 @@ class FingerprintsWithMLP(nn.Module):
             dropout=dropout,
         )
 
+        logger.info(f"Using Fingerprint MLP")
+
     def forward(self, x):
         return self.backbone(x)
