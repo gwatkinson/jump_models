@@ -1,3 +1,7 @@
+defaults:
+  - override /data/compound_transform@_global_.data.compound_transform: fp_transform.yaml
+  - override /data/collate_fn@_global_.data.collate_fn: none.yaml
+
 _target_: src.modules.molecules.fp_mlp.FingerprintsWithMLP
 input_dim: 2167  # This depends on the number of features in the concatenated fingerprint
 out_dim: ${model.embedding_dim}
