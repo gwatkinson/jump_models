@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 import datamol as dm
-from molfeat.molfeat.trans.concat import FeatConcat
+from molfeat.trans.concat import FeatConcat
 
 
 class FPTransform:
