@@ -111,7 +111,10 @@ class BasicJUMPDataModule(LightningDataModule):
         # data transformations
         self.transform = transform
         self.compound_transform = compound_transform
-        self.collate_fn = collate_fn
+        if collate_fn:
+            self.collate_fn = collate_fn
+        else:
+            self.collate_fn = None
 
         # datasets
         self.train_dataset: Optional[Dataset] = None
