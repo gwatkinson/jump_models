@@ -128,4 +128,7 @@ class EvaluatorList:
             return
 
         for evaluator in self.evaluators:
-            evaluator.run()
+            try:
+                evaluator.run()
+            except Exception as e:
+                logger.error(f"Error while running {evaluator}: {e}")

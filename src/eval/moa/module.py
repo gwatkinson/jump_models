@@ -169,28 +169,27 @@ class JumpMOAImageModule(LightningModule):
         )
 
         if not torch.isfinite(loss):
-            return None
+            loss = None
 
-        return loss, logits, targets
+        return {"loss": loss, "logits": logits, "targets": targets}
 
     def training_step(self, batch: Any, batch_idx: int):
         out = self.model_step(batch, stage="train", on_step_loss=True)
-        if out is None:
-            return None
-        loss, _preds, _targets = out
-        return loss
+        return out["loss"]
 
     def on_train_epoch_end(self):
         pass
 
     def validation_step(self, batch: Any, batch_idx: int):
-        _loss, _preds, _targets = self.model_step(batch, stage="val", on_step_loss=False)
+        out = self.model_step(batch, stage="val", on_step_loss=False)
+        return out["loss"]
 
     def on_validation_epoch_end(self):
         pass
 
     def test_step(self, batch: Any, batch_idx: int):
-        loss, preds, targets = self.model_step(batch, stage="test", on_step_loss=False)
+        out = self.model_step(batch, stage="test", on_step_loss=False)
+        return out["loss"]
 
     def on_test_epoch_end(self):
         pass

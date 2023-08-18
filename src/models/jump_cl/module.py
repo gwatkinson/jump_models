@@ -76,7 +76,6 @@ class BasicJUMPModule(LightningModule):
         self.train_loss = MeanMetric()
         self.val_loss = MeanMetric()
         self.test_loss = MeanMetric()
-        self.val_loss_min = MinMetric()
 
         self.loss_dict = {
             "train": self.train_loss,
@@ -140,9 +139,7 @@ class BasicJUMPModule(LightningModule):
         return loss
 
     def on_validation_epoch_end(self):
-        loss = self.val_loss.compute()  # get current val loss
-        self.val_loss_min.update(loss)  # update min so far val loss
-        self.log("val/loss_min", self.val_loss_min.compute(), prog_bar=True)
+        pass
 
     def test_step(self, batch: Any, batch_idx: int):
         loss = self.model_step(batch, batch_idx, stage="test", on_step=False, on_epoch=True, prog_bar=True)
