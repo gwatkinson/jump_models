@@ -16,7 +16,7 @@ model_checkpoint:
 
 early_stopping:
   monitor: jump_moa/image/val/loss
-  patience: 10
+  patience: 15
   min_delta: 0
   mode: min
 

@@ -8,6 +8,7 @@ batch_size: ???
 num_workers: ???
 pin_memory: null
 prefetch_factor: null
+drop_last: null
 
 
 collate_fn:
@@ -41,18 +42,21 @@ dataloader_config:
     num_workers: ${data.num_workers}
     pin_memory: ${data.pin_memory}
     prefetch_factor: ${data.prefetch_factor}
+    drop_last: ${data.drop_last}
     shuffle: True
   val:
     batch_size: ${data.batch_size}
     num_workers: ${data.num_workers}
     pin_memory: ${data.pin_memory}
     prefetch_factor: ${data.prefetch_factor}
+    drop_last: ${data.drop_last}
     shuffle: False
   test:
     batch_size: ${data.batch_size}
     num_workers: ${data.num_workers}
     pin_memory: ${data.pin_memory}
     prefetch_factor: ${data.prefetch_factor}
+    drop_last: ${data.drop_last}
     shuffle: False
 
 

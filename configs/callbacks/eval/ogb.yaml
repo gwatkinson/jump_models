@@ -16,6 +16,6 @@ model_checkpoint:
 
 early_stopping:
   monitor: ???
-  patience: 10
+  patience: 15
   min_delta: 0
   mode: min

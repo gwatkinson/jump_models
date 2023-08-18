@@ -11,7 +11,7 @@ defaults:
   - override /model/molecule_encoder: gin_infomax.yaml
   - override /model/optimizer: adam.yaml
   - override /model/scheduler: cosine_annealing_warm_restart.yaml
-  - override /callbacks: default.yaml
+  - override /callbacks: jump.yaml
   - override /trainer: gpu.yaml
   - override /logger: many_loggers.yaml
   - override /eval: evaluators.yaml
@@ -37,7 +37,7 @@ trainer:
   log_every_n_steps: 1
   # gradient_clip_val: 0.5
   num_sanity_val_steps: 2
-  reload_dataloaders_every_n_epochs: 1
+  # reload_dataloaders_every_n_epochs: 1
 
   devices: ???
 
@@ -45,6 +45,7 @@ data:
   batch_size: 32
   num_workers: 24
   prefetch_factor: 3
+  drop_last: True
 
   transform:
     size: 128
@@ -77,6 +78,6 @@ logger:
   wandb:
     tags: ${tags}
     project: "small_jump_cl"
-    group: "default"
+    group: null
     job_type: ""
     log_model: True

@@ -37,15 +37,16 @@ trainer:
   log_every_n_steps: 1
   gradient_clip_val: null # 0.5
   num_sanity_val_steps: 1
-  reload_dataloaders_every_n_epochs: 1
+  # reload_dataloaders_every_n_epochs: 1
 
   devices: ???
 
 
 data:
   batch_size: 512
-  num_workers: 24
+  num_workers: 16
   prefetch_factor: 2
+  drop_last: True
 
   transform:
     size: 384
@@ -85,6 +86,6 @@ logger:
   wandb:
     tags: ${tags}
     project: "med_jump_cl"
-    group: "from_scratch"
+    group: null
     job_type: ""
     log_model: True
