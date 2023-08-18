@@ -7,6 +7,7 @@ defaults:
   - optimizer: adam.yaml
   - scheduler: exponential.yaml
   - override /data/compound_transform@_global_.data.compound_transform: fp_transform.yaml
+  - override /data/compound_transform@_global_.data.collate_fn: null
   - _self_
 
 embedding_dim: ???
