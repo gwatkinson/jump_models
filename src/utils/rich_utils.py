@@ -19,14 +19,14 @@ log = pylogger.get_pylogger(__name__)
 def print_config_tree(
     cfg: DictConfig,
     print_order: Sequence[str] = (
-        "paths",
-        "data",
-        "model",
         "eval",
-        "trainer",
         "callbacks",
         "logger",
         "extras",
+        "paths",
+        "trainer",
+        "data",
+        "model",
     ),
     resolve: bool = True,
     save_to_file: bool = False,

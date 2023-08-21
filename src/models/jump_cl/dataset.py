@@ -2,7 +2,8 @@
 image."""
 
 import random
-import time
+
+# import time
 from typing import Callable, Dict, List, Optional
 
 import pandas as pd
@@ -101,7 +102,7 @@ class MoleculeImageDataset(Dataset):
             return tr_compound
 
     def __getitem__(self, idx):
-        start = time.time()
+        # start = time.time()
         compound = self.compound_list[idx]  # An inchi or smiles string
         corresponding_images = self.compound_dict[compound]  # A list of indices into the load_df
 
@@ -113,7 +114,7 @@ class MoleculeImageDataset(Dataset):
             tr_compound = self.transform_compound(compound)
         else:
             tr_compound = compound
-        ct_time = time.time()
+        # ct_time = time.time()
 
         while not fetched and tries < self.max_tries and len(corresponding_images) > 0:
             try:
@@ -125,19 +126,19 @@ class MoleculeImageDataset(Dataset):
                     str(self.load_df.loc[image_id, self.col_fstring.format(channel=channel)])
                     for channel in self.channels
                 ]
-                path_time = time.time()
+                # path_time = time.time()
 
                 img_array = load_image_paths_to_array(image_paths)  # A numpy array: (5, 768, 768)
                 img_array = torch.from_numpy(img_array)
-                img_time = time.time()
+                # img_time = time.time()
 
                 if self.transform:
                     img_array = self.transform(img_array)
-                it_time = time.time()
+                # it_time = time.time()
 
-                py_logger.debug(
-                    f"Timing: compound_transform: {ct_time - start:.2f}s, path: {path_time - ct_time:.2f}s, img: {img_time - path_time:.2f}s, it: {it_time - img_time:.2f}s total: {it_time - start:.2f}s"
-                )
+                # py_logger.debug(
+                #     f"Timing: compound_transform: {ct_time - start:.2f}s, path: {path_time - ct_time:.2f}s, img: {img_time - path_time:.2f}s, it: {it_time - img_time:.2f}s total: {it_time - start:.2f}s"
+                # )
 
                 return {"image": img_array, "compound": tr_compound}
 
