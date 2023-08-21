@@ -4,9 +4,9 @@ default_root_dir: ${paths.output_dir}
 
 min_epochs: 5 # prevents early stopping
 max_epochs: 20
-max_time:
-  days: 0
-  hours: 6 # 6 hours max
+# max_time:
+#   days: 0
+#   hours: 6 # 6 hours max
 
 accelerator: cpu
 devices: ???
