@@ -1,0 +1,2 @@
+nan_loss:
+  _target_: src.callbacks.nan_loss.NaNLossCallback

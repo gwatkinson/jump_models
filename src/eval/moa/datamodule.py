@@ -7,7 +7,7 @@ import torch
 from lightning.pytorch import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 
-from src.modules.collate_fn import image_graph_label_collate_function, label_graph_collate_function
+from src.modules.collate_fn import default_collate, image_graph_label_collate_function, label_graph_collate_function
 from src.splitters import BaseSplitter
 from src.utils import pylogger
 from src.utils.io import load_image_paths_to_array
@@ -160,7 +160,7 @@ class JumpMOADataModule(LightningDataModule):
         force_split: bool = False,
         transform: Optional[Callable] = None,
         compound_transform: Optional[Callable] = None,
-        collate_fn: Optional[Callable] = None,
+        collate_fn: Optional[Callable] = default_collate,
         target_col: str = "moa",
         smiles_col: str = "smiles",
         return_image: bool = True,

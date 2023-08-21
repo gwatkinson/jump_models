@@ -10,7 +10,7 @@ import torch
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 
-from src.modules.collate_fn import label_graph_collate_function
+from src.modules.collate_fn import default_collate, label_graph_collate_function
 from src.utils import pylogger
 from src.utils.io import download_and_extract_zip
 
@@ -108,7 +108,7 @@ class OGBBaseDataModule(LightningDataModule):
         self,
         root_dir: str,
         compound_transform: Optional[Callable] = None,
-        collate_fn: Optional[Callable] = None,
+        collate_fn: Optional[Callable] = default_collate,
         targets: Optional[List[str]] = None,
         smiles_col: str = "smiles",
         split_type: Optional[str] = "scaffold",

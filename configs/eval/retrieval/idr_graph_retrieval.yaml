@@ -42,8 +42,8 @@ idr_graph_retrieval:
     smiles_col: "SMILES"
     use_cache: False
 
-    mol_collate_fn: null
-    img_collate_fn: null
+    # mol_collate_fn: null
+    # img_collate_fn: null
 
 
   trainer:

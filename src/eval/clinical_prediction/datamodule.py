@@ -12,15 +12,13 @@ import torch
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 
-from src.modules.collate_fn import label_graph_collate_function
+from src.modules.collate_fn import default_collate, label_graph_collate_function
 from src.utils import pylogger
 
 logger = pylogger.get_pylogger(__name__)
 
 
 def smiles_str_to_list(smiles: str) -> List[str]:
-    """"['CN[C@H]1CC[C@@H](C2=CC(Cl)=C(Cl)C=C2)C2=CC=CC=C12',
-    'CNCCC=C1C2=CC=CC=C2CCC2=CC=CC=C12']"."""
     text = text[1:-1]
     lst = [i.strip()[1:-1] for i in text.split(",")]
     return lst
@@ -114,7 +112,7 @@ class OGBBaseDataModule(LightningDataModule):
         self,
         root_dir: str,
         compound_transform: Optional[Callable] = None,
-        collate_fn: Optional[Callable] = None,
+        collate_fn: Optional[Callable] = default_collate,
         targets: Optional[List[str]] = None,
         smiles_col: str = "smiles",
         split_type: Optional[str] = "scaffold",

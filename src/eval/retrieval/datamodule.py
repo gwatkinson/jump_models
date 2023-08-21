@@ -6,7 +6,7 @@ import torch
 from lightning.pytorch import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 
-from src.modules.collate_fn import idr_flag_graph_collate_fn
+from src.modules.collate_fn import default_collate, idr_flag_graph_collate_fn
 from src.utils import pylogger
 from src.utils.io import load_image_paths_to_array
 
@@ -138,8 +138,8 @@ class IDRRetrievalDataModule(LightningDataModule):
         target_col: str = "Activity_Flag",
         smiles_col: str = "SMILES",
         use_cache: bool = True,
-        mol_collate_fn: Optional[Callable] = None,
-        img_collate_fn: Optional[Callable] = None,
+        mol_collate_fn: Optional[Callable] = default_collate,
+        img_collate_fn: Optional[Callable] = default_collate,
     ):
         super().__init__()
 

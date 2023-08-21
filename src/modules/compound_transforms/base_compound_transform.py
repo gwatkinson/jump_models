@@ -1,22 +1,17 @@
-from typing import Any, Dict, List, Literal, Optional
+from abc import ABC, abstractmethod
+from typing import Literal
 
 import datamol as dm
-from molfeat.trans.concat import FeatConcat
-from torch.utils.data import default_collate
+
+from src.modules.collate_fn import default_collate
 
 
-class FPTransform:
+class DefaultCompoundTransform(ABC):
     def __init__(
         self,
-        fps: Optional[List[str]] = None,
         compound_str_type: Literal["inchi", "smiles", "selfies", "smarts"] = "smiles",
-        params: Optional[Dict[str, Any]] = None,
     ):
-        self.fps = fps or ["maccs", "ecfp"]
         self.compound_str_type = compound_str_type
-        self.params = params or ({"ecfp": {"radius": 2}} if "ecfp" in self.fps else {})
-
-        self.mol_to_feat = FeatConcat(fps, params=params)
 
     def convert_str_to_mol(self, compound_str: str):
         if self.compound_str_type == "inchi":
@@ -32,9 +27,13 @@ class FPTransform:
 
         return dm.to_smiles(mol)
 
+    @abstractmethod
+    def mol_to_feat(self, mol):
+        raise NotImplementedError
+
     def __call__(self, compound_str: str):
         mol = self.convert_str_to_mol(compound_str)
-        feats = self.mol_to_feat(mol).squeeze().astype("float32")
+        feats = self.mol_to_feat(mol)
         return feats
 
     def get_default_collate_fn(self):

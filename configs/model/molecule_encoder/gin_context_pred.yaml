@@ -2,7 +2,7 @@
 
 defaults:
   - override /data/compound_transform@_global_.data.compound_transform: dgllife_gin.yaml
-  - override /data/collate_fn@_global_.data.collate_fn: image_graph.yaml
+  # - override /data/collate_fn@_global_.data.collate_fn: image_graph.yaml
 
 _target_: src.modules.molecules.dgllife_gin.GINPretrainedWithLinearHead
 pretrained_name: "gin_supervised_contextpred"

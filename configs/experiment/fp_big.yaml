@@ -37,9 +37,9 @@ trainer:
   devices: ???
 
 data:
-  batch_size: 768
-  num_workers: 24
-  prefetch_factor: 3
+  batch_size: 1024
+  num_workers: 16
+  prefetch_factor: 2
   drop_last: True
 
   transform:
@@ -55,7 +55,7 @@ data:
 
 
 model:
-  embedding_dim: 512
+  embedding_dim: 768
   lr: 1e-3
 
   scheduler:
@@ -63,7 +63,7 @@ model:
     T_mult: 2
 
   optimizer:
-    weight_decay: 1e-3
+    weight_decay: 5e-2
 
   example_input_path: null
 

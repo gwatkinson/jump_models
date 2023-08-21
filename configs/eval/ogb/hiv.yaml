@@ -52,7 +52,7 @@ hiv:
 
     smiles_col: smiles
     targets: null
-    collate_fn: null
+    # collate_fn: null
 
     use_cache: True
 

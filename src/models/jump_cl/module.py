@@ -163,7 +163,12 @@ class BasicJUMPModule(LightningModule):
         pass
 
     def configure_optimizers(self):
-        params_groups = []
+        params_groups = [
+            {
+                "params": list(self.criterion.parameters()),
+                "name": "criterion",
+            }
+        ]
 
         if self.image_head is not None and self.image_backbone is not None:
             params_groups.append(
