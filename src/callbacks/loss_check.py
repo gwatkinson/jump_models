@@ -4,7 +4,7 @@ correct."""
 import os.path as osp
 from typing import Any, Dict, List, Optional
 
-import lightning.pytorch.logger as pl_loggers
+import lightning.pytorch.loggers as pl_loggers
 import matplotlib.pyplot as plt
 import pandas as pd
 import torch
