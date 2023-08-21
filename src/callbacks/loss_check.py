@@ -4,17 +4,19 @@ correct."""
 import os.path as osp
 from typing import Any, Dict, List, Optional
 
+import lightning.pytorch.logger as pl_loggers
 import matplotlib.pyplot as plt
 import pandas as pd
 import torch
 from lightning.pytorch.callbacks import Callback
 
+import wandb
 from src.utils import pylogger
 
 py_logger = pylogger.get_pylogger(__name__)
 
 
-class NaNLossCallback(Callback):
+class LossCheckCallback(Callback):
     def __init__(
         self,
         batch_size: Optional[int] = None,
@@ -103,4 +105,14 @@ class NaNLossCallback(Callback):
 
         if self.image_dir is not None:
             fig.savefig(osp.join(self.image_dir, "loss_by_epoch.png"))
+
+        wandb_logger = None
+        for logger in trainer.loggers:
+            if isinstance(logger, pl_loggers.WandbLogger):
+                wandb_logger = logger.experiment
+                break
+
+        if wandb_logger is not None:
+            wandb_logger.log({"loss_by_epoch": wandb.Image(fig)})
+
         plt.close(fig)

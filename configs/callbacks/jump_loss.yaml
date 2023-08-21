@@ -1,0 +1,4 @@
+defaults:
+  - custom/nan_loss@_here_
+  - custom/loss_check@_here_
+  - jump@_here_
