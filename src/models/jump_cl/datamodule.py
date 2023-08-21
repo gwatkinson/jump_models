@@ -11,6 +11,7 @@ from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, Dataset
 
 from src.models.jump_cl.dataset import MoleculeImageDataset
+from src.modules.collate_fn import default_collate
 from src.utils import pylogger
 from src.utils.io import load_load_df_from_parquet, load_metadata_df_from_csv
 
@@ -53,7 +54,7 @@ class BasicJUMPDataModule(LightningDataModule):
         compound_col: str = "Metadata_InChI",
         transform: Optional[Callable] = None,
         compound_transform: Optional[Callable] = None,
-        collate_fn: Optional[Callable] = None,
+        collate_fn: Optional[Callable] = default_collate,
         image_sampler: Optional[Callable[[List[str]], str]] = None,
         use_compond_cache: bool = False,
         data_root_dir: Optional[str] = None,

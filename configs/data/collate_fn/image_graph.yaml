@@ -1,2 +1,2 @@
-_target_: src.modules.collate_fn.dgl_image.image_graph_collate_function
+_target_: src.modules.collate_fn.image_graph_collate_function
 _partial_: true
