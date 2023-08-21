@@ -19,7 +19,7 @@ class NaNLossCallback(Callback):
     def setup(self, trainer, pl_module, stage=None):
         pass
 
-    def on_train_batch_end(trainer, pl_module, outputs, batch, batch_idx):
+    def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
         if isinstance(outputs, torch.Tensor):
             loss = outputs
         elif isinstance(outputs, Dict[str, torch.Tensor]):
