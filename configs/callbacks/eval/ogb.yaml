@@ -2,7 +2,7 @@ defaults:
   - /callbacks/lightning/rich_progress_bar@_here_
   - /callbacks/lightning/model_checkpoint@_here_
   - /callbacks/lightning/early_stopping@_here_
-  - custom/nan_loss@_here_
+  - /callbacks/custom/nan_loss@_here_
   - /callbacks/custom/molecule_freezer@_here_
   - /callbacks/lightning/lr_monitor@_here_
 

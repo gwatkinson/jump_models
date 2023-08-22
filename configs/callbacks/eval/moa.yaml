@@ -3,7 +3,7 @@ defaults:
   - /callbacks/lightning/model_checkpoint@_here_
   - /callbacks/lightning/early_stopping@_here_
   - /callbacks/custom/wandb_plotter@_here_
-  - custom/nan_loss@_here_
+  - /callbacks/custom/nan_loss@_here_
   # - /callbacks/custom/image_freezer@_here_
   - /callbacks/lightning/lr_monitor@_here_
 
