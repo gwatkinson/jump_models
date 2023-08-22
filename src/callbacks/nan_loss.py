@@ -1,7 +1,5 @@
 """Defines a callback that allows to explore the loss when it becomes NaN."""
 
-from typing import Dict
-
 import torch
 from lightning.pytorch.callbacks import Callback
 
@@ -20,9 +18,11 @@ class NaNLossCallback(Callback):
         pass
 
     def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
+        py_logger.info(f"Outputs {batch_idx}: {outputs}")
+
         if isinstance(outputs, torch.Tensor):
             loss = outputs
-        elif isinstance(outputs, Dict[str, torch.Tensor]):
+        elif isinstance(outputs, dict):
             loss = outputs["loss"]
 
         if not torch.isfinite(loss):

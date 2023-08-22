@@ -125,7 +125,7 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
         if logger:
             log.info("Logging evaluation metrics!")
-            utils.log_evaluation_metrics(evaluator_list, logger)
+            logger.log_hyperparams({"evaluator_list": evaluator_list})
 
     return metric_dict, object_dict
 
