@@ -120,12 +120,12 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     # merge train and test metrics
     metric_dict = {**train_metrics, **test_metrics}
 
-    if evaluator_list is not None:
-        object_dict["evaluators"] = evaluator_list
+    # if evaluator_list is not None:
+    #     object_dict["evaluators"] = evaluator_list
 
-        if logger:
-            log.info("Logging evaluation metrics!")
-            logger.log_hyperparams({"evaluator_list": evaluator_list})
+    #     if logger:
+    #         log.info("Logging evaluation metrics!")
+    #         logger.log_hyperparams({"evaluator_list": evaluator_list})
 
     return metric_dict, object_dict
 

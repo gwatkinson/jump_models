@@ -51,7 +51,7 @@ data:
     test: 3000
     val: 2000
 
-  split_path: ${paths.split_path}/fp_med/
+  split_path: ${paths.split_path}/fp_med2/
 
 
 model:

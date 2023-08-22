@@ -51,7 +51,7 @@ data:
     val: 5_000
     retrieval: 3_000
 
-  split_path: ${paths.split_path}/fp_big/
+  split_path: ${paths.split_path}/fp_big2/
 
 
 model:

@@ -50,7 +50,7 @@ data:
     test: 200
     val: 100
 
-  split_path: ${paths.split_path}/fp_small/
+  split_path: ${paths.split_path}/fp_small2/
 
 
 model:
