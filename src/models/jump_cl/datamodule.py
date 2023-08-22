@@ -328,7 +328,7 @@ class BasicJUMPDataModule(LightningDataModule):
 
         train_compound_path = Path(self.split_path) / "train_compound_dict.json"
         train_load_df_path = Path(self.split_path) / "train_load_df.parquet"
-        if not train_compound_path.exists():
+        if not train_compound_path.exists() or not train_load_df_path.exists():
             if "load_df_with_meta" not in locals():
                 py_logger.debug(f"Loading local load data df from {img_path} ...")
                 load_df_with_meta = load_load_df_from_parquet(img_path)
@@ -356,7 +356,7 @@ class BasicJUMPDataModule(LightningDataModule):
 
         val_compound_path = Path(self.split_path) / "val_compound_dict.json"
         val_load_df_path = Path(self.split_path) / "val_load_df.parquet"
-        if not val_compound_path.exists():
+        if not val_compound_path.exists() or not val_load_df_path.exists():
             if "load_df_with_meta" not in locals():
                 py_logger.debug(f"Loading local load data df from {img_path} ...")
                 load_df_with_meta = load_load_df_from_parquet(img_path)
@@ -384,7 +384,7 @@ class BasicJUMPDataModule(LightningDataModule):
 
         test_compound_path = Path(self.split_path) / "test_compound_dict.json"
         test_load_df_path = Path(self.split_path) / "test_load_df.parquet"
-        if not test_compound_path.exists():
+        if not test_compound_path.exists() or not test_load_df_path.exists():
             if "load_df_with_meta" not in locals():
                 py_logger.debug(f"Loading local load data df from {img_path} ...")
                 load_df_with_meta = load_load_df_from_parquet(img_path)
