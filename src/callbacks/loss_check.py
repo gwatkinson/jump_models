@@ -89,6 +89,7 @@ class LossCheckCallback(Callback):
         ax.set_title("Loss by epoch")
 
         if self.image_dir is not None:
+            py_logger.info(f"Saving loss plot to {self.image_dir}")
             image_dir = Path(self.image_dir)
             image_dir.mkdir(parents=True, exist_ok=True)
 

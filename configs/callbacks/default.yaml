@@ -4,6 +4,7 @@ defaults:
   - lightning/model_checkpoint@_here_
   - lightning/early_stopping@_here_
   - lightning/timer@_here_
+  - custom/nan_loss@_here_
   - custom/wandb_watcher@_here_
   - lightning/lr_monitor@_here_
 

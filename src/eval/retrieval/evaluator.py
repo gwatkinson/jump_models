@@ -71,7 +71,7 @@ class IDRRetrievalEvaluator(Evaluator):
             logger.log_metrics(out_metrics)
             logger.save()
 
-        py_logger.info(f"{self.prefix}Retrieval metrics: {out_metrics}")
+        # py_logger.info(f"{self.prefix}Retrieval metrics: {out_metrics}")
 
         return out_metrics
 
