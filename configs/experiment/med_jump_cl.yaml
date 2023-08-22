@@ -52,11 +52,11 @@ data:
     size: 256
 
   splitter:
-    train: 25_000
-    test: 3000
-    val: 2000
+    train: 25_600
+    test: 3_072
+    val: 2_048
 
-  split_path: ${paths.split_path}/med_jump_cl/
+  split_path: ${paths.split_path}/med_jump_cl2/
 
 
 model:

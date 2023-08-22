@@ -46,11 +46,11 @@ data:
     size: 128
 
   splitter:
-    train: 800
-    test: 200
-    val: 100
+    train: 1024
+    test: 256
+    val: 128
 
-  split_path: ${paths.split_path}/fp_small2/
+  split_path: ${paths.split_path}/fp_small3/
 
 
 model:

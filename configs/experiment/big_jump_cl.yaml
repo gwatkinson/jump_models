@@ -43,7 +43,7 @@ trainer:
 
 
 data:
-  batch_size: 768
+  batch_size: 1024
   num_workers: 16
   pin_memory: False
   prefetch_factor: 2
@@ -53,12 +53,12 @@ data:
     size: 128
 
   splitter:
-    train: 90_000
-    test: 10_000
-    val: 5_000
-    retrieval: 3_000
+    train: 92_160
+    test: 10_240
+    val: 5_120
+    retrieval: 3_072
 
-  split_path: ${paths.split_path}/big_jump_cl/
+  split_path: ${paths.split_path}/big_jump_cl2/
 
 
 model:

@@ -53,11 +53,11 @@ data:
     size: 128
 
   splitter:
-    train: 25_000
-    test: 3000
-    val: 2000
+    train: 25_600
+    test: 3_072
+    val: 2_048
 
-  split_path: ${paths.split_path}/med_scratch/
+  split_path: ${paths.split_path}/med_scratch2/
   image_metadata_path: ${paths.metadata_path}/images_metadata_scratch.parquet
   compound_metadata_path: ${paths.metadata_path}/compound_dict_scratch.json
 

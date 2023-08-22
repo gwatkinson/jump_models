@@ -46,12 +46,12 @@ data:
     size: 128
 
   splitter:
-    train: 90_000
-    test: 10_000
-    val: 5_000
-    retrieval: 3_000
+    train: 92_160
+    test: 10_240
+    val: 5_120
+    retrieval: 3_072
 
-  split_path: ${paths.split_path}/fp_big2/
+  split_path: ${paths.split_path}/fp_big3/
 
 
 model:

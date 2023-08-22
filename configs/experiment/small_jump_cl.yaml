@@ -42,7 +42,7 @@ trainer:
   devices: ???
 
 data:
-  batch_size: 32
+  batch_size: 128
   num_workers: 24
   prefetch_factor: 3
   drop_last: True
@@ -51,11 +51,11 @@ data:
     size: 128
 
   splitter:
-    train: 800
-    test: 200
-    val: 100
+    train: 1024
+    test: 256
+    val: 128
 
-  split_path: ${paths.split_path}/small_jump_cl/
+  split_path: ${paths.split_path}/small_jump_cl2/
 
 
 model:

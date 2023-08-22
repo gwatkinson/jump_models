@@ -379,8 +379,6 @@ class BasicJUMPDataModule(LightningDataModule):
                 use_compond_cache=self.use_compond_cache,
             )
 
-            py_logger.info(f"Train dataset length: {len(self.train_dataset)}")
-
         if self.val_dataset is None:
             py_logger.info("Preparing validation dataset")
             val_load_df = self.load_df[self.load_df[self.compound_col].isin(self.val_cpds)]
@@ -395,8 +393,6 @@ class BasicJUMPDataModule(LightningDataModule):
                 col_fstring=self.col_fstring,
                 use_compond_cache=self.use_compond_cache,
             )
-
-            py_logger.info(f"Validation dataset length: {len(self.val_dataset)}")
 
         if stage == "test" and self.test_dataset is None:
             py_logger.info("Preparing test dataset")
@@ -422,7 +418,6 @@ class BasicJUMPDataModule(LightningDataModule):
         )
 
     def val_dataloader(self) -> DataLoader:
-        py_logger.info("Preparing val dataloader")
         val_kwargs = OmegaConf.to_container(self.dataloader_config.val, resolve=True)
         return DataLoader(
             dataset=self.val_dataset,
