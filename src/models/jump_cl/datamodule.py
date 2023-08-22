@@ -326,6 +326,90 @@ class BasicJUMPDataModule(LightningDataModule):
                     retrieval_ids_path.parent.mkdir(exist_ok=True)
                     pd.Series(retrieval_ids).to_csv(retrieval_ids_path, index=False)
 
+        train_compound_path = Path(self.split_path) / "train_compound_dict.json"
+        train_load_df_path = Path(self.split_path) / "train_load_df.parquet"
+        if not train_compound_path.exists():
+            if "load_df_with_meta" not in locals():
+                py_logger.debug(f"Loading local load data df from {img_path} ...")
+                load_df_with_meta = load_load_df_from_parquet(img_path)
+
+            if "compound_dict" not in locals():
+                py_logger.debug(f"Loading compound dictionary from {comp_path} ...")
+                with open(comp_path) as handle:
+                    compound_dict = json.load(handle)
+
+            train_cpds = pd.read_csv(train_ids_path).iloc[:, 0].tolist()
+
+            train_compound_dict = {k: v for k, v in compound_dict.items() if k in train_cpds}
+            train_ids = [item for sublist in train_compound_dict.values() for item in sublist]
+            train_load_df = load_df_with_meta.loc[train_ids]
+
+            with open(train_compound_path, "w") as handle:
+                json.dump(train_compound_dict, handle)
+
+            train_load_df.to_parquet(
+                path=str(train_load_df_path),
+                engine="pyarrow",
+                compression="snappy",
+                index=True,
+            )
+
+        val_compound_path = Path(self.split_path) / "val_compound_dict.json"
+        val_load_df_path = Path(self.split_path) / "val_load_df.parquet"
+        if not val_compound_path.exists():
+            if "load_df_with_meta" not in locals():
+                py_logger.debug(f"Loading local load data df from {img_path} ...")
+                load_df_with_meta = load_load_df_from_parquet(img_path)
+
+            if "compound_dict" not in locals():
+                py_logger.debug(f"Loading compound dictionary from {comp_path} ...")
+                with open(comp_path) as handle:
+                    compound_dict = json.load(handle)
+
+            val_cpds = pd.read_csv(val_ids_path).iloc[:, 0].tolist()
+
+            val_compound_dict = {k: v for k, v in compound_dict.items() if k in val_cpds}
+            val_ids = [item for sublist in val_compound_dict.values() for item in sublist]
+            val_load_df = load_df_with_meta.loc[val_ids]
+
+            with open(val_compound_path, "w") as handle:
+                json.dump(val_compound_dict, handle)
+
+            val_load_df.to_parquet(
+                path=str(val_load_df_path),
+                engine="pyarrow",
+                compression="snappy",
+                index=True,
+            )
+
+        test_compound_path = Path(self.split_path) / "test_compound_dict.json"
+        test_load_df_path = Path(self.split_path) / "test_load_df.parquet"
+        if not test_compound_path.exists():
+            if "load_df_with_meta" not in locals():
+                py_logger.debug(f"Loading local load data df from {img_path} ...")
+                load_df_with_meta = load_load_df_from_parquet(img_path)
+
+            if "compound_dict" not in locals():
+                py_logger.debug(f"Loading compound dictionary from {comp_path} ...")
+                with open(comp_path) as handle:
+                    compound_dict = json.load(handle)
+
+            test_cpds = pd.read_csv(test_ids_path).iloc[:, 0].tolist()
+
+            test_compound_dict = {k: v for k, v in compound_dict.items() if k in test_cpds}
+            test_ids = [item for sublist in test_compound_dict.values() for item in sublist]
+            test_load_df = load_df_with_meta.loc[test_ids]
+
+            with open(test_compound_path, "w") as handle:
+                json.dump(test_compound_dict, handle)
+
+            test_load_df.to_parquet(
+                path=str(test_load_df_path),
+                engine="pyarrow",
+                compression="snappy",
+                index=True,
+            )
+
     def setup(self, stage: Optional[str] = None) -> None:
         """Load data. Set variables: `self.train_dataset`, `self.val_dataset`,
         `self.test_dataset`.
@@ -366,8 +450,11 @@ class BasicJUMPDataModule(LightningDataModule):
 
         if self.train_dataset is None:
             py_logger.info("Preparing train dataset")
-            train_load_df = self.load_df[self.load_df[self.compound_col].isin(self.train_cpds)]
-            train_compound_dict = {k: v for k, v in self.compound_dict.items() if k in self.train_cpds}
+
+            train_load_df = pd.read_parquet(Path(self.split_path) / "train_load_df.parquet")
+            with open(Path(self.split_path) / "train_compound_dict.json") as handle:
+                train_compound_dict = json.load(handle)
+
             self.train_dataset = self.dataset_cls(
                 load_df=train_load_df,
                 compound_dict=train_compound_dict,
@@ -381,8 +468,11 @@ class BasicJUMPDataModule(LightningDataModule):
 
         if self.val_dataset is None:
             py_logger.info("Preparing validation dataset")
-            val_load_df = self.load_df[self.load_df[self.compound_col].isin(self.val_cpds)]
-            val_compound_dict = {k: v for k, v in self.compound_dict.items() if k in self.val_cpds}
+
+            val_load_df = pd.read_parquet(Path(self.split_path) / "val_load_df.parquet")
+            with open(Path(self.split_path) / "val_compound_dict.json") as handle:
+                val_compound_dict = json.load(handle)
+
             self.val_dataset = self.dataset_cls(
                 load_df=val_load_df,
                 compound_dict=val_compound_dict,
@@ -396,8 +486,11 @@ class BasicJUMPDataModule(LightningDataModule):
 
         if stage == "test" and self.test_dataset is None:
             py_logger.info("Preparing test dataset")
-            test_load_df = self.load_df[self.load_df[self.compound_col].isin(self.test_cpds)]
-            test_compound_dict = {k: v for k, v in self.compound_dict.items() if k in self.test_cpds}
+
+            test_load_df = pd.read_parquet(Path(self.split_path) / "test_load_df.parquet")
+            with open(Path(self.split_path) / "test_compound_dict.json") as handle:
+                test_compound_dict = json.load(handle)
+
             self.test_dataset = self.dataset_cls(
                 load_df=test_load_df,
                 compound_dict=test_compound_dict,
@@ -432,12 +525,6 @@ class BasicJUMPDataModule(LightningDataModule):
             collate_fn=self.collate_fn,
             **test_kwargs,
         )
-
-    # def transfer_batch_to_device(self, batch: Any, device, dataloader_idx: int) -> Any:
-    #     py_logger.debug("Transfer batch to device")
-    #     new_batch = {k: v.to(device) for k, v in batch.items()}
-
-    #     return new_batch
 
     def teardown(self, stage: Optional[str] = None):
         """Clean up after fit or test."""

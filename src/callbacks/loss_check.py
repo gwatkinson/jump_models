@@ -38,6 +38,8 @@ class LossCheckCallback(Callback):
     def on_batch_end(self, phase: str, trainer, pl_module, outputs, batch, batch_idx):
         if isinstance(outputs, torch.Tensor):
             loss = outputs
+        elif outputs is None:
+            loss = torch.tensor(float("nan"))
         elif isinstance(outputs, dict):
             loss = outputs["loss"]
 

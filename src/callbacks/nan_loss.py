@@ -20,6 +20,8 @@ class NaNLossCallback(Callback):
     def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
         if isinstance(outputs, torch.Tensor):
             loss = outputs
+        elif outputs is None:
+            loss = torch.tensor(float("nan"))
         elif isinstance(outputs, dict):
             loss = outputs["loss"]
 

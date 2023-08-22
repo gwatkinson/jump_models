@@ -42,17 +42,17 @@ class Evaluator:
 
     def finetune(self):
         """Finetune the model."""
-        logger.info(f"{self.prefix}Finetuning {self.model} on {self.datamodule}")
+        # logger.info(f"{self.prefix}Finetuning {self.model} on {self.datamodule}")
         self.trainer.fit(model=self.model, datamodule=self.datamodule)
 
     def evaluate(self):
         """Evaluate the model."""
-        logger.info(f"{self.prefix}Evaluating {self.model} on {self.datamodule}")
+        # logger.info(f"{self.prefix}Evaluating {self.model} on {self.datamodule}")
         self.trainer.test(model=self.model, datamodule=self.datamodule)
 
     def visualize(self, **kwargs):
         """Create visualizations."""
-        logger.info(f"{self.prefix}Visualizing {self.model} on {self.datamodule}")
+        # logger.info(f"{self.prefix}Visualizing {self.model} on {self.datamodule}")
         pass  # To implement in subclasses
 
     def run(self):

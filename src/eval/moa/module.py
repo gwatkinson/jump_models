@@ -151,7 +151,7 @@ class JumpMOAImageModule(LightningModule):
         loss = self.criterion(logits, targets)
 
         # update metrics
-        self.loss_dict[stage].update(loss)
+        self.loss_dict[stage](loss)
         self.plot_metrics_dict[stage].update(logits, targets)
         self.other_metrics_dict[stage].update(logits, targets)
 

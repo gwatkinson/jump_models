@@ -47,11 +47,11 @@ data:
     size: 128
 
   splitter:
-    train: 25_600
+    train: 24_576
     test: 3_072
     val: 2_048
 
-  split_path: ${paths.split_path}/fp_med3/
+  split_path: ${paths.split_path}/fp_med4/
 
 
 model:
