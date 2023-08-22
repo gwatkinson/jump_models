@@ -92,7 +92,7 @@ class LossCheckCallback(Callback):
             image_dir = Path(self.image_dir)
             image_dir.mkdir(parents=True, exist_ok=True)
 
-            train_epoch_loss.to_csv(self.image_dir / "train_epoch_loss.csv")
+            train_epoch_loss.to_csv(image_dir / "train_epoch_loss.csv")
             val_epoch_loss.to_csv(image_dir / "val_epoch_loss.csv")
 
             train_step_loss.to_csv(image_dir / "train_step_loss.csv")
