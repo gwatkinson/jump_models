@@ -1,7 +1,7 @@
 """Defines a callback that allows to explore the loss to check it is
 correct."""
 
-import os.path as osp
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import lightning.pytorch.loggers as pl_loggers
@@ -67,27 +67,18 @@ class LossCheckCallback(Callback):
 
     @staticmethod
     def get_loss_from_list_of_dict(losses: List[Dict[str, Any]]):
-        return [loss["loss"] for loss in losses]
+        return pd.DataFrame(losses)
 
     @staticmethod
     def get_loss_by_epoch(losses: List[Dict[str, Any]]):
-        py_logger.info(f"Losses dict: {losses}")
-        py_logger.info(pd.DataFrame(losses))
-
         return pd.DataFrame(losses).groupby("epoch")["loss"].sum().reset_index()
 
     def on_fit_end(self, trainer, pl_module):
         train_step_loss = self.get_loss_from_list_of_dict(self.losses["train"])
         val_step_loss = self.get_loss_from_list_of_dict(self.losses["val"])
 
-        py_logger.info(f"Train step loss: {train_step_loss}")
-        py_logger.info(f"Val step loss: {val_step_loss}")
-
         train_epoch_loss = self.get_loss_by_epoch(self.losses["train"])
         val_epoch_loss = self.get_loss_by_epoch(self.losses["val"])
-
-        py_logger.info(f"Train epoch loss: {train_epoch_loss}")
-        py_logger.info(f"Val epoch loss: {val_epoch_loss}")
 
         fig, ax = plt.subplots()
         ax.plot(train_epoch_loss["epoch"], train_epoch_loss["loss"], label="train")
@@ -98,7 +89,16 @@ class LossCheckCallback(Callback):
         ax.set_title("Loss by epoch")
 
         if self.image_dir is not None:
-            fig.savefig(osp.join(self.image_dir, "loss_by_epoch.png"))
+            image_dir = Path(self.image_dir)
+            image_dir.mkdir(parents=True, exist_ok=True)
+
+            train_epoch_loss.to_csv(self.image_dir / "train_epoch_loss.csv")
+            val_epoch_loss.to_csv(image_dir / "val_epoch_loss.csv")
+
+            train_step_loss.to_csv(image_dir / "train_step_loss.csv")
+            val_step_loss.to_csv(image_dir / "val_step_loss.csv")
+
+            fig.savefig(str(image_dir / "loss_by_epoch.png"))
 
         wandb_logger = None
         for logger in trainer.loggers:
@@ -107,6 +107,14 @@ class LossCheckCallback(Callback):
                 break
 
         if wandb_logger is not None:
-            wandb_logger.log({"loss_by_epoch": wandb.Image(fig)})
+            wandb_logger.log(
+                {
+                    "callback/loss_by_epoch": wandb.Image(fig),
+                    "callback/train_epoch_loss": wandb.Table(data=train_epoch_loss),
+                    "callback/val_epoch_loss": wandb.Table(data=val_epoch_loss),
+                    "callback/train_step_loss": wandb.Table(data=train_step_loss),
+                    "callback/val_step_loss": wandb.Table(data=val_step_loss),
+                }
+            )
 
         plt.close(fig)
