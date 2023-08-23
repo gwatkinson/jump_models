@@ -1,5 +1,6 @@
 """Defines a callback that allows to explore the loss when it becomes NaN."""
 
+from glob import glob
 from pathlib import Path
 
 import torch
@@ -13,7 +14,9 @@ py_logger = pylogger.get_pylogger(__name__)
 class NaNLossCallback(Callback):
     def __init__(
         self,
+        max_files: int = 10,
     ):
+        self.max_files = max_files
         super().__init__()
 
     def setup(self, trainer, pl_module, stage=None):
@@ -36,4 +39,7 @@ class NaNLossCallback(Callback):
                 Path(trainer.log_dir) / f"{trainer.state.status}_epoch_{trainer.current_epoch}_batch_{batch_idx}.pt"
             )
             out_file.parent.mkdir(parents=True, exist_ok=True)
-            torch.save(batch, self.log_dir, out_file)
+            num_files = len(glob(str(out_file.parent / "*.pt")))
+
+            if num_files < self.max_files:
+                torch.save(batch, out_file)

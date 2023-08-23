@@ -130,14 +130,15 @@ class ContrastiveLossWithTemperature(nn.Module):
         logit_scale_min: Optional[float] = LOG_1,
         logit_scale_max: Optional[float] = LOG_100,
         requires_grad: bool = False,
+        norm: bool = True,
     ):
         super().__init__()
-        torch._C._log_api_usage_once(f"torchmultimodal.{self.__class__.__name__}")
 
         if not logit_scale_min and not logit_scale_max:
             raise ValueError("Only one of `logit_scale_min` and `logit_scale_max` can be None.")
         self.logit_scale_min = logit_scale_min
         self.logit_scale_max = logit_scale_max
+        self.norm = norm
 
         # If already initialized, set to what was passed
         if isinstance(logit_scale, nn.Parameter):
@@ -153,6 +154,11 @@ class ContrastiveLossWithTemperature(nn.Module):
         mask: Optional[Tensor] = None,
     ) -> Tensor:
         self.logit_scale.data.clamp_(self.logit_scale_min, self.logit_scale_max)
+
+        if self.norm:
+            embeddings_a = F.normalize(embeddings_a, dim=-1)
+            embeddings_b = F.normalize(embeddings_b, dim=-1)
+
         return contrastive_loss_with_temperature(
             embeddings_a=embeddings_a,
             embeddings_b=embeddings_b,

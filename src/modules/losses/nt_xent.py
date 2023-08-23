@@ -3,6 +3,7 @@
 from typing import Optional, Union
 
 import torch
+import torch.nn.functional as F
 from torch import Tensor, nn
 
 
@@ -37,6 +38,7 @@ class NtXentLoss(nn.Module):
         temperature: Union[float, nn.Parameter] = 1.0,
         temperature_min: Optional[float] = 0.0,
         temperature_max: Optional[float] = 100.0,
+        norm: bool = True,
         requires_grad: bool = False,
     ):
         super().__init__()
@@ -45,6 +47,7 @@ class NtXentLoss(nn.Module):
             raise ValueError("Only one of `temperature_min` and `temperature_max` can be None.")
         self.temperature_min = temperature_min
         self.temperature_max = temperature_max
+        self.norm = norm
 
         # If already initialized, set to what was passed
         if isinstance(temperature, nn.Parameter):
@@ -61,6 +64,10 @@ class NtXentLoss(nn.Module):
     ) -> Tensor:
         self.temperature.data.clamp_(self.temperature_min, self.temperature_max)
         self.logit_scale = torch.log(self.temperature)
+
+        if self.norm:
+            embeddings_a = F.normalize(embeddings_a, dim=1)
+            embeddings_b = F.normalize(embeddings_b, dim=1)
 
         return nt_xent_loss(
             embeddings_a=embeddings_a,
