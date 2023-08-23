@@ -110,10 +110,7 @@ class BasicJUMPModule(LightningModule):
         return {"image_emb": image_emb, "compound_emb": compound_emb}
 
     def on_train_start(self):
-        # by default lightning executes validation step sanity checks before training starts,
-        # so it's worth to make sure validation metrics don't store results from these checks
-        self.val_loss.reset()
-        super().on_train_start()
+        pass
 
     def model_step(self, batch: Any, batch_idx: int, stage: str, **kwargs):
         image_emb = self.image_encoder(batch["image"])
@@ -146,7 +143,7 @@ class BasicJUMPModule(LightningModule):
         pass
 
     def validation_step(self, batch: Any, batch_idx: int):
-        loss = self.model_step(batch, batch_idx, stage="val", on_step=False, on_epoch=True, prog_bar=True)
+        loss = self.model_step(batch, batch_idx, stage="val", on_step=True, on_epoch=True, prog_bar=True)
         return loss
 
     def on_validation_epoch_end(self):

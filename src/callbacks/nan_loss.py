@@ -33,13 +33,17 @@ class NaNLossCallback(Callback):
             loss = outputs.get("loss", nan)
 
         if not torch.isfinite(loss):
-            py_logger.info(f"Loss of batch {batch_idx} is {loss}. Returning None.")
-            py_logger.info(f"Batch: {batch}")
+            py_logger.info(f"Loss of batch {batch_idx} is {loss}.")
+            # py_logger.info(f"Batch: {batch}")
+
             out_file = (
-                Path(trainer.log_dir) / f"{trainer.state.status}_epoch_{trainer.current_epoch}_batch_{batch_idx}.pt"
+                Path(trainer.log_dir)
+                / "nan_batches"
+                / f"{trainer.state.status}_epoch_{trainer.current_epoch}_batch_{batch_idx}.pt"
             )
             out_file.parent.mkdir(parents=True, exist_ok=True)
             num_files = len(glob(str(out_file.parent / "*.pt")))
 
             if num_files < self.max_files:
+                py_logger.info(f"Saving batch to {out_file}")
                 torch.save(batch, out_file)

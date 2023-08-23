@@ -1,4 +1,4 @@
-_target_: src.modules.losses.multiview_losses.InfoNCE
+_target_: src.modules.losses.multiview_losses.NTXent
 norm: True
 tau: 1
 uniformity_reg: 0
