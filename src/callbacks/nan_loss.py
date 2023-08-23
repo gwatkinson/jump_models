@@ -1,5 +1,7 @@
 """Defines a callback that allows to explore the loss when it becomes NaN."""
 
+from pathlib import Path
+
 import torch
 from lightning.pytorch.callbacks import Callback
 
@@ -30,3 +32,6 @@ class NaNLossCallback(Callback):
         if not torch.isfinite(loss):
             py_logger.info(f"Loss of batch {batch_idx} is {loss}. Returning None.")
             py_logger.info(f"Batch: {batch}")
+            out_file = Path(self.log_dir) / f"{trainer.state.status}_epoch_{trainer.current_epoch}_batch_{batch_idx}.pt"
+            out_file.parent.mkdir(parents=True, exist_ok=True)
+            torch.save(batch, self.log_dir, out_file)

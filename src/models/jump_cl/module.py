@@ -87,9 +87,9 @@ class BasicJUMPModule(LightningModule):
         self.frequency = frequency
 
         # for averaging loss across batches
-        self.train_loss = MeanMetric()
-        self.val_loss = MeanMetric()
-        self.test_loss = MeanMetric()
+        self.train_loss = MeanMetric(nan_strategy="ignore")
+        self.val_loss = MeanMetric(nan_strategy="ignore")
+        self.test_loss = MeanMetric(nan_strategy="ignore")
 
         self.loss_dict = {
             "train": self.train_loss,
