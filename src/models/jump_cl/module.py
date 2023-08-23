@@ -120,10 +120,7 @@ class BasicJUMPModule(LightningModule):
         compound_emb = self.molecule_encoder(batch["compound"])
         batch_size = image_emb.shape[0]
 
-        loss = self.criterion(
-            embeddings_a=image_emb,
-            embeddings_b=compound_emb,
-        )
+        loss = self.criterion(image_emb, compound_emb)
 
         self.loss_dict[stage](loss)
         self.log(f"{stage}/loss", self.loss_dict[stage], batch_size=batch_size, **kwargs)
