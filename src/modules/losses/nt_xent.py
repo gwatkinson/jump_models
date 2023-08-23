@@ -7,11 +7,11 @@ from torch import Tensor, nn
 
 
 def nt_xent_loss(
-    embedding_a: Tensor,
-    embedding_b: Tensor,
+    embeddings_a: Tensor,
+    embeddings_b: Tensor,
     temperature: float = 1.0,
 ):
-    out = torch.cat([embedding_a, embedding_b], dim=0)
+    out = torch.cat([embeddings_a, embeddings_b], dim=0)
     n_samples = out.shape[0]
 
     # Calculate cosine similarity
@@ -23,7 +23,7 @@ def nt_xent_loss(
     neg = sim.masked_select(mask).view(n_samples, -1).sum(dim=-1)
 
     # Positive similarity
-    pos = torch.exp(torch.sum(embedding_a * embedding_b, dim=-1) / temperature)
+    pos = torch.exp(torch.sum(embeddings_a * embeddings_b, dim=-1) / temperature)
     pos = torch.cat([pos, pos], dim=0)
 
     loss = -torch.log(pos / neg).mean()
