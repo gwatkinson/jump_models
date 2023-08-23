@@ -63,10 +63,7 @@ class Evaluator:
 
     def __repr__(self):
         """Returns a string representation of the Evaluator object."""
-        return f"""{self.prefix}{self.__class__.__name__}(
-            datamodule={self.datamodule},
-            model={self.model},
-        )"""
+        return f"{self.prefix}{self.__class__.__name__}"
 
 
 class EvaluatorList:

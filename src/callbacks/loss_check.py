@@ -41,7 +41,7 @@ class LossCheckCallback(Callback):
         elif outputs is None:
             loss = torch.tensor(float("nan"))
         elif isinstance(outputs, dict):
-            loss = outputs["loss"]
+            loss = outputs.get("loss", torch.tensor(float("nan")))
 
         if "image" in batch:
             n = len(batch["image"])

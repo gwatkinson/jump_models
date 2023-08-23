@@ -18,12 +18,14 @@ class NaNLossCallback(Callback):
         pass
 
     def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
+        nan = torch.tensor(float("nan"))
+
         if isinstance(outputs, torch.Tensor):
             loss = outputs
         elif outputs is None:
-            loss = torch.tensor(float("nan"))
+            loss = nan
         elif isinstance(outputs, dict):
-            loss = outputs["loss"]
+            loss = outputs.get("loss", nan)
 
         if not torch.isfinite(loss):
             py_logger.info(f"Loss of batch {batch_idx} is {loss}. Returning None.")
