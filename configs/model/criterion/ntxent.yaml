@@ -1,0 +1,5 @@
+_target_: src.modules.losses.nt_xent.NtXentLoss
+temperature: 10
+temperature_min: 0
+temperature_max: 100
+requires_grad: True
