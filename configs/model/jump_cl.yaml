@@ -3,7 +3,7 @@ _target_: src.models.jump_cl.module.BasicJUMPModule
 defaults:
   - image_encoder: ???
   - molecule_encoder: ???
-  - criterion: contrastive.yaml
+  - criterion: info_nce.yaml
   - optimizer: adam.yaml
   - scheduler: exponential.yaml
   - _self_
