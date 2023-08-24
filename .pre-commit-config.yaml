@@ -54,7 +54,7 @@ repos:
       - id: nbqa-isort
       - id: nbqa-pyupgrade
       - id: nbqa-flake8
-        args: ["--extend-ignore=F401,F821,B015"]  # For notebooks only
+        args: ["--extend-ignore=F401,F821,B015,B007"]  # For notebooks only
         additional_dependencies:
           - Flake8-pyproject
           - flake8-bugbear
