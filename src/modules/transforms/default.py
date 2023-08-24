@@ -1,6 +1,7 @@
 import torch
 import torchvision.transforms.v2 as transforms
 
+from src.modules.transforms.fill_nans import FillNaNs
 from src.modules.transforms.image_normalization import ImageNormalization
 
 
@@ -12,10 +13,11 @@ class DefaultJUMPTransform(torch.nn.Module):
         self.transform = torch.nn.Sequential(
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(),
-            transforms.RandomCrop(size),
+            transforms.RandomCrop(size, pad_if_needed=True),
             transforms.ToImageTensor(),
             transforms.ConvertImageDtype(),
             ImageNormalization(dim=dim),
+            FillNaNs(nan=0.0, posinf=None, neginf=None),
         )
 
     def forward(self, inpt: torch.Tensor) -> torch.Tensor:
