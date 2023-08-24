@@ -1,6 +1,5 @@
 """Defines a callback that allows to explore the loss when it becomes NaN."""
 
-from glob import glob
 from pathlib import Path
 
 import torch
@@ -17,12 +16,13 @@ class NaNLossCallback(Callback):
         max_files: int = 10,
     ):
         self.max_files = max_files
+        self.num_files = 0
         super().__init__()
 
     def setup(self, trainer, pl_module, stage=None):
         pass
 
-    def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
+    def check_loss(self, phase: str, trainer, pl_module, outputs, batch, batch_idx):
         nan = torch.tensor(float("nan"))
 
         if isinstance(outputs, torch.Tensor):
@@ -37,13 +37,20 @@ class NaNLossCallback(Callback):
             # py_logger.info(f"Batch: {batch}")
 
             out_file = (
-                Path(trainer.log_dir)
-                / "nan_batches"
-                / f"{trainer.state.status}_epoch_{trainer.current_epoch}_batch_{batch_idx}.pt"
+                Path(trainer.log_dir) / "nan_batches" / f"{phase}_epoch_{trainer.current_epoch}_batch_{batch_idx}.pt"
             )
             out_file.parent.mkdir(parents=True, exist_ok=True)
-            num_files = len(glob(str(out_file.parent / "*.pt")))
 
-            if num_files < self.max_files:
+            if self.num_files < self.max_files:
+                self.num_files += 1
                 py_logger.info(f"Saving batch to {out_file}")
                 torch.save(batch, out_file)
+
+    def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+        self.check_loss("train", trainer, pl_module, outputs, batch, batch_idx)
+
+    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+        self.check_loss("val", trainer, pl_module, outputs, batch, batch_idx)
+
+    def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+        self.check_loss("test", trainer, pl_module, outputs, batch, batch_idx)
