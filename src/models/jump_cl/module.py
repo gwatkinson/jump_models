@@ -129,7 +129,8 @@ class BasicJUMPModule(LightningModule):
             except AttributeError:
                 pass
 
-        if not torch.isfinite(loss):
+        losses = self.all_gather(loss)  # Need to gather losses when using DDP to not fall out of sync
+        if not all(torch.isfinite(loss) for loss in losses):
             logger.info(f"Loss of batch {batch_idx} is {loss}. Returning None.")
             return None
 

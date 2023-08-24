@@ -46,11 +46,11 @@ class NaNLossCallback(Callback):
                 py_logger.info(f"Saving batch to {out_file}")
                 torch.save(batch, out_file)
 
-    def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+    def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
         self.check_loss("train", trainer, pl_module, outputs, batch, batch_idx)
 
-    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
         self.check_loss("val", trainer, pl_module, outputs, batch, batch_idx)
 
-    def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+    def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
         self.check_loss("test", trainer, pl_module, outputs, batch, batch_idx)
