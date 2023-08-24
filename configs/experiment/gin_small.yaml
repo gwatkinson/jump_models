@@ -2,22 +2,25 @@
 
 defaults:
   - override /data: jump_cl.yaml
-  - override /model: fp_resnet.yaml
+  - override /model: jump_cl.yaml
   - override /model/image_encoder: resnet18.yaml
+  - override /model/molecule_encoder: gin_context_pred.yaml
   - override /model/optimizer: adam.yaml
   - override /model/scheduler: cosine_annealing_warm_restart.yaml
-  - override /callbacks: default.yaml
+  - override /callbacks: jump.yaml
   - override /trainer: gpu.yaml
   - override /logger: many_loggers.yaml
   - override /eval: evaluators.yaml
+
 
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
 tags:
-  - big_jump_cl
-  - fingerprints
+  - small_jump_cl
+  - pretrained_gin
   - clip_like
+  - ${model.molecule_encoder.pretrained_name}
   - ${model.image_encoder.instance_model_name}
 
 seed: 12345
@@ -27,8 +30,8 @@ compile: False
 evaluate: True
 
 trainer:
-  min_epochs: 0
-  max_epochs: 50
+  min_epochs: 5
+  max_epochs: 100
   log_every_n_steps: 1
   # gradient_clip_val: 0.5
   num_sanity_val_steps: 2
@@ -37,46 +40,48 @@ trainer:
   devices: ???
 
 data:
-  batch_size: 1024
+  batch_size: 128
   num_workers: 24
-  prefetch_factor: 2
+  prefetch_factor: 3
   drop_last: True
 
   transform:
     size: 128
 
   splitter:
-    train: 90_112
-    test: 10_240
-    val: 5_120
-    retrieval: 3_072
+    train: 1024
+    test: 256
+    val: 128
 
-  split_path: ${paths.split_path}/fp_big4/
+  split_path: ${paths.split_path}/fp_small3/
 
 
 model:
-  embedding_dim: 1024
-  lr: 1e-3
+  embedding_dim: 256
+  lr: 1e-2
 
   scheduler:
-    T_0: 4
-    T_mult: 2
+    T_0: 10
+    T_mult: 3
 
   optimizer:
-    weight_decay: 5e-2
+    weight_decay: 1e-3
 
-  example_input_path: null
+  example_input_path: ${paths.data_root_dir}/jump/models/example_batch/simple_jump_cl/batch.pth
 
 callbacks:
   wandb_watcher:
     log_freq: 100
     watch_log: all
 
+  image_backbone_freezer:
+    unfreeze_backbone_at_epoch: 10
+
 
 logger:
   wandb:
     tags: ${tags}
-    project: "fp_big"
+    project: "gin_small"
     group: null
     job_type: ""
     log_model: True

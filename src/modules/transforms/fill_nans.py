@@ -16,7 +16,7 @@ class FillNaNs(torch.nn.Module):
 
     def forward(self, inpt: torch.Tensor) -> torch.Tensor:
         if inpt.isnan().any():
-            logger.debug(f"Inpt tensor has NaNs. Fill with {self.nan}.")
+            logger.info(f"Inpt tensor has NaNs. Fill with {self.nan}.")
             return torch.nan_to_num(inpt, nan=self.nan, posinf=self.posinf, neginf=self.neginf)
         else:
             return inpt

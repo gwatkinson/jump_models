@@ -110,7 +110,10 @@ class BasicJUMPModule(LightningModule):
         return {"image_emb": image_emb, "compound_emb": compound_emb}
 
     def on_train_start(self):
-        pass
+        # by default lightning executes validation step sanity checks before training starts,
+        # so it's worth to make sure validation metrics don't store results from these checks
+        self.val_loss.reset()
+        super().on_train_start()
 
     def model_step(self, batch: Any, batch_idx: int, stage: str, **kwargs):
         image_emb = self.image_encoder(batch["image"])
@@ -128,10 +131,6 @@ class BasicJUMPModule(LightningModule):
                 self.log("model/temperature", temperature, prog_bar=False, on_epoch=True, on_step=False)
             except AttributeError:
                 pass
-
-        if batch_idx == 0:
-            logger.info(f"All gather losses: {self.all_gather(loss)}")
-            logger.info(f"Shape of losses: {self.all_gather(loss).shape}")
 
         if self.trainer.num_devices > 1:
             losses = self.all_gather(loss)  # Need to gather losses when using DDP to not fall out of sync

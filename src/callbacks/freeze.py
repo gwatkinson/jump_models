@@ -61,10 +61,9 @@ class BackboneFinetuningFromName(BaseFinetuning):
         backbone_name: Union[str, List[str]] = "molecule_encoder",
         group_name: Optional[str] = None,
         lambda_func: Callable = default_lambda_func,
-        backbone_initial_ratio_lr: float = 10e-2,
         backbone_initial_lr: Optional[float] = None,
-        should_align: bool = True,
         initial_denom_lr: float = 10.0,
+        should_align: bool = True,
         train_bn: bool = True,
         verbose: bool = False,
         rounding: int = 12,
@@ -75,10 +74,9 @@ class BackboneFinetuningFromName(BaseFinetuning):
         self.backbone_name = backbone_name
         self.group_name = group_name
         self.lambda_func: Callable[[int, float], float] = lambda_func
-        self.backbone_initial_ratio_lr: float = backbone_initial_ratio_lr
         self.backbone_initial_lr: Optional[float] = backbone_initial_lr
-        self.should_align: bool = should_align
         self.initial_denom_lr: float = initial_denom_lr
+        self.should_align: bool = should_align
         self.train_bn: bool = train_bn
         self.verbose: bool = verbose
         self.rounding: int = rounding
@@ -110,11 +108,7 @@ class BackboneFinetuningFromName(BaseFinetuning):
         """Called when the epoch begins."""
         if epoch == self.unfreeze_backbone_at_epoch:
             current_lr = optimizer.param_groups[0]["lr"]
-            initial_backbone_lr = (
-                self.backbone_initial_lr
-                if self.backbone_initial_lr is not None
-                else current_lr * self.backbone_initial_ratio_lr
-            )
+            initial_backbone_lr = self.backbone_initial_lr or current_lr / self.initial_denom_lr
             self.previous_backbone_lr = initial_backbone_lr
             self.unfreeze_and_add_param_group(
                 _get_layer(pl_module, self.backbone_name),
@@ -168,7 +162,7 @@ class BackboneFinetuningFromName(BaseFinetuning):
         params = BaseFinetuning.filter_on_optimizer(optimizer, params)
         if params:
             new_lr = params_lr / denom_lr
-            optimizer.add_param_group({"params": params, "lr": new_lr, "name": name, "swa_lr": new_lr})
+            optimizer.add_param_group({"params": params, "lr": new_lr, "name": name})
 
 
 class JUMPCLFreezer(BaseFinetuning):

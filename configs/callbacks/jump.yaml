@@ -1,3 +1,22 @@
 defaults:
-  - custom/jump_cl_freezer@_here_
   - default@_here_
+
+image_backbone_freezer:
+  _target_: src.callbacks.freeze.BackboneFinetuningFromName
+
+  unfreeze_backbone_at_epoch: ???
+  backbone_name:
+    - image_encoder
+    - backbone  # This list allows to freeze the backbone of the image_encoder
+  group_name: image_encoder_backbone_unfrozen
+  lambda_func:
+    _target_: src.callbacks.freeze.multiplicative_func
+    a0: 1.5
+  backbone_initial_lr: null
+  should_align: True
+  initial_denom_lr: 20.0
+  train_bn: True
+  verbose: False
+  rounding: 12
+
+
