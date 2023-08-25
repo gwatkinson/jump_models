@@ -1,0 +1,12 @@
+_target_: src.modules.losses.contrastive_losses.RegInfoNCE
+norm: True
+temperature: 0.5
+temperature_requires_grad: False  # If True, temperature is learned
+alpha: 0.05             # Factor for the regularization losses (which is a combination of regularization losses)
+mse_reg: 0.5            # L1 loss between normalized embeddings
+uniformity_reg: 0       # Usually leads to inf loss
+variance_reg: 1         # Similar to simreg
+covariance_reg: 0.25
+
+temperature_min: 0      # Not used if requires_grad is False
+temperature_max: 100
