@@ -145,12 +145,12 @@ class OGBClassificationModule(LightningModule):
         logits = self.model(compound)
 
         loss = self.criterion(logits, targets)
-        # preds = F.sigmoid(logits)  # is in the torchmetrics implementation ??
+        preds = F.sigmoid(logits)
 
         # update metrics
-        self.loss_dict[stage].update(loss)
-        self.plot_metrics_dict[stage].update(logits, targets)
-        other_metrics = self.other_metrics_dict[stage](logits, targets)
+        self.loss_dict[stage](loss)
+        self.plot_metrics_dict[stage](preds, targets)
+        other_metrics = self.other_metrics_dict[stage](preds, targets)
 
         # log metrics
         self.log(
@@ -158,23 +158,22 @@ class OGBClassificationModule(LightningModule):
         )
         self.log_dict(other_metrics, on_step=False, on_epoch=True, prog_bar=False)
 
-        return loss, logits, targets
+        return {"loss": loss}
 
     def training_step(self, batch: Any, batch_idx: int):
-        loss, _preds, _targets = self.model_step(batch, stage="train", on_step_loss=True)
-        return loss
+        return self.model_step(batch, stage="train", on_step_loss=True)
+
+    def validation_step(self, batch: Any, batch_idx: int):
+        return self.model_step(batch, stage="val", on_step_loss=False)
+
+    def test_step(self, batch: Any, batch_idx: int):
+        return self.model_step(batch, stage="test", on_step_loss=False)
 
     def on_train_epoch_end(self):
         pass
 
-    def validation_step(self, batch: Any, batch_idx: int):
-        _loss, _preds, _targets = self.model_step(batch, stage="val", on_step_loss=False)
-
     def on_validation_epoch_end(self):
         pass
-
-    def test_step(self, batch: Any, batch_idx: int):
-        loss, preds, targets = self.model_step(batch, stage="test", on_step_loss=False)
 
     def on_test_epoch_end(self):
         pass
@@ -228,6 +227,7 @@ class OGBClassificationModule(LightningModule):
                     "monitor": f"{self.log_prefix}/val/loss",
                     "interval": "epoch",
                     "frequency": 1,
+                    "name": self.log_prefix,
                 },
             }
         return {"optimizer": optimizer}

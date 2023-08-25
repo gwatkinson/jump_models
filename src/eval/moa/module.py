@@ -149,11 +149,12 @@ class JumpMOAImageModule(LightningModule):
         batch_size = targets.shape[0]
         logits = self.forward(**batch)
         loss = self.criterion(logits, targets)
+        preds = F.softmax(logits, dim=1)
 
         # update metrics
         self.loss_dict[stage](loss)
-        self.plot_metrics_dict[stage].update(logits, targets)
-        self.other_metrics_dict[stage].update(logits, targets)
+        self.plot_metrics_dict[stage](preds, targets)
+        self.other_metrics_dict[stage](preds, targets)
 
         # log metrics
         self.log(
@@ -171,7 +172,7 @@ class JumpMOAImageModule(LightningModule):
         if not torch.isfinite(loss):
             loss = None
 
-        return {"loss": loss, "logits": logits, "targets": targets}
+        return {"loss": loss}
 
     def training_step(self, batch: Any, batch_idx: int):
         out = self.model_step(batch, stage="train", on_step_loss=True)
@@ -235,6 +236,7 @@ class JumpMOAImageModule(LightningModule):
                     "monitor": "jump_moa/image/val/loss",
                     "interval": "epoch",
                     "frequency": 1,
+                    "name": "jump_moa/image",
                 },
             }
         return {"optimizer": optimizer}

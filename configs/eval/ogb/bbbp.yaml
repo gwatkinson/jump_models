@@ -55,7 +55,7 @@ bbbp:
     targets: null
     # collate_fn: null
 
-    use_cache: True
+    use_cache: False
 
 
   trainer:

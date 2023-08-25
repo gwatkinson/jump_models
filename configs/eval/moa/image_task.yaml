@@ -1,6 +1,6 @@
 defaults:
   - /model/optimizer/adam.yaml@moa_image_task.model.optimizer
-  - /model/scheduler/exponential.yaml@moa_image_task.model.scheduler
+  - /model/scheduler/on_plateau_with_warmup.yaml@moa_image_task.model.scheduler
   - /trainer/gpu.yaml@moa_image_task.trainer
   - /callbacks/eval/moa.yaml@moa_image_task.callbacks  #! This adds the callbacks
 
@@ -64,11 +64,11 @@ moa_image_task:
   model:
     _target_: src.eval.moa.module.JumpMOAImageModule
 
-    lr: 1e-2
+    lr: 5e-3
     num_classes: 9  # when min is set to 500, else 26
 
     scheduler:
-      gamma: 0.92
+      warmup_steps: [500]
 
     example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
 

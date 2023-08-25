@@ -16,10 +16,8 @@ from src.utils.io import load_image_paths_to_array
 
 py_logger = pylogger.get_pylogger(__name__)
 
-default_channels = ["DNA", "AGP", "ER", "Mito", "RNA"]
 
-
-class MoleculeImageDataset(Dataset):
+class MultiviewDataset(Dataset):
     """This Dataset returns both a molecule, in the SMILES format and an
     associated image."""
 
@@ -30,7 +28,7 @@ class MoleculeImageDataset(Dataset):
         transform: Optional[Callable] = None,
         compound_transform: Optional[Callable] = None,
         sampler: Optional[Callable[[List[str]], str]] = None,
-        channels: List[str] = default_channels,
+        channels: List[str] = ("DNA", "AGP", "ER", "Mito", "RNA"),
         col_fstring: str = "FileName_Orig{channel}",
         max_tries: int = 10,
         use_compond_cache: bool = False,

@@ -80,9 +80,9 @@ class BasicJUMPModule(LightningModule):
         self.lr = lr
 
         self.steps = {
-            "train": 0,
-            "val": 0,
-            "test": 0,
+            "train": 0.0,
+            "val": 0.0,
+            "test": 0.0,
         }
 
         # training
@@ -254,6 +254,8 @@ class BasicJUMPModule(LightningModule):
                     "monitor": self.monitor,
                     "interval": self.interval,
                     "frequency": self.frequency,
+                    "strict": True,
+                    "name": "jump_cl",
                 },
             }
 
