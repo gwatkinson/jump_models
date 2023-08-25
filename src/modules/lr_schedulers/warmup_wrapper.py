@@ -1,10 +1,12 @@
-# Taken from https://github.com/HannesStark/3DInfomax/blob/master/trainer/lr_schedulers.py
+# Inspired from https://github.com/HannesStark/3DInfomax/blob/master/trainer/lr_schedulers.py
+# Added inheritance from torch.optim.lr_scheduler.LRScheduler
 
 import numpy as np
 from torch.optim.lr_scheduler import *  # noqa: F403, F401
+from torch.optim.lr_scheduler import LRScheduler
 
 
-class WarmUpWrapper:
+class WarmUpWrapper(LRScheduler):
     "Optim wrapper that implements lr."
 
     def __init__(self, optimizer, wrapped_scheduler, warmup_steps, interpolation="linear", **kwargs):
@@ -27,6 +29,8 @@ class WarmUpWrapper:
         for p in self.optim.param_groups:
             self.start_lrs.append(p["lr"])
             p["lr"] = 0
+
+        super().__init__(optimizer, last_epoch=kwargs.get("last_epoch", -1), verbose=kwargs.get("verbose", False))
 
     def step(self, metrics=None):
         "Update parameters and lr"
