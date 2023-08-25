@@ -14,10 +14,9 @@ class FillNaNs(torch.nn.Module):
         self.posinf = posinf
         self.neginf = neginf
 
-    def forward(self, inpt: torch.Tensor, input_id: Optional[str]) -> torch.Tensor:
+    def forward(self, inpt: torch.Tensor) -> torch.Tensor:
         if inpt.isnan().any():
-            mid_str = f" of {input_id}" if input_id is not None else ""
-            logger.info(f"Inpt tensor{mid_str} has NaNs. Fill with {self.nan}.")
+            logger.info(f"Inpt tensor has NaNs. Fill with {self.nan}.")
             return torch.nan_to_num(inpt, nan=self.nan, posinf=self.posinf, neginf=self.neginf)
         else:
             return inpt

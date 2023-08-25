@@ -20,5 +20,5 @@ class DefaultJUMPTransform(torch.nn.Module):
             FillNaNs(nan=0.0, posinf=None, neginf=None),
         )
 
-    def forward(self, inpt: torch.Tensor, **kwargs) -> torch.Tensor:
-        return self.transform(inpt, **kwargs)
+    def forward(self, inpt: torch.Tensor) -> torch.Tensor:
+        return self.transform(inpt)
