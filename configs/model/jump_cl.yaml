@@ -5,7 +5,7 @@ defaults:
   - molecule_encoder: ???
   - criterion: info_nce.yaml
   - optimizer: adam.yaml
-  - scheduler: exponential.yaml
+  - scheduler: on_plateau_with_warmup.yaml
   - _self_
 
 embedding_dim: ???
@@ -20,10 +20,9 @@ example_input_path: ???
 
 # args for the lr scheduler in pytorch lightning
 monitor: val/loss  # metric to monitor for some schedulers
-interval: epoch    # epoch or step
+interval: step    # epoch or step
 frequency: 1       # how often to call the scheduler
 
-params_group_to_ignore: []
 image_backbone: backbone
 image_head: projection_head
 molecule_backbone: backbone

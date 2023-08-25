@@ -1,0 +1,13 @@
+_target_: src.modules.lr_schedulers.warmup_wrapper.WarmUpWrapper
+_partial_: True
+warmup_steps: 350
+interpolation: linear
+
+wrapped_scheduler: ReduceLROnPlateau
+cooldown: 5
+factor: 0.6
+patience: 10
+min_lr: 1.0e-6
+threshold: 1.0e-4
+mode: 'min'
+verbose: True

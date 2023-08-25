@@ -20,7 +20,7 @@ example_input_path: null
 
 # args for the lr scheduler in pytorch lightning
 monitor: val/loss  # metric to monitor for some schedulers
-interval: epoch    # epoch or step
+interval: step    # epoch or step
 frequency: 1       # how often to call the scheduler
 
 image_backbone: backbone

@@ -79,6 +79,12 @@ class BasicJUMPModule(LightningModule):
         self.batch_size = batch_size
         self.lr = lr
 
+        self.steps = {
+            "train": 0,
+            "val": 0,
+            "test": 0,
+        }
+
         # training
         self.optimizer = optimizer
         self.scheduler = scheduler
@@ -125,6 +131,9 @@ class BasicJUMPModule(LightningModule):
         self.loss_dict[stage](loss)
         self.log(f"{stage}/loss", self.loss_dict[stage], batch_size=batch_size, **kwargs)
 
+        self.steps[stage] += 1
+        self.log(f"{stage}/steps", self.steps[stage], prog_bar=False, on_epoch=False, on_step=True)
+
         if stage == "train":
             try:
                 temperature = self.criterion.logit_scale.exp().item()
@@ -148,19 +157,19 @@ class BasicJUMPModule(LightningModule):
         loss = self.model_step(batch, batch_idx, stage="train", on_step=True, on_epoch=True, prog_bar=True)
         return loss
 
-    def on_train_epoch_end(self):
-        pass
-
     def validation_step(self, batch: Any, batch_idx: int):
-        loss = self.model_step(batch, batch_idx, stage="val", on_step=True, on_epoch=True, prog_bar=True)
+        loss = self.model_step(batch, batch_idx, stage="val", on_step=False, on_epoch=True, prog_bar=True)
         return loss
-
-    def on_validation_epoch_end(self):
-        pass
 
     def test_step(self, batch: Any, batch_idx: int):
         loss = self.model_step(batch, batch_idx, stage="test", on_step=False, on_epoch=True, prog_bar=True)
         return loss
+
+    def on_train_epoch_end(self):
+        pass
+
+    def on_validation_epoch_end(self):
+        pass
 
     def on_test_epoch_end(self):
         pass

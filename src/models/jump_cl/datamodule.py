@@ -104,11 +104,6 @@ class BasicJUMPDataModule(LightningDataModule):
         self.compound_dict: Optional[Dict[str, List[str]]] = None
         self.data_root_dir = data_root_dir
 
-        # split ids
-        self.train_cpds: Optional[List] = None
-        self.test_cpds: Optional[List] = None
-        self.val_cpds: Optional[List] = None
-
         # data transformations
         self.transform = transform
         self.compound_transform = compound_transform
@@ -405,6 +400,14 @@ class BasicJUMPDataModule(LightningDataModule):
                 index=True,
             )
 
+    def replace_root_dir(self, df: pd.DataFrame) -> pd.DataFrame:
+        if self.data_root_dir is not None:
+            for channel in self.channels:
+                df.loc[:, f"FileName_Orig{channel}"] = df[f"FileName_Orig{channel}"].str.replace(
+                    "/projects/", self.data_root_dir
+                )
+        return df
+
     def setup(self, stage: Optional[str] = None) -> None:
         """Load data. Set variables: `self.train_dataset`, `self.val_dataset`,
         `self.test_dataset`.
@@ -414,39 +417,41 @@ class BasicJUMPDataModule(LightningDataModule):
         random split twice!
         """
 
-        if self.load_df is None:
-            py_logger.info(f"Loading image metadata df from {self.image_metadata_path}")
-            self.load_df = load_load_df_from_parquet(self.image_metadata_path)
-            if self.data_root_dir is not None:
-                for channel in self.channels:
-                    self.load_df.loc[:, f"FileName_Orig{channel}"] = self.load_df[
-                        f"FileName_Orig{channel}"
-                    ].str.replace("/projects/", self.data_root_dir)
+        # if self.load_df is None:
+        #     py_logger.info(f"Loading image metadata df from {self.image_metadata_path}")
+        #     self.load_df = load_load_df_from_parquet(self.image_metadata_path)
+        #     if self.data_root_dir is not None:
+        #         for channel in self.channels:
+        #             self.load_df.loc[:, f"FileName_Orig{channel}"] = self.load_df[
+        #                 f"FileName_Orig{channel}"
+        #             ].str.replace("/projects/", self.data_root_dir)
 
-            self.image_list = self.load_df.index.tolist()
-            self.n_images = len(self.image_list)
+        #     self.image_list = self.load_df.index.tolist()
+        #     self.n_images = len(self.image_list)
 
-        if self.compound_dict is None:
-            py_logger.info(f"Loading compound dictionary from {self.compound_metadata_path}")
-            with open(self.compound_metadata_path) as handle:
-                self.compound_dict = json.load(handle)
-            self.compound_list = list(self.compound_dict.keys())
-            self.n_compounds = len(self.compound_list)
+        # if self.compound_dict is None:
+        #     py_logger.info(f"Loading compound dictionary from {self.compound_metadata_path}")
+        #     with open(self.compound_metadata_path) as handle:
+        #         self.compound_dict = json.load(handle)
+        #     self.compound_list = list(self.compound_dict.keys())
+        #     self.n_compounds = len(self.compound_list)
 
-        if self.train_cpds is None or self.val_cpds is None or self.test_cpds is None:
-            py_logger.info(f"Loading train ids from {self.train_ids_path}")
-            self.train_cpds = pd.read_csv(self.train_ids_path).iloc[:, 0].tolist()
-            self.val_cpds = pd.read_csv(self.val_ids_path).iloc[:, 0].tolist()
-            self.test_cpds = pd.read_csv(self.test_ids_path).iloc[:, 0].tolist()
+        # if self.train_cpds is None or self.val_cpds is None or self.test_cpds is None:
+        #     py_logger.info(f"Loading train ids from {self.train_ids_path}")
+        #     self.train_cpds = pd.read_csv(self.train_ids_path).iloc[:, 0].tolist()
+        #     self.val_cpds = pd.read_csv(self.val_ids_path).iloc[:, 0].tolist()
+        #     self.test_cpds = pd.read_csv(self.test_ids_path).iloc[:, 0].tolist()
 
-            py_logger.info(
-                f"Train, test, val lengths: {len(self.train_cpds)}, {len(self.test_cpds)}, {len(self.val_cpds)}"
-            )
+        #     py_logger.info(
+        #         f"Train, test, val lengths: {len(self.train_cpds)}, {len(self.test_cpds)}, {len(self.val_cpds)}"
+        #     )
 
         if self.train_dataset is None:
             py_logger.info("Preparing train dataset")
 
             train_load_df = pd.read_parquet(Path(self.split_path) / "train_load_df.parquet")
+            train_load_df = self.replace_root_dir(train_load_df)
+
             with open(Path(self.split_path) / "train_compound_dict.json") as handle:
                 train_compound_dict = json.load(handle)
 
@@ -465,6 +470,8 @@ class BasicJUMPDataModule(LightningDataModule):
             py_logger.info("Preparing validation dataset")
 
             val_load_df = pd.read_parquet(Path(self.split_path) / "val_load_df.parquet")
+            val_load_df = self.replace_root_dir(val_load_df)
+
             with open(Path(self.split_path) / "val_compound_dict.json") as handle:
                 val_compound_dict = json.load(handle)
 
@@ -483,6 +490,8 @@ class BasicJUMPDataModule(LightningDataModule):
             py_logger.info("Preparing test dataset")
 
             test_load_df = pd.read_parquet(Path(self.split_path) / "test_load_df.parquet")
+            test_load_df = self.replace_root_dir(test_load_df)
+
             with open(Path(self.split_path) / "test_compound_dict.json") as handle:
                 test_compound_dict = json.load(handle)
 

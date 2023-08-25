@@ -6,8 +6,8 @@ defaults:
   - override /model/image_encoder: resnet18.yaml
   - override /model/molecule_encoder: gin_context_pred.yaml
   - override /model/optimizer: adam.yaml
-  - override /model/scheduler: cosine_annealing_warm_restart.yaml
-  - override /callbacks: jump.yaml
+  - override /model/scheduler: on_plateau_with_warmup.yaml
+  - override /callbacks: default.yaml
   - override /trainer: gpu.yaml
   - override /logger: many_loggers.yaml
   - override /eval: evaluators.yaml
@@ -59,7 +59,7 @@ data:
 
 model:
   embedding_dim: 1024
-  lr: 1e-2
+  lr: 1e-4
 
   scheduler:
     T_0: 4
@@ -75,8 +75,8 @@ callbacks:
     log_freq: 100
     watch_log: all
 
-  image_backbone_freezer:
-    unfreeze_backbone_at_epoch: 4
+  # image_backbone_freezer:
+  #   unfreeze_backbone_at_epoch: 4
 
 
 logger:
