@@ -93,12 +93,15 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
     train_metrics = trainer.callback_metrics
 
+    ckpt_path = trainer.checkpoint_callback.best_model_path
+    if ckpt_path == "":
+        log.warning("Best ckpt not found! Using current weights for testing...")
+        ckpt_path = None
+    else:
+        utils.log_ckpt_path(ckpt_path, logger)
+
     if cfg.get("test"):
         log.info("Starting testing!")
-        ckpt_path = trainer.checkpoint_callback.best_model_path
-        if ckpt_path == "":
-            log.warning("Best ckpt not found! Using current weights for testing...")
-            ckpt_path = None
         trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
         log.info(f"Best ckpt path: {ckpt_path}")
 
@@ -106,10 +109,6 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
     if cfg.get("evaluate"):
         log.info("Starting evaluation!")
-        ckpt_path = trainer.checkpoint_callback.best_model_path
-        if ckpt_path == "":
-            log.warning("Best ckpt not found! Using current weights for testing...")
-            ckpt_path = None
 
         log.info("Instantiating evaluators ...")
         evaluator_list: Optional[EvaluatorList] = utils.instantiate_evaluator_list(

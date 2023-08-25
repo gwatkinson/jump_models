@@ -72,6 +72,7 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
         "model": model,
         "logger": logger,
         "trainer": trainer,
+        "ckpt_path": cfg.ckpt_path,
     }
 
     if logger:

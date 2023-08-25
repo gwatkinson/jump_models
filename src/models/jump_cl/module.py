@@ -2,8 +2,10 @@ from typing import Any, Optional
 
 import torch
 from lightning import LightningModule
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MeanMetric
 
+from src.modules.lr_schedulers.warmup_wrapper import WarmUpWrapper
 from src.utils import pylogger
 
 logger = pylogger.get_pylogger(__name__)
@@ -118,7 +120,7 @@ class BasicJUMPModule(LightningModule):
     def on_train_start(self):
         # by default lightning executes validation step sanity checks before training starts,
         # so it's worth to make sure validation metrics don't store results from these checks
-        self.val_loss.reset()
+        # self.val_loss.reset()
         super().on_train_start()
 
     def model_step(self, batch: Any, batch_idx: int, stage: str, **kwargs):
@@ -173,6 +175,9 @@ class BasicJUMPModule(LightningModule):
 
     def on_test_epoch_end(self):
         pass
+
+    def lr_scheduler_step(self, scheduler, metrics):
+        super().lr_scheduler_step(scheduler, metrics)
 
     def configure_optimizers(self):
         params_groups = [
@@ -247,16 +252,22 @@ class BasicJUMPModule(LightningModule):
 
         if self.scheduler is not None:
             scheduler = self.scheduler(optimizer=optimizer)
+
+            lr_scheduler_dict = {
+                "scheduler": scheduler,
+                "monitor": self.monitor,
+                "interval": self.interval,
+                "frequency": self.frequency,
+                "strict": True,
+                "name": "jump_cl",
+            }
+
+            if isinstance(scheduler, WarmUpWrapper) and isinstance(scheduler.wrapped_scheduler, ReduceLROnPlateau):
+                lr_scheduler_dict["reduce_on_plateau"] = True
+
             return {
                 "optimizer": optimizer,
-                "lr_scheduler": {
-                    "scheduler": scheduler,
-                    "monitor": self.monitor,
-                    "interval": self.interval,
-                    "frequency": self.frequency,
-                    "strict": True,
-                    "name": "jump_cl",
-                },
+                "lr_scheduler": lr_scheduler_dict,
             }
 
         return {"optimizer": optimizer}

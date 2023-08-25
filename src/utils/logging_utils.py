@@ -45,3 +45,12 @@ def log_hyperparameters(object_dict: dict) -> None:
     # send hparams to all loggers
     for logger in trainer.loggers:
         logger.log_hyperparams(hparams)
+
+
+@rank_zero_only
+def log_ckpt_path(cfg_path: str, loggers) -> None:
+    hparams = {"ckpt_path": cfg_path}
+
+    # send hparams to all loggers
+    for logger in loggers:
+        logger.log_hyperparams(hparams)

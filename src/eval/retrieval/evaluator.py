@@ -67,13 +67,18 @@ class IDRRetrievalEvaluator(Evaluator):
         mean_metrics = dict(mean_metrics)
         out_metrics["Average"] = mean_metrics
 
+        unfold_metrics = {}
+        for gene in out_metrics:
+            for metric in out_metrics[gene]:
+                unfold_metrics[f"{gene}/{metric}"] = out_metrics[gene][metric]
+
         for logger in self.trainer.loggers:
-            logger.log_metrics(out_metrics)
+            logger.log_metrics(unfold_metrics)
             logger.save()
 
         # py_logger.info(f"{self.prefix}Retrieval metrics: {out_metrics}")
 
-        return out_metrics
+        return unfold_metrics
 
-    def visualize(self, **kwargs):
+    def visualize(self, outs, **kwargs):
         pass

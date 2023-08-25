@@ -49,8 +49,9 @@ class Evaluator:
         """Evaluate the model."""
         # logger.info(f"{self.prefix}Evaluating {self.model} on {self.datamodule}")
         self.trainer.test(model=self.model, datamodule=self.datamodule)
+        return self.trainer.callback_metrics
 
-    def visualize(self, **kwargs):
+    def visualize(self, outs, **kwargs):
         """Create visualizations."""
         # logger.info(f"{self.prefix}Visualizing {self.model} on {self.datamodule}")
         pass  # To implement in subclasses
@@ -58,8 +59,8 @@ class Evaluator:
     def run(self):
         """Run the evaluator."""
         self.finetune()
-        self.evaluate()
-        self.visualize(**self.visualize_kwargs)
+        outs = self.evaluate()
+        self.visualize(outs, **self.visualize_kwargs)
 
     def __repr__(self):
         """Returns a string representation of the Evaluator object."""

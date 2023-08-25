@@ -12,9 +12,9 @@ hiv:
 
 
   callbacks:
-    molecule_freezer:
-      unfreeze_backbone_at_epoch: 11
-      group_name: hiv_molecule_unfrozen
+    # molecule_freezer:
+    #   unfreeze_backbone_at_epoch: 11
+    #   group_name: hiv_molecule_unfrozen
 
     early_stopping:
       monitor: ogb/hiv/image/val/loss
@@ -64,3 +64,4 @@ hiv:
     log_every_n_steps: 1
     gradient_clip_val: 0.5
     num_sanity_val_steps: 1
+    check_val_every_n_epoch: 1

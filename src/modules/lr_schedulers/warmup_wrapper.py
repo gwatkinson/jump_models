@@ -32,7 +32,7 @@ class WarmUpWrapper(LRScheduler):
 
         super().__init__(optimizer, last_epoch=kwargs.get("last_epoch", -1), verbose=kwargs.get("verbose", False))
 
-    def step(self, metric=None):
+    def step(self, metrics=None):
         "Update parameters and lr"
         if self._step < self.total_warmup_steps:
             warmup_phase = 0
@@ -58,8 +58,8 @@ class WarmUpWrapper(LRScheduler):
                             raise ValueError("interpolation not implemented:", self.interpolation)
 
         else:
-            if metric is not None:
-                self.wrapped_scheduler.step(metric)
+            if metrics is not None:
+                self.wrapped_scheduler.step(metrics)
             else:
                 self.wrapped_scheduler.step()
         self._step += 1

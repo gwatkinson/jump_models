@@ -15,10 +15,10 @@ moa_image_task:
     model_checkpoint:
       dirpath: ${eval.moa_image_task.trainer.default_root_dir}/checkpoints
 
-    image_freezer:
-      unfreeze_backbone_at_epoch: 11
-      backbone_initial_ratio_lr: 5e-2
-      group_name: moa_image_encoder_unfrozen
+    # image_freezer:
+    #   unfreeze_backbone_at_epoch: 11
+    #   backbone_initial_ratio_lr: 5e-2
+    #   group_name: moa_image_encoder_unfrozen
 
 
 
@@ -81,3 +81,4 @@ moa_image_task:
     log_every_n_steps: 1
     gradient_clip_val: 0.5
     num_sanity_val_steps: 1
+    check_val_every_n_epoch: 1
