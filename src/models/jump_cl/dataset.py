@@ -133,7 +133,7 @@ class MoleculeImageDataset(Dataset):
                 # img_time = time.time()
 
                 if self.transform:
-                    img_array = self.transform(img_array, image_id=image_id)
+                    img_array = self.transform(img_array)
                 # it_time = time.time()
 
                 # py_logger.debug(
