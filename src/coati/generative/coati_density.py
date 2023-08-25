@@ -5,9 +5,9 @@ import torch
 from rdkit import Chem
 from torch.distributions.multivariate_normal import MultivariateNormal
 
-from coati.common.util import batch_indexable
-from coati.models.encoding.clip_e2e import e3gnn_smiles_clip_e2e
-from coati.models.encoding.tokenizers.trie_tokenizer import TrieTokenizer
+from src.coati.common.util import batch_indexable
+from src.coati.models.encoding.clip_e2e import e3gnn_smiles_clip_e2e
+from src.coati.models.encoding.tokenizers.trie_tokenizer import TrieTokenizer
 
 
 def estimate_density_batchwise(

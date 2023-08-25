@@ -2,8 +2,8 @@ from typing import List, Tuple
 
 import torch
 
-from coati.common.util import colored_background
-from coati.models.encoding.tokenizers.trie import Trie
+from src.coati.common.util import colored_background
+from src.coati.models.encoding.tokenizers.trie import Trie
 
 
 class TrieTokenizer:

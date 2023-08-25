@@ -5,7 +5,7 @@ import torch.nn as nn
 from torch import autocast
 from torch.nn import functional as F
 
-from coati.models.encoding.basic_transformer import RotaryBlock, RotaryEmbedding
+from src.coati.models.encoding.basic_transformer import RotaryBlock, RotaryEmbedding
 
 # -----------------------------------------------------------------------------
 

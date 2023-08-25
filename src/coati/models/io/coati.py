@@ -3,12 +3,12 @@ from typing import Tuple
 
 import torch.nn as nn
 
-from coati.common.s3 import cache_read
-from coati.models.encoding.clip_e2e import e3gnn_smiles_clip_e2e
-from coati.models.encoding.clip_e2e_selfies import to_selfies_tokenizer
-from coati.models.encoding.clip_fp_e2e import e3gnn_smiles_clip_e2e as fp_e2e_model
-from coati.models.encoding.tokenizers import get_vocab
-from coati.models.encoding.tokenizers.trie_tokenizer import TrieTokenizer
+from src.coati.common.s3 import cache_read
+from src.coati.models.encoding.clip_e2e import e3gnn_smiles_clip_e2e
+from src.coati.models.encoding.clip_e2e_selfies import to_selfies_tokenizer
+from src.coati.models.encoding.clip_fp_e2e import e3gnn_smiles_clip_e2e as fp_e2e_model
+from src.coati.models.encoding.tokenizers import get_vocab
+from src.coati.models.encoding.tokenizers.trie_tokenizer import TrieTokenizer
 
 
 def load_e3gnn_smiles_clip_e2e(

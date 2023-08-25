@@ -3,8 +3,8 @@ no coordinates Just dumps the hidden rep."""
 import torch
 import torch.nn as nn
 
-from coati.common.periodic_table import XY_ONE_HOT_FULL
-from coati.models.encoding.e_gcl_sparse import e_gcl_sparse
+from src.coati.common.periodic_table import XY_ONE_HOT_FULL
+from src.coati.models.encoding.e_gcl_sparse import e_gcl_sparse
 
 
 class e3gnn_clip(torch.nn.Module):

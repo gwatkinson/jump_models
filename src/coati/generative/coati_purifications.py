@@ -4,9 +4,9 @@ import numpy as np
 import torch
 from rdkit import Chem
 
-from coati.containers.rdkit_utils import mol_to_atoms_coords
-from coati.models.encoding.clip_e2e import e3gnn_smiles_clip_e2e
-from coati.models.encoding.tokenizers.trie_tokenizer import TrieTokenizer
+from src.coati.containers.rdkit_utils import mol_to_atoms_coords
+from src.coati.models.encoding.clip_e2e import e3gnn_smiles_clip_e2e
+from src.coati.models.encoding.tokenizers.trie_tokenizer import TrieTokenizer
 
 
 def embed_points(s: str, encoder: e3gnn_smiles_clip_e2e) -> torch.Tensor:

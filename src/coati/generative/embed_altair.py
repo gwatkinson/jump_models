@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn.manifold import TSNE
 
-from coati.math_tools.plots import image_formatter2, wrapped_get_smiles_image
+from src.coati.math_tools.plots import image_formatter2, wrapped_get_smiles_image
 
 
 def embed_altair(

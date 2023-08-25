@@ -8,7 +8,7 @@ import random
 import numpy as np
 import torch
 
-from coati.models.encoding.fill_in_middle import adj_mat_to_tokens
+from src.coati.models.encoding.fill_in_middle import adj_mat_to_tokens
 
 
 def selfies_pre_tokenize(self, text):

@@ -7,10 +7,10 @@ import torch
 import torch.nn as nn
 from torch import autocast
 
-from coati.containers.rdkit_utils import permute_smiles
-from coati.models.encoding.e3gnn_clip import e3gnn_clip
-from coati.models.encoding.fill_in_middle import adj_mat_to_tokens
-from coati.models.encoding.smiles_xformer import RotarySmilesTransformer, SmilesTransformerConfig
+from src.coati.containers.rdkit_utils import permute_smiles
+from src.coati.models.encoding.e3gnn_clip import e3gnn_clip
+from src.coati.models.encoding.fill_in_middle import adj_mat_to_tokens
+from src.coati.models.encoding.smiles_xformer import RotarySmilesTransformer, SmilesTransformerConfig
 
 from .clip_e2e import clip_loss
 

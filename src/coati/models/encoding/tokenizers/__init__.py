@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from typing import Dict, List
 
-from coati.common.s3 import cache_read
+from src.coati.common.s3 import cache_read
 
 from .smiles_vocab import tokenizer_vocabs
 
