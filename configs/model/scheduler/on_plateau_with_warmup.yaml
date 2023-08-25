@@ -1,6 +1,6 @@
 _target_: src.modules.lr_schedulers.warmup_wrapper.WarmUpWrapper
 _partial_: True
-warmup_steps: 350
+warmup_steps: [288]
 interpolation: linear
 
 wrapped_scheduler: ReduceLROnPlateau

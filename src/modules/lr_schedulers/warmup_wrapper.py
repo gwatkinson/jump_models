@@ -39,6 +39,7 @@ class WarmUpWrapper(LRScheduler):
             for steps in self.warmup_steps.cumsum():
                 if self._step >= steps:
                     warmup_phase += 1
+
             for i, p in enumerate(self.optim.param_groups):
                 # update all parameters if there is only one entry specified for the warmup steps otherwise only update the ones corresponding to the current warmup phase
                 if i <= warmup_phase or len(self.warmup_steps) == 1:
