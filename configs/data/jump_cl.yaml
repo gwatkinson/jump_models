@@ -47,14 +47,14 @@ dataloader_config:
     num_workers: ${data.num_workers}
     pin_memory: ${data.pin_memory}
     prefetch_factor: ${data.prefetch_factor}
-    drop_last: ${data.drop_last}
+    drop_last: False
     shuffle: False
   test:
     batch_size: ${data.batch_size}
     num_workers: ${data.num_workers}
     pin_memory: ${data.pin_memory}
     prefetch_factor: ${data.prefetch_factor}
-    drop_last: ${data.drop_last}
+    drop_last: False
     shuffle: False
 
 
