@@ -66,6 +66,18 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
     trainer: Trainer = hydra.utils.instantiate(cfg.trainer, logger=logger)
 
+    object_dict = {
+        "cfg": cfg,
+        "datamodule": datamodule,
+        "model": model,
+        "logger": logger,
+        "trainer": trainer,
+    }
+
+    if logger:
+        log.info("Logging hyperparameters!")
+        utils.log_hyperparameters(object_dict)
+
     log.info("Starting testing!")
     trainer.test(model=model, datamodule=datamodule, ckpt_path=cfg.ckpt_path)  # ? This is enough to load the weights ?
 
@@ -75,25 +87,13 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
         cfg.get("eval"),
         cross_modal_module=model,
         logger=logger,
+        ckpt_path=cfg.ckpt_path,
     )
 
     if evaluator_list is not None:
         evaluator_list.run()
 
     metric_dict = trainer.callback_metrics
-
-    object_dict = {
-        "cfg": cfg,
-        "datamodule": datamodule,
-        "model": model,
-        "logger": logger,
-        "trainer": trainer,
-        "evaluators": evaluator_list,
-    }
-
-    if logger:
-        log.info("Logging hyperparameters!")
-        utils.log_hyperparameters(object_dict)
 
     return metric_dict, object_dict
 

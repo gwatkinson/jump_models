@@ -106,12 +106,17 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
     if cfg.get("evaluate"):
         log.info("Starting evaluation!")
+        ckpt_path = trainer.checkpoint_callback.best_model_path
+        if ckpt_path == "":
+            log.warning("Best ckpt not found! Using current weights for testing...")
+            ckpt_path = None
 
         log.info("Instantiating evaluators ...")
         evaluator_list: Optional[EvaluatorList] = utils.instantiate_evaluator_list(
             cfg.get("eval"),
             cross_modal_module=model,
             logger=logger,
+            ckpt_path=ckpt_path,
         )
 
         if evaluator_list is not None:

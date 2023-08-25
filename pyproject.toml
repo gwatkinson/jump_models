@@ -85,6 +85,12 @@ transformers = "^4.30.1"
 # kornia = "^0.6.12"
 
 
+[tool.poetry.group.s3.dependencies]
+# s3fs = "^2023.6.0"
+# fsspec = "^2023.6.0"
+boto3 = "^1.26"
+
+
 [tool.poetry.group.dev.dependencies]
 # Dev dependencies
 pre-commit = "^3.1.1"

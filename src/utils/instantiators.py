@@ -74,6 +74,9 @@ def instantiate_evaluator_list(
     for ev_name, ev_conf in evaluator_list_cfg.items():
         if isinstance(ev_conf, DictConfig):
             if "model" in ev_conf:
+                if ckpt_path is not None:
+                    cross_modal_module = cross_modal_module.load_from_checkpoint(ckpt_path)
+
                 module = hydra.utils.instantiate(ev_conf.model, cross_modal_module=cross_modal_module)
             else:
                 raise ValueError("Evaluator config must contain a model!")
