@@ -61,7 +61,7 @@ model:
   lr: 3e-4
 
   scheduler:
-    warmup_steps: [288]
+    warmup_steps: [5]
 
   optimizer:
     weight_decay: 1e-3

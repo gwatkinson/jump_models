@@ -1,6 +1,6 @@
 defaults:
   - /model/optimizer/adam.yaml@esol.model.optimizer
-  - /model/scheduler/cosine_annealing_warm_restart.yaml@esol.model.scheduler
+  - /model/scheduler/on_plateau_with_warmup.yaml@esol.model.scheduler
   - /trainer/gpu.yaml@esol.trainer
   - /callbacks/eval/ogb.yaml@esol.callbacks
 
@@ -27,11 +27,10 @@ esol:
   model:
     _target_: src.eval.ogb.module.EsolModule
 
-    lr: 1e-2
+    lr: 5e-3
 
     scheduler:
-      T_0: 10
-      T_mult: 5
+      warmup_steps: [10]
 
     example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
 

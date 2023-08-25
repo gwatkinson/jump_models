@@ -68,7 +68,7 @@ moa_image_task:
     num_classes: 9  # when min is set to 500, else 26
 
     scheduler:
-      warmup_steps: [500]
+      warmup_steps: [10]
 
     example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
 

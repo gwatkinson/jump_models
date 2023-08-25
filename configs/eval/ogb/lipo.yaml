@@ -1,6 +1,6 @@
 defaults:
   - /model/optimizer/adam.yaml@lipo.model.optimizer
-  - /model/scheduler/cosine_annealing_warm_restart.yaml@lipo.model.scheduler
+  - /model/scheduler/on_plateau_with_warmup.yaml@lipo.model.scheduler
   - /trainer/gpu.yaml@lipo.trainer
   - /callbacks/eval/ogb.yaml@lipo.callbacks
 
@@ -27,11 +27,10 @@ lipo:
   model:
     _target_: src.eval.ogb.module.LipoModule
 
-    lr: 1e-2
+    lr: 5e-3
 
     scheduler:
-      T_0: 10
-      T_mult: 5
+      warmup_steps: [10]
 
     example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
 
