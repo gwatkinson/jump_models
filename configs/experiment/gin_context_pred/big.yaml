@@ -59,10 +59,15 @@ data:
 
 model:
   embedding_dim: 1024
-  lr: 1e-4
+  lr: 8e-5
 
   scheduler:
     warmup_steps: [5]
+    cooldown: 3
+    factor: 0.6
+    patience: 7
+    min_lr: 1.0e-6
+    threshold: 1.0e-4
 
   optimizer:
     weight_decay: 5e-3

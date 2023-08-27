@@ -4,9 +4,9 @@ warmup_steps: [5]
 interpolation: linear
 
 wrapped_scheduler: ReduceLROnPlateau
-cooldown: 5
+cooldown: 3
 factor: 0.6
-patience: 10
+patience: 7
 min_lr: 1.0e-6
 threshold: 1.0e-4
 mode: 'min'
