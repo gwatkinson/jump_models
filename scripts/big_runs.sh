@@ -4,7 +4,7 @@ git pull
 
 python src/train.py \
     experiment=gin_context_pred/big \
-    trainer=gpu trainer.devices=[1] \
+    trainer=gpu trainer.devices=[1] trainer.max_epochs=200 \
     data.num_workers=32 \
     seed=23540 \
     model/criterion=info_nce \
@@ -12,7 +12,7 @@ python src/train.py \
 
 python src/train.py \
     experiment=fp_big \
-    trainer=gpu trainer.devices=[1] \
+    trainer=gpu trainer.devices=[1] trainer.max_epochs=100 \
     data.num_workers=32 \
     seed=2131 \
     model/criterion=info_nce \
@@ -20,9 +20,9 @@ python src/train.py \
 
 python src/train.py \
     experiment=gin_context_pred/big \
-    trainer=gpu trainer.devices=[1] \
+    trainer=gpu trainer.devices=[1] trainer.max_epochs=100 \
     data.num_workers=32 \
-    seed=23540 \
+    seed=213 \
     model/criterion=ntxent_reg model.criterion.alpha=0.1 \
     logger.wandb.project=big_runs logger.wandb.group=gin_context_pred
 
