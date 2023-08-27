@@ -28,7 +28,12 @@ class CNNEncoder(nn.Module):
                 self.backbone.conv_stem.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
             self.entry = self.backbone.conv_stem
-            self.projection_head = nn.Linear(self.backbone.classifier.in_features, out_dim)
+            self.projection_head = nn.Sequential(
+                nn.Linear(self.backbone.classifier.in_features, out_dim),
+                nn.ReLU(),
+                nn.Linear(out_dim, out_dim),
+            )
+
             self.backbone.classifier = nn.Identity()
             logger.info("Using model efficientnet/mixnet with projection head")
         elif model_name in ["resnet34d"]:
@@ -36,7 +41,11 @@ class CNNEncoder(nn.Module):
                 self.backbone.conv1[0].weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
             self.entry = self.backbone.conv1[0]
-            self.projection_head = nn.Linear(self.backbone.fc.in_features, out_dim)
+            self.projection_head = nn.Sequential(
+                nn.Linear(self.backbone.fc.in_features, out_dim),
+                nn.ReLU(),
+                nn.Linear(out_dim, out_dim),
+            )
             self.backbone.fc = nn.Identity()
             logger.info("Using model resnet34d with projection head")
         elif ("resnet" in model_name or "resnest" in model_name) and "vit" not in model_name:
@@ -44,7 +53,11 @@ class CNNEncoder(nn.Module):
                 self.backbone.conv1.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
             self.entry = self.backbone.conv1
-            self.projection_head = nn.Linear(self.backbone.fc.in_features, out_dim)
+            self.projection_head = nn.Sequential(
+                nn.Linear(self.backbone.fc.in_features, out_dim),
+                nn.ReLU(),
+                nn.Linear(out_dim, out_dim),
+            )
             self.backbone.fc = nn.Identity()
             logger.info("Using model resnet/resnest with projection head")
         elif "rexnet" in model_name or "regnety" in model_name or "nf_regnet" in model_name:
@@ -52,7 +65,11 @@ class CNNEncoder(nn.Module):
                 self.backbone.stem.conv.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
             self.entry = self.backbone.stem.conv
-            self.projection_head = nn.Linear(self.backbone.head.fc.in_features, out_dim)
+            self.projection_head = nn.Sequential(
+                nn.Linear(self.backbone.head.fc.in_features, out_dim),
+                nn.ReLU(),
+                nn.Linear(out_dim, out_dim),
+            )
             self.backbone.head.fc = nn.Identity()
             logger.info("Using model rexnet/regnety/nf_regnet with projection head")
         elif "resnext" in model_name:
@@ -60,7 +77,11 @@ class CNNEncoder(nn.Module):
                 self.backbone.conv1.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
             self.entry = self.backbone.conv1
-            self.projection_head = nn.Linear(self.backbone.fc.in_features, out_dim)
+            self.projection_head = nn.Sequential(
+                nn.Linear(self.backbone.fc.in_features, out_dim),
+                nn.ReLU(),
+                nn.Linear(out_dim, out_dim),
+            )
             self.backbone.fc = nn.Identity()
             logger.info("Using model resnext with projection head")
         elif "hrnet_w32" in model_name:
@@ -68,7 +89,11 @@ class CNNEncoder(nn.Module):
                 self.backbone.conv1.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
             self.entry = self.backbone.conv1
-            self.projection_head = nn.Linear(self.backbone.classifier.in_features, out_dim)
+            self.projection_head = nn.Sequential(
+                nn.Linear(self.backbone.classifier.in_features, out_dim),
+                nn.ReLU(),
+                nn.Linear(out_dim, out_dim),
+            )
             self.backbone.classifier = nn.Identity()
             logger.info("Using model hrnet_w32 with projection head")
         elif "densenet" in model_name:
@@ -76,7 +101,11 @@ class CNNEncoder(nn.Module):
                 self.backbone.features.conv0.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
             self.entry = self.backbone.features.conv0
-            self.projection_head = nn.Linear(self.backbone.classifier.in_features, out_dim)
+            self.projection_head = nn.Sequential(
+                nn.Linear(self.backbone.classifier.in_features, out_dim),
+                nn.ReLU(),
+                nn.Linear(out_dim, out_dim),
+            )
             self.backbone.classifier = nn.Identity()
             logger.info("Using model densenet with projection head")
         elif "ese_vovnet39b" in model_name or "xception41" in model_name:
@@ -84,7 +113,11 @@ class CNNEncoder(nn.Module):
                 self.backbone.stem[0].conv.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
             self.entry = self.backbone.stem[0].conv
-            self.projection_head = nn.Linear(self.backbone.head.fc.in_features, out_dim)
+            self.projection_head = nn.Sequential(
+                nn.Linear(self.backbone.head.fc.in_features, out_dim),
+                nn.ReLU(),
+                nn.Linear(out_dim, out_dim),
+            )
             self.backbone.head.fc = nn.Identity()
             logger.info("Using model ese_vovnet39b/xception41 with projection head")
         elif "dpn" in model_name:
@@ -92,7 +125,11 @@ class CNNEncoder(nn.Module):
                 self.backbone.features.conv1_1.conv.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
             self.entry = self.backbone.features.conv1_1.conv
-            self.projection_head = nn.Linear(self.backbone.classifier.in_channels, out_dim)
+            self.projection_head = nn.Sequential(
+                nn.Linear(self.backbone.classifier.in_channels, out_dim),
+                nn.ReLU(),
+                nn.Linear(out_dim, out_dim),
+            )
             self.backbone.classifier = nn.Identity()
             logger.info("Using model dpn with projection head")
         elif "inception" in model_name:
@@ -100,7 +137,11 @@ class CNNEncoder(nn.Module):
                 self.backbone.features[0].conv.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
             self.entry = self.backbone.features[0].conv
-            self.projection_head = nn.Linear(self.backbone.last_linear.in_features, out_dim)
+            self.projection_head = nn.Sequential(
+                nn.Linear(self.backbone.last_linear.in_features, out_dim),
+                nn.ReLU(),
+                nn.Linear(out_dim, out_dim),
+            )
             self.backbone.last_linear = nn.Identity()
             logger.info("Using model inception with projection head")
         elif "vit_base_resnet50" in model_name or "vit_base_r50" in model_name:
@@ -108,7 +149,11 @@ class CNNEncoder(nn.Module):
                 self.backbone.patch_embed.backbone.stem.conv.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
             self.entry = self.backbone.patch_embed.backbone.stem.conv
-            self.projection_head = nn.Linear(self.backbone.head.in_features, out_dim)
+            self.projection_head = nn.Sequential(
+                nn.Linear(self.backbone.head.in_features, out_dim),
+                nn.ReLU(),
+                nn.Linear(out_dim, out_dim),
+            )
             self.backbone.head = nn.Identity()
             logger.info("Using model vit_base_resnet50 with projection head")
         elif "vit" in model_name:
@@ -116,7 +161,11 @@ class CNNEncoder(nn.Module):
                 self.backbone.patch_embed.proj.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
             self.entry = self.backbone.patch_embed.proj
-            self.projection_head = nn.Linear(self.backbone.head.in_features, out_dim)
+            self.projection_head = nn.Sequential(
+                nn.Linear(self.backbone.head.in_features, out_dim),
+                nn.ReLU(),
+                nn.Linear(out_dim, out_dim),
+            )
             self.backbone.head = nn.Identity()
             logger.info("Using model vit with projection head")
         else:

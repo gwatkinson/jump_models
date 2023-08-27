@@ -28,7 +28,11 @@ class GINPretrainedWithLinearHead(nn.Module):
         self.backbone = dgllife.model.load_pretrained(self.pretrained_name)
         self.pretrained_dim = self.backbone.node_embeddings[0].embedding_dim
         self.pooler = self.get_pooling(pooling)
-        self.projection_head = nn.Linear(self.pretrained_dim, self.out_dim)
+        self.projection_head = nn.Sequential(
+            nn.Linear(self.pretrained_dim, self.out_dim),
+            nn.ReLU(),
+            nn.Linear(self.out_dim, self.out_dim),
+        )
 
         logger.info(f"Using pretrained model: {self.pretrained_name}")
 
