@@ -81,11 +81,11 @@ class BasicJUMPModule(LightningModule):
         self.batch_size = batch_size
         self.lr = lr
 
-        self.steps = {
-            "train": 0.0,
-            "val": 0.0,
-            "test": 0.0,
-        }
+        # self.steps = {
+        #     "train": 0.0,
+        #     "val": 0.0,
+        #     "test": 0.0,
+        # }
 
         # training
         self.optimizer = optimizer
@@ -128,24 +128,31 @@ class BasicJUMPModule(LightningModule):
         compound_emb = self.molecule_encoder(batch["compound"])
         batch_size = image_emb.shape[0]
 
-        loss = self.criterion(image_emb, compound_emb)
+        losses = self.criterion(image_emb, compound_emb)
+        if isinstance(losses, dict):
+            loss = losses.pop("loss")
+            self.log_dict(
+                {f"{stage}/{k}": v for k, v in losses.items()}, on_epoch=True, on_step=True, batch_size=batch_size
+            )
+        else:
+            loss = losses
 
         self.loss_dict[stage](loss)
         self.log(f"{stage}/loss", self.loss_dict[stage], batch_size=batch_size, **kwargs)
 
-        self.steps[stage] += 1
-        self.log(f"{stage}/steps", self.steps[stage], prog_bar=False, on_epoch=False, on_step=True)
+        # self.steps[stage] += 1
+        # self.log(f"{stage}/steps", self.steps[stage], prog_bar=False, on_epoch=False, on_step=True)
 
         if stage == "train":
             try:
-                temperature = self.criterion.logit_scale.exp().item()
+                temperature = self.criterion.temperature.value.item()
                 self.log("model/temperature", temperature, prog_bar=False, on_epoch=True, on_step=False)
             except AttributeError:
                 pass
 
         if self.trainer.num_devices > 1:
-            losses = self.all_gather(loss)  # Need to gather losses when using DDP to not fall out of sync
-            condition = all(torch.isfinite(loss) for loss in losses)
+            devices_loss = self.all_gather(loss)  # Need to gather losses when using DDP to not fall out of sync
+            condition = all(torch.isfinite(loss) for loss in devices_loss)
         else:
             condition = torch.isfinite(loss)
 

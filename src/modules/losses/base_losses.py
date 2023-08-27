@@ -85,6 +85,7 @@ class RegularizationLoss(_Loss):
         uniformity_reg: float = 0,
         variance_reg: float = 0,
         covariance_reg: float = 0,
+        name: Optional[str] = None,
         **kwargs,
     ):
         super().__init__()
@@ -92,6 +93,7 @@ class RegularizationLoss(_Loss):
         self.variance_reg = variance_reg
         self.covariance_reg = covariance_reg
         self.mse_reg = mse_reg
+        self.name = name or "regularization_loss"
 
         self.mse_loss = nn.MSELoss()
 
@@ -106,7 +108,7 @@ class RegularizationLoss(_Loss):
             loss += self.covariance_reg * (cov_loss(z1) + cov_loss(z2))
         if self.uniformity_reg > 0:
             loss += self.uniformity_reg * uniformity_loss(z1, z2)
-        return loss
+        return {"loss": loss}
 
 
 class CombinationLoss(_Loss):
@@ -131,10 +133,23 @@ class CombinationLoss(_Loss):
             z1 = F.normalize(z1, dim=-1, p=2)
             z2 = F.normalize(z2, dim=-1, p=2)
 
+        loss_dict = {}
         loss = 0
         for loss_fn, weight in zip(self.losses, self.weights):
-            loss += weight * loss_fn(z1, z2, **kwargs)
-        return loss
+            loss_value = loss_fn(z1, z2, **kwargs)
+            if isinstance(loss_value, dict):
+                loss_value = loss_value["loss"]
+
+            key = getattr(loss_fn, "name", loss_fn.__class__.__name__)
+            if key in loss_dict:
+                key += "_"  # Add underscore to avoid overwriting
+
+            loss_dict[loss_fn.name] = loss_value
+            loss += weight * loss_value
+
+        loss_dict["loss"] = loss
+
+        return loss_dict
 
 
 class RegLoss(CombinationLoss):
@@ -149,7 +164,7 @@ class RegLoss(CombinationLoss):
         covariance_reg: float = 0.05,
         **kwargs,
     ):
-        weights = [1, alpha]
+        weights = [1 - alpha, alpha]
 
         losses = [
             loss_fn,
@@ -163,6 +178,7 @@ class RegLoss(CombinationLoss):
 
 class RegWithTemperatureLoss(RegLoss):
     loss_fn = None
+    name = None
 
     def __init__(
         self,
@@ -184,6 +200,7 @@ class RegWithTemperatureLoss(RegLoss):
             temperature_requires_grad=temperature_requires_grad,
             temperature_min=temperature_min,
             temperature_max=temperature_max,
+            name=self.name,
             **kwargs,
         )
 

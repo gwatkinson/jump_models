@@ -1,10 +1,10 @@
+from copy import deepcopy
 from typing import List, Optional
 
 import hydra
-import torch.nn as nn
 from lightning import Callback
 from lightning.pytorch.loggers import Logger
-from omegaconf import DictConfig
+from omegaconf import DictConfig, open_dict
 
 from src.utils import pylogger
 
@@ -53,7 +53,7 @@ def instantiate_loggers(logger_cfg: DictConfig) -> List[Logger]:
 
 def instantiate_evaluator_list(
     evaluator_list_cfg: DictConfig,
-    cross_modal_module: nn.Module,
+    model_cfg: DictConfig,
     logger: Optional[List[Logger]] = None,
     ckpt_path: Optional[str] = None,
     name: Optional[str] = None,
@@ -63,6 +63,7 @@ def instantiate_evaluator_list(
     from src.eval.evaluators import Evaluator, EvaluatorList
 
     evaluators: List[Evaluator] = []
+    model_cfg = deepcopy(model_cfg)
 
     if not evaluator_list_cfg:
         log.warning("No evaluator configs found! Skipping...")
@@ -71,36 +72,42 @@ def instantiate_evaluator_list(
     if not isinstance(evaluator_list_cfg, DictConfig):
         raise TypeError("Evaluator config must be a DictConfig!")
 
-    for ev_name, ev_conf in evaluator_list_cfg.items():
-        if isinstance(ev_conf, DictConfig):
-            if "model" in ev_conf:
+    for evaluator_name, evaluator_cfg in evaluator_list_cfg.items():
+        if isinstance(evaluator_cfg, DictConfig):
+            if "model" in evaluator_cfg:
                 if ckpt_path is not None:
-                    cross_modal_module = cross_modal_module.load_from_checkpoint(ckpt_path)
+                    model_cfg["_target_"] += ".load_from_checkpoint"
+                    with open_dict(model_cfg):
+                        model_cfg["checkpoint_path"] = ckpt_path
 
-                module = hydra.utils.instantiate(ev_conf.model, cross_modal_module=cross_modal_module)
+                model = hydra.utils.instantiate(model_cfg)
+
+                module = hydra.utils.instantiate(evaluator_cfg.model, cross_modal_module=model)
             else:
                 raise ValueError("Evaluator config must contain a model!")
 
-            if "datamodule" in ev_conf:
-                datamodule = hydra.utils.instantiate(ev_conf.datamodule)
+            if "datamodule" in evaluator_cfg:
+                datamodule = hydra.utils.instantiate(evaluator_cfg.datamodule)
             else:
                 raise ValueError("Evaluator config must contain a datamodule!")
 
-            if "callbacks" in ev_conf:
-                callbacks = instantiate_callbacks(ev_conf.callbacks)
+            if "callbacks" in evaluator_cfg:
+                callbacks = instantiate_callbacks(evaluator_cfg.callbacks)
             else:
                 callbacks = []
 
-            if "trainer" in ev_conf:
-                trainer = hydra.utils.instantiate(ev_conf.trainer, callbacks=callbacks, logger=logger)
+            if "trainer" in evaluator_cfg:
+                trainer = hydra.utils.instantiate(evaluator_cfg.trainer, callbacks=callbacks, logger=logger)
             else:
                 trainer = None
 
-            if ev_conf.evaluator.name is None:
-                ev_conf.evaluator.name = ev_name
+            if evaluator_cfg.evaluator.name is None:
+                evaluator_cfg.evaluator.name = evaluator_name
 
-            log.info(f"Instantiating evaluator <{ev_conf.model._target_}>")
-            evaluator = hydra.utils.instantiate(ev_conf.evaluator, model=module, datamodule=datamodule, trainer=trainer)
+            log.info(f"Instantiating evaluator <{evaluator_cfg.model._target_}>")
+            evaluator = hydra.utils.instantiate(
+                evaluator_cfg.evaluator, model=module, datamodule=datamodule, trainer=trainer
+            )
 
             evaluators.append(evaluator)
 

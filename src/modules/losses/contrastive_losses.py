@@ -1,3 +1,5 @@
+from typing import Optional
+
 # from torch.distributions import MultivariateNormal
 import torch
 from torch import Tensor
@@ -11,12 +13,14 @@ class InfoNCE(LossWithTemperature):
         norm: bool = True,
         temperature: float = 0.5,
         eps: float = 1e-8,
+        name: Optional[str] = None,
         **kwargs,
     ):
         # Access temperature as self.temperature.value
         super().__init__(temperature=temperature, **kwargs)
         self.norm = norm
         self.eps = eps
+        self.name = name or "InfoNCE"
 
     def forward(self, z1, z2, **kwargs) -> Tensor:
         batch_size, _ = z1.size()
@@ -32,11 +36,12 @@ class InfoNCE(LossWithTemperature):
         loss = pos_sim / sim_matrix.sum(dim=1)
         loss = -torch.log(loss).mean()
 
-        return loss
+        return {"loss": loss}
 
 
 class RegInfoNCE(RegWithTemperatureLoss):
     loss_fn = InfoNCE
+    name = "RegInfoNCE"
 
 
 class NTXent(LossWithTemperature):
@@ -45,11 +50,13 @@ class NTXent(LossWithTemperature):
         norm: bool = True,
         temperature: float = 0.5,
         eps: float = 1e-8,
+        name: Optional[str] = None,
         **kwargs,
     ):
         super().__init__(temperature=temperature, **kwargs)
         self.norm = norm
         self.eps = eps
+        self.name = name or "NTXent"
 
     def forward(self, z1, z2, **kwargs) -> Tensor:
         batch_size, _ = z1.size()
@@ -65,11 +72,12 @@ class NTXent(LossWithTemperature):
         loss = pos_sim / (sim_matrix.sum(dim=1) - pos_sim)  # This is the difference from InfoNCE
         loss = -torch.log(loss).mean()
 
-        return loss
+        return {"loss": loss}
 
 
 class RegNTXent(RegWithTemperatureLoss):
     loss_fn = NTXent
+    name = "RegNTXent"
 
 
 # class KLDivergenceMultiplePositives(LossWithTemperature):
