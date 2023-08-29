@@ -6,5 +6,3 @@ compound_str_type: inchi
 params:
   ecfp:
     radius: 2
-
-

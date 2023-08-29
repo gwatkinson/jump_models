@@ -2,6 +2,6 @@
 
 timer:
   _target_: lightning.pytorch.callbacks.Timer
-  duration: "00:06:00:00" # 6 hours
+  duration: "02:00:00:00" # 2 days
   interval: epoch
   verbose: True

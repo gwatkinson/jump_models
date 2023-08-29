@@ -1,21 +1,18 @@
 """LightningModule for Jump MOA datasets evalulation."""
-# flake8: noqa
 
 import copy
-from functools import partial
 from typing import Any, Optional
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from lightning import LightningModule
-from torchmetrics import MeanMetric, MetricCollection, MinMetric
+from torchmetrics import MeanMetric, MetricCollection
 from torchmetrics.classification import (
     MulticlassAccuracy,
     MulticlassAUROC,
     MulticlassConfusionMatrix,
     MulticlassF1Score,
-    MulticlassPrecision,
-    MulticlassRecall,
 )
 
 from src.utils import pylogger

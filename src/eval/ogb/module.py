@@ -1,13 +1,14 @@
 """LightningModule for OGB datasets evalulation."""
-# flake8: noqa
 
+import copy
 from functools import partial
 from typing import Any, Optional
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from lightning import LightningModule
-from torchmetrics import MeanMetric, MetricCollection, MinMetric
+from torchmetrics import MeanMetric, MetricCollection
 from torchmetrics.classification import (
     BinaryAccuracy,
     BinaryAUROC,
@@ -63,9 +64,17 @@ class OGBClassificationModule(LightningModule):
 
         # encoder
         # self.cross_modal_module = cross_modal_module
-        self.molecule_encoder = getattr(cross_modal_module, molecule_encoder_attribute_name)
-        self.embedding_dim = getattr(self.molecule_encoder, "out_dim", None)
+
+        if not (cross_modal_module and molecule_encoder_attribute_name):
+            raise ValueError("Cross_modal_module with attribute name must be provided.")
+
+        self.molecule_encoder = copy.deepcopy(getattr(cross_modal_module, molecule_encoder_attribute_name))
+        self.model_name = self.molecule_encoder.__class__.__name__
+
+        self.embedding_dim = self.molecule_encoder["out_dim"]
         self.head = nn.Linear(self.embedding_dim, self.out_dim)
+
+        # lr
         self.lr = lr
 
         # model

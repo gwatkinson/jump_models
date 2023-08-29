@@ -6,4 +6,4 @@ from src.modules.collate_fn.collate_fns import (
     image_graph_label_collate_function,
     label_graph_collate_function,
 )
-from src.modules.collate_fn.default_collate import default_collate
+from src.modules.collate_fn.default import SmilesList, default_collate

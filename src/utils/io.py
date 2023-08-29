@@ -8,7 +8,6 @@ import cv2
 import numpy as np
 import pandas as pd
 import requests
-from PIL import Image
 
 
 def download_and_extract_zip(url: str, path: str) -> None:
@@ -72,10 +71,7 @@ def load_dict_from_json(path: str) -> Dict[str, Any]:
 
 def load_image_paths_to_array(image_paths: List[str]):
     """Load a list of image paths into a numpy array."""
-    images = []
-    for image_path in image_paths:
-        images.append(np.array(Image.open(image_path)))
-    return np.stack(images)
+    return np.array([cv2.imread(str(f), cv2.IMREAD_GRAYSCALE) for f in image_paths])
 
 
 def get_img_from_fig(fig, dpi=60):

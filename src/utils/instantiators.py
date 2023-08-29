@@ -72,16 +72,15 @@ def instantiate_evaluator_list(
     if not isinstance(evaluator_list_cfg, DictConfig):
         raise TypeError("Evaluator config must be a DictConfig!")
 
+    if ckpt_path is not None:
+        model_cfg["_target_"] += ".load_from_checkpoint"
+        with open_dict(model_cfg):
+            model_cfg["checkpoint_path"] = ckpt_path
+
     for evaluator_name, evaluator_cfg in evaluator_list_cfg.items():
         if isinstance(evaluator_cfg, DictConfig):
             if "model" in evaluator_cfg:
-                if ckpt_path is not None:
-                    model_cfg["_target_"] += ".load_from_checkpoint"
-                    with open_dict(model_cfg):
-                        model_cfg["checkpoint_path"] = ckpt_path
-
                 model = hydra.utils.instantiate(model_cfg)
-
                 module = hydra.utils.instantiate(evaluator_cfg.model, cross_modal_module=model)
             else:
                 raise ValueError("Evaluator config must contain a model!")

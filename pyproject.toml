@@ -58,6 +58,8 @@ llvmlite = "0.40.1"
 matplotlib = "^3.7.2"
 seaborn = "^0.12.2"
 plotly = "^5.15.0"
+imageio = "^2.31.2"
+scikit-image = "^0.21.0"
 
 
 [tool.poetry.group.images.dependencies]
