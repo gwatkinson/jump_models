@@ -4,7 +4,7 @@ image."""
 import random
 
 # import time
-from typing import Callable, Dict, List, Optional
+from typing import Callable, List, Optional
 
 import pandas as pd
 import torch
@@ -24,7 +24,6 @@ class MultiviewDataset(Dataset):
     def __init__(
         self,
         load_df: pd.DataFrame,
-        compound_dict: Dict[str, List[str]],
         transform: Optional[Callable] = None,
         compound_transform: Optional[Callable] = None,
         sampler: Optional[Callable[[List[str]], str]] = None,
@@ -33,36 +32,10 @@ class MultiviewDataset(Dataset):
         max_tries: int = 10,
         use_compond_cache: bool = False,
     ):
-        """Initializes the dataset.
-
-        Args:
-            load_df (pd.DataFrame): A dataframe containing the paths to the images.
-            compound_dict (Dict[str, List[str]]): A dictionary mapping a compound
-                to a list of indices into the load_df.
-            transform (Optional[Callable], optional): A transform to apply to the
-                image. Usually torchvision transforms. Defaults to None.
-            compound_transform (Optional[Callable], optional): A transform to apply
-                to the compound. This can be a tokenizer or a featurizer transforming a string into a Graph.
-                Defaults to None.
-            sampler (Optional[Callable[[List[str]], str]], optional): A function that
-                samples an index from a list of indices. Defaults to None.
-            channels (List[str], optional): A list of strings that are used to
-                format the column names in the load_df. Defaults to default_channels.
-            col_fstring (str, optional): A format string that is used to format the
-                column names in the load_df. Defaults to "FileName_Orig{channel}".
-            max_tries (int, optional): The maximum number of tries to sample an image for a compound.
-                Defaults to 10.
-            use_compond_cache (bool, optional): Whether to cache the compound transforms. Defaults to True.
-        """
         super().__init__()
 
         # data
         self.load_df = load_df
-        self.compound_dict = compound_dict
-        self.compound_list = list(self.compound_dict.keys())
-        self.n_compounds = len(self.compound_list)
-        self.image_list = self.load_df.index.tolist()
-        self.n_images = len(self.image_list)
 
         # transforms
         self.transform = transform
