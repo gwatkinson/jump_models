@@ -8,7 +8,7 @@ python src/train.py \
     trainer=ddp \
     trainer.devices=[0,1] \
     trainer.max_epochs=200 \
-    data.num_workers=32 \
+    data.num_workers=16 \
     model/criterion=info_nce \
     logger.wandb.project=first_real_runs \
     logger.wandb.group=big_runs
@@ -19,7 +19,7 @@ python src/train.py \
     trainer=ddp \
     trainer.devices=[0,1] \
     trainer.max_epochs=200 \
-    data.num_workers=32 \
+    data.num_workers=16 \
     model.lr=5e-4 \
     model/criterion=info_nce \
     logger.wandb.project=first_real_runs \
