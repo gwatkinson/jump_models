@@ -6,6 +6,7 @@ alpha: 0.05             # Factor for the regularization losses (which is a combi
 mse_reg: 0.5            # L1 loss between normalized embeddings
 uniformity_reg: 0       # Usually leads to inf loss
 variance_reg: 1         # Similar to simreg
+covariance_reg: 0.25
 
 temperature_min: 0      # Not used if requires_grad is False
 temperature_max: 100

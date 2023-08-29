@@ -32,7 +32,8 @@ bbbp:
     scheduler:
       warmup_steps: [10]
 
-    example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
+    example_input_path: ${model.example_input_path}
+    # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
 
 
   datamodule:

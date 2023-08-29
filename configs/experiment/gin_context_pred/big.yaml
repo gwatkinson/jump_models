@@ -58,7 +58,7 @@ data:
 
 
 model:
-  embedding_dim: 1024
+  embedding_dim: 768
   lr: 8e-5
 
   scheduler:

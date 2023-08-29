@@ -140,7 +140,7 @@ class JumpMOAImageModule(LightningModule):
     def extract(self, image):
         return self.image_encoder(image)
 
-    def forward(self, image, label=None, compound=None):
+    def forward(self, image, **kwargs):
         emb = self.extract(image)
         return self.head(emb)
 
@@ -292,7 +292,7 @@ class JumpMOAImageGraphModule(JumpMOAImageModule):
         compound_emb = self.molecule_encoder(compound)
         return torch.cat([image_emb, compound_emb], dim=1)
 
-    def forward(self, image, compound, label=None):
+    def forward(self, image, compound, **kwargs):
         emb = self.extract(image, compound)
         return self.head(emb)
 

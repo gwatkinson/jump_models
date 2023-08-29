@@ -32,8 +32,8 @@ tox21:
     scheduler:
       warmup_steps: [10]
 
-    example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
-
+    example_input_path: ${model.example_input_path}
+    # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
 
   datamodule:
     _target_: src.eval.ogb.datamodule.Tox21DataModule
