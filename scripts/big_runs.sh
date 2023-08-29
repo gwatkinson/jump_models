@@ -5,8 +5,8 @@ git pull
 python src/train.py \
     experiment=gin_context_pred/big \
     seed=23540 \
-    trainer=gpu \
-    trainer.devices=[1] \
+    trainer=ddp \
+    trainer.devices=[0,1] \
     trainer.max_epochs=200 \
     data.num_workers=32 \
     model/criterion=info_nce \
@@ -16,8 +16,8 @@ python src/train.py \
 python src/train.py \
     experiment=gin_context_pred/big \
     seed=23540 \
-    trainer=gpu \
-    trainer.devices=[1] \
+    trainer=ddp \
+    trainer.devices=[0,1] \
     trainer.max_epochs=200 \
     data.num_workers=32 \
     model.lr=5e-4 \
@@ -39,7 +39,9 @@ python src/train.py \
 
 python src/train.py \
     experiment=gin_context_pred/big \
-    trainer=gpu trainer.devices=[1] trainer.max_epochs=100 \
+    trainer=gpu \
+    trainer.devices=[1] \
+    trainer.max_epochs=100 \
     data.num_workers=32 \
     seed=213 \
     model/criterion=ntxent_reg \
