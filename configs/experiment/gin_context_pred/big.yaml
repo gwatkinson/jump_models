@@ -34,13 +34,13 @@ trainer:
   max_epochs: 50
   log_every_n_steps: 1
   # gradient_clip_val: 0.5
-  num_sanity_val_steps: 2
+  num_sanity_val_steps: 1
   # reload_dataloaders_every_n_epochs: 1
 
   devices: ???
 
 data:
-  batch_size: 1024
+  batch_size: 768
   num_workers: 24
   prefetch_factor: 2
   drop_last: True
