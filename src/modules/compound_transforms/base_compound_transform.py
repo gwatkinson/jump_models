@@ -28,7 +28,7 @@ class DefaultCompoundTransform(ABC):
         return dm.to_smiles(mol)
 
     @abstractmethod
-    def mol_to_feat(self, mol):
+    def mol_to_feat(self, mol: str):
         raise NotImplementedError
 
     def __call__(self, compound_str: str):
