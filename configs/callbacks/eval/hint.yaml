@@ -4,19 +4,20 @@ defaults:
   - /callbacks/lightning/early_stopping@_here_
   - /callbacks/custom/wandb_plotter@_here_
   - /callbacks/custom/nan_loss@_here_
-  # - /callbacks/custom/image_freezer@_here_
+  # - /callbacks/custom/molecule_freezer@_here_
   - /callbacks/lightning/lr_monitor@_here_
+
 
 model_checkpoint:
   dirpath: ???
-  filename: "moa_epoch_{epoch:03d}"
-  monitor: jump_moa/image/val/loss
+  filename: null
+  monitor: ???
   mode: min
-  save_last: True
-  auto_insert_metric_name: False
+  save_last: False
+  auto_insert_metric_name: null
 
 early_stopping:
-  monitor: jump_moa/image/val/loss
+  monitor: ???
   patience: 15
   min_delta: 0
   mode: min

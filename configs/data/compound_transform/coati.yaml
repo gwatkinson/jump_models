@@ -1,0 +1,2 @@
+_target_: src.modules.compound_transforms.coati.COATITransform
+compound_str_type: inchi
