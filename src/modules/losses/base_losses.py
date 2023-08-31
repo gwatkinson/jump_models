@@ -134,17 +134,25 @@ class CombinationLoss(_Loss):
             z2 = F.normalize(z2, dim=-1, p=2)
 
         loss_dict = {}
+        keys = []
         loss = 0
         for loss_fn, weight in zip(self.losses, self.weights):
-            loss_value = loss_fn(z1, z2, **kwargs)
-            if isinstance(loss_value, dict):
-                loss_value = loss_value["loss"]
-
             key = getattr(loss_fn, "name", loss_fn.__class__.__name__)
-            if key in loss_dict:
+            if key in keys:
                 key += "_"  # Add underscore to avoid overwriting
+            keys.append(key)
 
-            loss_dict[loss_fn.name] = loss_value
+            loss_results = loss_fn(z1, z2, **kwargs)
+
+            if isinstance(loss_results, dict):
+                loss_value = loss_results["loss"]
+                log_dict = {f"{key}/{k}": v for k, v in loss_results.items()}
+            else:
+                loss_value = loss_results
+                log_dict = {f"{key}/loss": loss_value}
+
+            loss_dict.update(log_dict)
+
             loss += weight * loss_value
 
         loss_dict["loss"] = loss
