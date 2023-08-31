@@ -46,6 +46,7 @@ phase_II:
 
   evaluator:
     _target_: src.eval.evaluators.Evaluator
+    name: Phase_II
     visualize_kwargs: null
 
 
