@@ -506,24 +506,27 @@ class BasicJUMPDataModule(LightningDataModule):
                 use_compond_cache=self.use_compond_cache,
             )
 
-    def train_dataloader(self) -> DataLoader:
+    def train_dataloader(self, **kwargs) -> DataLoader:
         train_kwargs = OmegaConf.to_container(self.dataloader_config.train, resolve=True)
+        train_kwargs.update(kwargs)
         return DataLoader(
             dataset=self.train_dataset,
             collate_fn=self.collate_fn,
             **train_kwargs,
         )
 
-    def val_dataloader(self) -> DataLoader:
+    def val_dataloader(self, **kwargs) -> DataLoader:
         val_kwargs = OmegaConf.to_container(self.dataloader_config.val, resolve=True)
+        val_kwargs.update(kwargs)
         return DataLoader(
             dataset=self.val_dataset,
             collate_fn=self.collate_fn,
             **val_kwargs,
         )
 
-    def test_dataloader(self) -> DataLoader:
+    def test_dataloader(self, **kwargs) -> DataLoader:
         test_kwargs = OmegaConf.to_container(self.dataloader_config.test, resolve=True)
+        test_kwargs.update(kwargs)
         return DataLoader(
             dataset=self.test_dataset,
             collate_fn=self.collate_fn,

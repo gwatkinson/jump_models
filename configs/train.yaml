@@ -39,6 +39,9 @@ tags: ["dev"]
 # set False to skip model training
 train: True
 
+# set True to load a small batch as an example for lightning
+load_first_bacth: True
+
 # evaluate on test set, using best model weights achieved during training
 # lightning chooses best weights based on the metric specified in checkpoint callback
 test: True

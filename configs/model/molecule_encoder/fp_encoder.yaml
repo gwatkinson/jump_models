@@ -1,14 +1,5 @@
 defaults:
   - override /data/compound_transform@_global_.data.compound_transform: fp_transform.yaml
-  # - override /data/collate_fn@_global_.data.collate_fn: none.yaml
-  # - override /data/collate_fn@_global_.eval.moa_image_task.datamodule.collate_fn: none.yaml
-  # - override /data/collate_fn@_global_.eval.bbbp.datamodule.collate_fn: none.yaml
-  # - override /data/collate_fn@_global_.eval.hiv.datamodule.collate_fn: none.yaml
-  # - override /data/collate_fn@_global_.eval.esol.datamodule.collate_fn: none.yaml
-  # - override /data/collate_fn@_global_.eval.lipo.datamodule.collate_fn: none.yaml
-  # - override /data/collate_fn@_global_.eval.tox21.datamodule.collate_fn: none.yaml
-  # - override /data/collate_fn@_global_.eval.idr_graph_retrieval.datamodule.mol_collate_fn: none.yaml
-  # - override /data/collate_fn@_global_.eval.idr_graph_retrieval.datamodule.img_collate_fn: none.yaml
 
 _target_: src.modules.molecules.fp_mlp.FingerprintsWithMLP
 input_dim: 2167  # This depends on the number of features in the concatenated fingerprint
@@ -18,6 +9,6 @@ activation_layer:
   _target_: torch.nn.ReLU
   _partial_: true
 norm_layer:
-  _target_: torch.nn.BatchNorm1d
+  _target_: torch.nn.LayerNorm
   _partial_: true
 dropout: 0.2

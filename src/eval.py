@@ -1,10 +1,12 @@
+from pathlib import Path
 from typing import List, Optional, Tuple
 
+import click
 import hydra
 import pyrootutils
 from lightning import LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
-from omegaconf import DictConfig  # open_dict
+from omegaconf import DictConfig, OmegaConf
 
 from src import utils
 from src.eval import EvaluatorList
@@ -51,14 +53,16 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info(f"Instantiating datamodule <{cfg.data._target_}>")
     datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
 
-    # log.info(f"Instantiating model <{cfg.model._target_}> from checkpoint {cfg.ckpt_path}")
-    # Add load_from_checkpoint to model
-    # cfg.model["_target_"] += ".load_from_checkpoint"
-    # with open_dict(cfg.model):
-    #     cfg.model["checkpoint_path"] = cfg.ckpt_path
-
     log.info(f"Instantiating model <{cfg.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(cfg.model)
+
+    if cfg.get("load_first_bacth"):
+        log.info("Loading first batch...")
+        datamodule.prepare_data()
+        datamodule.setup("fit")
+        dl = datamodule.train_dataloader(batch_size=2)
+        example_input = next(iter(dl))
+        model.example_input_array = example_input
 
     log.info("Instantiating loggers...")
     logger: List[Logger] = utils.instantiate_loggers(cfg.get("logger"))
@@ -99,8 +103,21 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     return metric_dict, object_dict
 
 
-@hydra.main(config_path="../configs", config_name="eval.yaml", version_base=None)
-def main(cfg: DictConfig) -> None:
+# @hydra.main(config_path="../configs", config_name="eval.yaml", version_base=None)
+
+
+@click.command()
+@click.argument("ckpt_path", type=click.Path(exists=True))
+def main(ckpt_path: str) -> None:
+    """Main entrypoint for evaluation.
+
+    Loads the config from the relative position of the checkpoint path.
+    """
+    # load config
+    config_path = Path(ckpt_path).parent.parent / ".hydra/config.yaml"
+
+    cfg = OmegaConf.load(config_path)
+
     # apply extra utilities
     # (e.g. ask for tags if none are provided in cfg, print cfg tree, etc.)
     utils.extras(cfg)

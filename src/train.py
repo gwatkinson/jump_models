@@ -61,6 +61,14 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info(f"Instantiating model <{cfg.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(cfg.model)
 
+    if cfg.get("load_first_bacth"):
+        log.info("Loading first batch...")
+        datamodule.prepare_data()
+        datamodule.setup("fit")
+        dl = datamodule.train_dataloader(batch_size=2)
+        example_input = next(iter(dl))
+        model.example_input_array = example_input
+
     log.info("Instantiating callbacks...")
     callbacks: List[Callback] = utils.instantiate_callbacks(cfg.get("callbacks"))
 

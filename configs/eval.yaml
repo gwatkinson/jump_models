@@ -14,10 +14,13 @@ defaults:
   - experiment: null
 
 
-
 task_name: "eval"
 
+train: False
+test: True
 evaluate: True
+load_first_bacth: True
+
 
 tags: ["dev"]
 
