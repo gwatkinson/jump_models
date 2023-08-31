@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import List, Optional, Tuple
 
@@ -117,6 +118,9 @@ def main(ckpt_path: str) -> None:
     config_path = Path(ckpt_path).parent.parent / ".hydra/config.yaml"
 
     cfg = OmegaConf.load(config_path)
+
+    cfg.paths.output_dir = Path(ckpt_path).parent.parent
+    cfg.paths.work_dir = os.getcwd()
 
     # apply extra utilities
     # (e.g. ask for tags if none are provided in cfg, print cfg tree, etc.)
