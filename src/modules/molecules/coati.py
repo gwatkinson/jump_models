@@ -49,6 +49,7 @@ class COATI(nn.Module):
         encoder, tokenizer = load_e3gnn_smiles_clip_e2e(
             doc_url=COATI_NAME_TO_URL[pretrained_name],
             freeze=freeze,
+            device="cpu",
         )
 
         self.padding_length = padding_length

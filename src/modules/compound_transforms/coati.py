@@ -21,9 +21,10 @@ class COATITransform(DefaultCompoundTransform):
         self.pretrained_name = pretrained_name
 
         encoder, tokenizer = load_e3gnn_smiles_clip_e2e(
-            doc_url=COATI_NAME_TO_URL[pretrained_name],
-            freeze=False,
+            doc_url=COATI_NAME_TO_URL[pretrained_name], freeze=False, device="cpu"
         )
+
+        del encoder
 
         self.padding_length = padding_length
         tokenizer.n_seq = padding_length
