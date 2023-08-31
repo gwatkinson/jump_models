@@ -2,9 +2,8 @@ from typing import Literal
 
 import torch
 
-from src.coati.models.io import load_e3gnn_smiles_clip_e2e
+from src.coati.models.io import COATI_MODELS, load_coati_tokenizer, load_model_doc
 from src.modules.compound_transforms.base_compound_transform import DefaultCompoundTransform
-from src.modules.molecules.coati import COATI_MODELS, COATI_NAME_TO_URL
 
 
 class COATITransform(DefaultCompoundTransform):
@@ -15,16 +14,17 @@ class COATITransform(DefaultCompoundTransform):
         pretrained_name: COATI_MODELS = "grande_closed",
         padding_length: int = 250,
         compound_str_type: Literal["inchi", "smiles", "selfies", "smarts"] = "smiles",
+        model_dir: str = "./models",
     ):
         super().__init__(compound_str_type)
 
         self.pretrained_name = pretrained_name
 
-        encoder, tokenizer = load_e3gnn_smiles_clip_e2e(
-            doc_url=COATI_NAME_TO_URL[pretrained_name], freeze=False, device="cpu"
-        )
+        if self.pretrained_name not in COATI_MODELS:
+            raise ValueError(f"pretrained_name must be one of {COATI_MODELS}")
 
-        del encoder
+        model_doc = load_model_doc(pretrained_name, model_dir=model_dir)
+        tokenizer = load_coati_tokenizer(model_doc)
 
         self.padding_length = padding_length
         tokenizer.n_seq = padding_length

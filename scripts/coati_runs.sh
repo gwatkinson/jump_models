@@ -10,8 +10,8 @@ python src/train.py \
     trainer.max_epochs=200 \
     data.num_workers=32 \
     data.transform.size=224 \
-    data.batch_size=512 \
-    model.embedding_dim=512 \
+    data.batch_size=128 \
+    model.embedding_dim=256 \
     model/image_encoder=vit_base_16_224 \
     model/criterion=ntxent_reg \
     model.criterion.alpha=0.2 \
@@ -22,16 +22,16 @@ python src/train.py \
     logger.wandb.group=coati
 
 
-python src/train.py \
-    seed=2213 \
+gl && python src/train.py \
+    seed=22123 \
     experiment=coati/med \
     trainer=gpu \
     trainer.devices=[1] \
     trainer.max_epochs=200 \
-    data.num_workers=32 \
+    data.num_workers=16 \
     data.transform.size=224 \
-    data.batch_size=512 \
-    model.embedding_dim=512 \
+    data.batch_size=128 \
+    model.embedding_dim=256 \
     model/image_encoder=vit_base_16_224 \
     model/criterion=ntxent_reg \
     model.criterion.alpha=0.2 \

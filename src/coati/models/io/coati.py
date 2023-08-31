@@ -1,5 +1,6 @@
 import pickle
-from typing import Tuple
+from pathlib import Path
+from typing import Literal, Tuple
 
 import torch.nn as nn
 
@@ -9,6 +10,72 @@ from src.coati.models.encoding.clip_e2e_selfies import to_selfies_tokenizer
 from src.coati.models.encoding.clip_fp_e2e import e3gnn_smiles_clip_e2e as fp_e2e_model
 from src.coati.models.encoding.tokenizers import get_vocab
 from src.coati.models.encoding.tokenizers.trie_tokenizer import TrieTokenizer
+
+COATI_NAME_TO_URL = {
+    "tall_closed": "s3://terray-public/models/tall_closed.pkl",
+    "grande_closed": "s3://terray-public/models/grande_closed.pkl",
+    "grade_closed_fp": "s3://terray-public/models/grade_closed_fp.pkl",
+    "barlow_closed_fp": "s3://terray-public/models/barlow_closed_fp.pkl",
+    "barlow_closed": "s3://terray-public/models/barlow_closed.pkl",
+    "autoreg_only": "s3://terray-public/models/autoreg_only.pkl",
+    "barlow_venti": "s3://terray-public/models/barlow_venti.pkl",
+    "grande_open": "s3://terray-public/models/grande_open.pkl",
+    "selfies_barlow": "s3://terray-public/models/selfies_barlow.pkl",
+}
+COATI_MODELS = [
+    "tall_closed",
+    "grande_closed",
+    "grade_closed_fp",
+    "barlow_closed_fp",
+    "barlow_closed",
+    "autoreg_only",
+    "barlow_venti",
+    "grande_open",
+    "selfies_barlow",
+]
+
+
+def load_model_doc(
+    pretrained_name: str,
+    model_dir: str = "./models",
+):
+    if (Path(model_dir) / f"{pretrained_name}.pkl").exists():
+        url = Path(model_dir) / f"{pretrained_name}.pkl"
+    else:
+        url = COATI_NAME_TO_URL[pretrained_name]
+
+    with cache_read(url, "rb") as f_in:
+        model_doc = pickle.loads(f_in.read(), encoding="UTF-8")
+
+    return model_doc
+
+
+def load_coati_tokenizer(model_doc):
+    tokenizer_vocab = model_doc["train_args"]["tokenizer_vocab"]
+    tokenizer = TrieTokenizer(n_seq=model_doc["model_kwargs"]["n_seq"], **get_vocab(tokenizer_vocab))
+
+    if "selfies" in tokenizer_vocab:
+        tokenizer = to_selfies_tokenizer(tokenizer)
+
+    return tokenizer
+
+
+def load_coati_model(model_doc, model_type="default"):
+    model_kwargs = model_doc["model_kwargs"]
+    model_dict_ = model_doc["model"]
+    # if model was created with DataParallel, remove the "module." prefix
+    new_names = [k.replace("module.", "") if k.startswith("module.") else k for k in model_dict_.keys()]
+    state_dict = {new_name: t for new_name, t in zip(new_names, model_dict_.values())}
+
+    if model_type == "default":
+        model = e3gnn_smiles_clip_e2e(**model_kwargs)
+    elif model_type == "fp":
+        model = fp_e2e_model(**model_kwargs)
+    else:
+        raise ValueError("unknown model type")
+    model.load_state_dict(state_dict, strict=False)
+
+    return model
 
 
 def load_e3gnn_smiles_clip_e2e(
