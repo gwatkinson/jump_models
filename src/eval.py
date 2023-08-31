@@ -143,8 +143,6 @@ def main(ckpt_path: str, eval_cfg, devices) -> None:
 
     cfg.eval = eval_cfg.eval
 
-    log.info(OmegaConf.to_yaml(cfg.eval))
-
     if devices is not None:
         cfg.trainer.devices = list(devices)
 
