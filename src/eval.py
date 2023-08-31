@@ -136,7 +136,7 @@ def main(ckpt_path: str, eval_cfg, devices) -> None:
     if not eval_cfg_path.exists():
         raise ValueError(f"Config for {eval_cfg} not found!")
 
-    with initialize_config_dir(version_base=None, config_path=eval_cfg_path.parent.parent):
+    with initialize_config_dir(version_base=None, config_dir=eval_cfg_path.parent.parent):
         eval_cfg = compose(config_name=f"eval/{eval_cfg}")
 
     cfg.eval = eval_cfg.eval
