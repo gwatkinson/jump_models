@@ -6,6 +6,7 @@ from typing import List, Optional, Tuple
 import click
 import hydra
 import pyrootutils
+from hydra import compose, initialize
 from lightning import LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig, OmegaConf
@@ -114,7 +115,7 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
 
 @click.command()
 @click.argument("ckpt_path", type=click.Path(exists=True))
-@click.option("--eval_cfg", "-e", type=str, help="Evaluator config to run.", default=None)
+@click.option("--eval_cfg", "-e", type=str, help="Evaluator config to run", default="evaluators")
 @click.option("--devices", "-d", help="List of devices to use", multiple=True, type=int)
 def main(ckpt_path: str, eval_cfg, devices) -> None:
     """Main entrypoint for evaluation.
@@ -131,16 +132,14 @@ def main(ckpt_path: str, eval_cfg, devices) -> None:
 
     cfg.ckpt_path = ckpt_path
 
-    if eval_cfg is not None:
-        eval_cfg_path = Path(cfg.paths.root_dir) / "configs" / "eval" / f"{eval}.yaml"
-        eval_cfg = OmegaConf.load(eval_cfg_path)
+    eval_cfg_path = Path(cfg.paths.root_dir) / "configs" / "eval" / f"{eval_cfg}.yaml"
+    if not eval_cfg_path.exists():
+        raise ValueError(f"Config for {eval_cfg} not found!")
 
-        log.info(OmegaConf.to_yaml(eval_cfg))
+    with initialize(version_base=None, config_path=eval_cfg_path.parent.parent):
+        eval_cfg = compose(config_name=f"eval/{eval_cfg}")
 
-        eval_hydra = hydra.utils.instantiate(eval_cfg)
-        log.info(OmegaConf.to_yaml(eval_hydra))
-
-        cfg.eval = eval_cfg
+    cfg.eval = eval_cfg.eval
 
     log.info(OmegaConf.to_yaml(cfg.eval))
 

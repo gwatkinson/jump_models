@@ -446,7 +446,7 @@ class BasicJUMPDataModule(LightningDataModule):
         #         f"Train, test, val lengths: {len(self.train_cpds)}, {len(self.test_cpds)}, {len(self.val_cpds)}"
         #     )
 
-        if self.train_dataset is None:
+        if self.train_dataset is None and (stage == "fit" or stage is None):
             py_logger.info("Preparing train dataset")
 
             train_load_df = pd.read_parquet(Path(self.split_path) / "train_load_df.parquet")
@@ -466,7 +466,7 @@ class BasicJUMPDataModule(LightningDataModule):
                 use_compond_cache=self.use_compond_cache,
             )
 
-        if self.val_dataset is None:
+        if self.val_dataset is None and (stage == "fit" or stage == "evaluate" or stage is None):
             py_logger.info("Preparing validation dataset")
 
             val_load_df = pd.read_parquet(Path(self.split_path) / "val_load_df.parquet")

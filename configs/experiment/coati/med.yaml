@@ -3,7 +3,7 @@
 defaults:
   - override /data: jump_cl.yaml
   - override /model: jump_cl.yaml
-  - override /model/image_encoder: resnet18.yaml
+  - override /model/image_encoder: resnet34.yaml
   - override /model/molecule_encoder: coati.yaml
   - override /model/optimizer: adam.yaml
   - override /model/scheduler: on_plateau_with_warmup.yaml
@@ -40,7 +40,7 @@ trainer:
   devices: ???
 
 data:
-  batch_size: 512
+  batch_size: 256
   num_workers: 24
   prefetch_factor: 3
   drop_last: True
@@ -58,10 +58,15 @@ data:
 
 model:
   embedding_dim: 512
-  lr: 3e-4
+  lr: 1e-4
 
   scheduler:
-    warmup_steps: [5]
+    warmup_steps: [3]
+    cooldown: 3
+    factor: 0.6
+    patience: 7
+    min_lr: 1.0e-6
+    threshold: 1.0e-4
 
   optimizer:
     weight_decay: 1e-3
@@ -74,8 +79,12 @@ callbacks:
     log_freq: 100
     watch_log: all
 
-  # image_backbone_freezer:
-  #   unfreeze_backbone_at_epoch: 10
+  early_stopping:
+    monitor: "val/loss"
+    patience: 25
+    min_delta: 0
+    mode: "min"
+
 
 
 logger:
