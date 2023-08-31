@@ -1,6 +1,8 @@
 _target_: src.modules.losses.contrastive_losses.NTXent
 norm: True
-temperature: 1
+temperature: 15
+return_rank: True
+
 temperature_requires_grad: False  # If True, temperature is learned
 
 temperature_min: 0      # Not used if requires_grad is False
