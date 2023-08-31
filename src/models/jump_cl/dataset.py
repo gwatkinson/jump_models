@@ -92,14 +92,14 @@ class MoleculeImageDataset(Dataset):
         return f"{self.__class__.__name__}(n_compounds={self.n_compounds}, n_images={self.n_images})"
 
     def transform_compound(self, compound):
-        if self.cached_compounds and compound in self.cached_compounds:
-            return self.cached_compounds[compound]
-        else:
-            tr_compound = self.compound_transform(compound)
+        # if self.cached_compounds and compound in self.cached_compounds:
+        #     return self.cached_compounds[compound]
+        # else:
+        tr_compound = self.compound_transform(compound)
 
-            if self.use_compond_cache:
-                self.cached_compounds[compound] = tr_compound
-            return tr_compound
+        # if self.use_compond_cache:
+        #     self.cached_compounds[compound] = tr_compound
+        return tr_compound
 
     def __getitem__(self, idx):
         # start = time.time()

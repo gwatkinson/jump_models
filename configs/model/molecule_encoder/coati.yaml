@@ -7,5 +7,5 @@ _target_: src.modules.molecules.coati.COATI
 
 pretrained_name: grande_closed
 out_dim: ${model.embedding_dim}
-padding_length: 250
+padding_length: null
 model_dir: ${paths.model_dir}

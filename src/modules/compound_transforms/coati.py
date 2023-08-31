@@ -1,9 +1,12 @@
-from typing import Literal
+from typing import Literal, Optional
 
 import torch
 
 from src.coati.models.io import COATI_MODELS, load_coati_tokenizer, load_model_doc
 from src.modules.compound_transforms.base_compound_transform import DefaultCompoundTransform
+from src.utils import pylogger
+
+logger = pylogger.get_pylogger(__name__)
 
 
 class COATITransform(DefaultCompoundTransform):
@@ -12,7 +15,7 @@ class COATITransform(DefaultCompoundTransform):
     def __init__(
         self,
         pretrained_name: COATI_MODELS = "grande_closed",
-        padding_length: int = 250,
+        padding_length: Optional[int] = None,
         compound_str_type: Literal["inchi", "smiles", "selfies", "smarts"] = "smiles",
         model_dir: str = "./models",
     ):
@@ -26,9 +29,12 @@ class COATITransform(DefaultCompoundTransform):
         model_doc = load_model_doc(pretrained_name, model_dir=model_dir)
         tokenizer = load_coati_tokenizer(model_doc)
 
-        self.padding_length = padding_length
-        tokenizer.n_seq = padding_length
+        if padding_length is not None:
+            tokenizer.n_seq = padding_length
+
         self.tokenizer = tokenizer
+
+        logger.info(f"Loaded tokenizer for pretrained model: {self.pretrained_name}")
 
     def mol_to_feat(self, smiles: str) -> torch.Tensor:
         tokens = torch.tensor(

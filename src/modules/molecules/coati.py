@@ -1,6 +1,8 @@
 """Molecule encoder using the models from
 https://github.com/terraytherapeutics/COATI/tree/main."""
 
+from typing import Optional
+
 import torch.nn as nn
 
 from src.coati.models.io import COATI_MODELS, load_coati_model, load_coati_tokenizer, load_model_doc
@@ -14,7 +16,7 @@ class COATI(nn.Module):
         self,
         pretrained_name: COATI_MODELS = "grande_closed",
         out_dim: int = 512,
-        padding_length: int = 250,
+        padding_length: Optional[int] = None,
         model_dir: str = "./models",
     ):
         super().__init__()
@@ -27,8 +29,9 @@ class COATI(nn.Module):
         tokenizer = load_coati_tokenizer(model_doc)
         encoder = load_coati_model(model_doc, model_type="default")
 
-        self.padding_length = padding_length
-        tokenizer.n_seq = padding_length
+        if padding_length is not None:
+            tokenizer.n_seq = padding_length
+
         self.tokenizer = tokenizer
 
         self.backbone = encoder.xformer

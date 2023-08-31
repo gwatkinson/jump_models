@@ -1,8 +1,9 @@
+import io
 import pickle
 from pathlib import Path
-from typing import Literal, Tuple
+from typing import Tuple
 
-import torch.nn as nn
+import torch
 
 from src.coati.common.s3 import cache_read
 from src.coati.models.encoding.clip_e2e import e3gnn_smiles_clip_e2e
@@ -35,6 +36,17 @@ COATI_MODELS = [
 ]
 
 
+class CPU_Unpickler(pickle.Unpickler):
+    """Override to unpickle torch tensor to cpu (instead of cuda:0
+    previously)"""
+
+    def find_class(self, module, name):
+        if module == "torch.storage" and name == "_load_from_bytes":
+            return lambda b: torch.load(io.BytesIO(b), map_location="cpu")
+        else:
+            return super().find_class(module, name)
+
+
 def load_model_doc(
     pretrained_name: str,
     model_dir: str = "./models",
@@ -45,7 +57,8 @@ def load_model_doc(
         url = COATI_NAME_TO_URL[pretrained_name]
 
     with cache_read(url, "rb") as f_in:
-        model_doc = pickle.loads(f_in.read(), encoding="UTF-8")
+        model_doc = CPU_Unpickler(f_in).load()
+        # model_doc = pickle.loads()
 
     return model_doc
 
@@ -60,12 +73,12 @@ def load_coati_tokenizer(model_doc):
     return tokenizer
 
 
-def load_coati_model(model_doc, model_type="default"):
+def load_coati_model(model_doc, model_type="default", strict=False):
     model_kwargs = model_doc["model_kwargs"]
     model_dict_ = model_doc["model"]
     # if model was created with DataParallel, remove the "module." prefix
     new_names = [k.replace("module.", "") if k.startswith("module.") else k for k in model_dict_.keys()]
-    state_dict = {new_name: t for new_name, t in zip(new_names, model_dict_.values())}
+    state_dict = {new_name: t.to("cpu") for new_name, t in zip(new_names, model_dict_.values())}
 
     if model_type == "default":
         model = e3gnn_smiles_clip_e2e(**model_kwargs)
@@ -73,7 +86,7 @@ def load_coati_model(model_doc, model_type="default"):
         model = fp_e2e_model(**model_kwargs)
     else:
         raise ValueError("unknown model type")
-    model.load_state_dict(state_dict, strict=False)
+    model.load_state_dict(state_dict, strict=strict)
 
     return model
 
@@ -117,7 +130,7 @@ def load_e3gnn_smiles_clip_e2e(
     model_dict_ = model_doc["model"]
     # if model was created with DataParallel, remove the "module." prefix
     new_names = [k.replace("module.", "") if k.startswith("module.") else k for k in model_dict_.keys()]
-    state_dict = {new_name: t for new_name, t in zip(new_names, model_dict_.values())}
+    state_dict = {new_name: t.to("cpu") for new_name, t in zip(new_names, model_dict_.values())}
 
     tokenizer_vocab = model_doc["train_args"]["tokenizer_vocab"]
     print(f"Loading tokenizer {tokenizer_vocab} from {doc_url}")
