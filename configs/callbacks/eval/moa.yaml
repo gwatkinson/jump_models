@@ -1,6 +1,7 @@
 defaults:
   - /callbacks/lightning/rich_progress_bar@_here_
   - /callbacks/lightning/model_checkpoint@_here_
+  - /callbacks/lightning/lr_finder@_here_
   - /callbacks/lightning/early_stopping@_here_
   - /callbacks/custom/wandb_plotter@_here_
   - /callbacks/custom/nan_loss@_here_
@@ -17,7 +18,7 @@ model_checkpoint:
 
 early_stopping:
   monitor: jump_moa/image/val/loss
-  patience: 15
+  patience: 25
   min_delta: 0
   mode: min
 

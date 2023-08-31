@@ -5,32 +5,13 @@ defaults:
   - /callbacks/eval/ogb.yaml@lipo.callbacks
 
 lipo:
-  evaluator:
-    _target_: src.eval.evaluators.Evaluator
-    name: LipoModule
-    visualize_kwargs: null
-
-
-  callbacks:
-    # molecule_freezer:
-    #   unfreeze_backbone_at_epoch: 11
-    #   group_name: lipo_molecule_unfrozen
-
-    early_stopping:
-      monitor: ogb/lipo/image/val/loss
-
-    model_checkpoint:
-      monitor: ogb/lipo/image/val/loss
-      dirpath: ${eval.lipo.trainer.default_root_dir}/checkpoints
-
-
   model:
     _target_: src.eval.ogb.module.LipoModule
 
-    lr: 5e-3
+    lr: 5e-4
 
     scheduler:
-      warmup_steps: [10]
+      warmup_steps: [3]
 
     example_input_path: ${model.example_input_path}
     # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
@@ -63,6 +44,20 @@ lipo:
     min_epochs: 0
     max_epochs: 100
     log_every_n_steps: 1
-    gradient_clip_val: 0.5
+    # gradient_clip_val: 0.5
     num_sanity_val_steps: 1
     check_val_every_n_epoch: 1
+
+  evaluator:
+    _target_: src.eval.evaluators.Evaluator
+    name: LipoModule
+    visualize_kwargs: null
+
+
+  callbacks:
+    early_stopping:
+      monitor: ogb/lipo/val/loss
+
+    model_checkpoint:
+      monitor: ogb/lipo/val/loss
+      dirpath: ${eval.lipo.trainer.default_root_dir}/checkpoints

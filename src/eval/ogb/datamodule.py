@@ -90,7 +90,7 @@ class OGBDataset(Dataset):
             tr_compound = smile
 
         y = self.mapping.loc[id_, self.targets].values.astype(float)
-        y = torch.tensor(y)
+        y = torch.FloatTensor(y)
 
         return {"compound": tr_compound, "label": y}
 

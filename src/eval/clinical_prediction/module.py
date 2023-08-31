@@ -12,6 +12,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from lightning import LightningModule
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MeanMetric, MetricCollection
 from torchmetrics.classification import (
     BinaryAccuracy,
@@ -23,6 +24,7 @@ from torchmetrics.classification import (
 )
 
 from src.modules.collate_fn import default_collate
+from src.modules.lr_schedulers.warmup_wrapper import WarmUpWrapper
 from src.utils import pylogger
 
 logger = pylogger.get_pylogger(__name__)
@@ -145,28 +147,6 @@ class HintClinicalModule(LightningModule):
             "test": self.test_plot_metrics,
         }
 
-    # def forward_single_smiles(self, smiles):
-    #     if self.compound_transform is not None:
-    #         smiles = self.compound_transform(smiles)
-    #     embed = self.molecule_encoder(smiles)
-    #     return embed
-
-    # def forward_smiles_lst(self, smiles_lst):
-    #     embed_lst = [self.forward_single_smiles(smiles) for smiles in smiles_lst]
-    #     embed_all = torch.cat(embed_lst, 0)
-    #     return embed_all
-
-    # def forward_smiles_lst_average(self, smiles_lst):
-    #     embed_all = self.forward_smiles_lst(smiles_lst)
-    #     embed_avg = torch.mean(embed_all, 0).view(1,-1)
-    #     return embed_avg
-
-    # def forward_smiles_lst_lst(self, smiles_lst_lst):
-    #     # Each observation is a list of smiles, so we need to average the embeddings of each smiles
-    #     embed_lst = [self.forward_smiles_lst_average(smiles_lst) for smiles_lst in smiles_lst_lst]
-    #     embed_all = torch.cat(embed_lst, 0)
-    #     return embed_all
-
     def forward_smiles_lst_lst(self, smiles_lst_lst):
         ids = []
         graphs = []
@@ -283,15 +263,21 @@ class HintClinicalModule(LightningModule):
         # optimizer = self.optimizer(params=filter(lambda p: p.requires_grad, self.parameters()))
         if self.scheduler is not None:
             scheduler = self.scheduler(optimizer=optimizer)
+
+            lr_scheduler_dict = {
+                "scheduler": scheduler,
+                "monitor": f"{self.log_prefix}/val/loss",
+                "interval": "epoch",
+                "frequency": 1,
+                "name": f"lr/{self.log_prefix}",
+            }
+
+            if isinstance(scheduler, WarmUpWrapper) and isinstance(scheduler.wrapped_scheduler, ReduceLROnPlateau):
+                lr_scheduler_dict["reduce_on_plateau"] = True
+
             return {
                 "optimizer": optimizer,
-                "lr_scheduler": {
-                    "scheduler": scheduler,
-                    "monitor": f"{self.log_prefix}/val/loss",
-                    "interval": "epoch",
-                    "frequency": 1,
-                    "name": self.log_prefix,
-                },
+                "lr_scheduler": lr_scheduler_dict,
             }
         return {"optimizer": optimizer}
 

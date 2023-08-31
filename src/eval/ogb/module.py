@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from lightning import LightningModule
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MeanMetric, MetricCollection
 from torchmetrics.classification import (
     BinaryAccuracy,
@@ -19,6 +20,7 @@ from torchmetrics.classification import (
 )
 from torchmetrics.regression import MeanAbsoluteError, MeanSquaredError, R2Score
 
+from src.modules.lr_schedulers.warmup_wrapper import WarmUpWrapper
 from src.utils import pylogger
 
 RMSE = partial(MeanSquaredError, squared=False)
@@ -229,15 +231,21 @@ class OGBClassificationModule(LightningModule):
         # optimizer = self.optimizer(params=filter(lambda p: p.requires_grad, self.parameters()))
         if self.scheduler is not None:
             scheduler = self.scheduler(optimizer=optimizer)
+
+            lr_scheduler_dict = {
+                "scheduler": scheduler,
+                "monitor": f"{self.log_prefix}/val/loss",
+                "interval": "epoch",
+                "frequency": 1,
+                "name": f"lr/{self.log_prefix}",
+            }
+
+            if isinstance(scheduler, WarmUpWrapper) and isinstance(scheduler.wrapped_scheduler, ReduceLROnPlateau):
+                lr_scheduler_dict["reduce_on_plateau"] = True
+
             return {
                 "optimizer": optimizer,
-                "lr_scheduler": {
-                    "scheduler": scheduler,
-                    "monitor": f"{self.log_prefix}/val/loss",
-                    "interval": "epoch",
-                    "frequency": 1,
-                    "name": self.log_prefix,
-                },
+                "lr_scheduler": lr_scheduler_dict,
             }
         return {"optimizer": optimizer}
 

@@ -69,7 +69,7 @@ model:
     threshold: 1.0e-4
 
   optimizer:
-    weight_decay: 1e-3
+    weight_decay: 3e-4
 
   example_input_path: null
   # example_input_path: ${paths.data_root_dir}/jump/models/example_batch/simple_jump_cl/batch.pth

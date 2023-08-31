@@ -8,12 +8,12 @@ phase_II:
   model:
     _target_: src.eval.clinical_prediction.module.HintClinicalModulePhaseII
 
-    lr: 1e-3
+    lr: 5e-4
 
     compound_transform: ${data.compound_transform}
 
     scheduler:
-      warmup_steps: [10]
+      warmup_steps: [5]
 
     example_input_path: ${model.example_input_path}
     # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt

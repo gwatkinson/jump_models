@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from lightning import LightningModule
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MeanMetric, MetricCollection
 from torchmetrics.classification import (
     MulticlassAccuracy,
@@ -15,6 +16,7 @@ from torchmetrics.classification import (
     MulticlassF1Score,
 )
 
+from src.modules.lr_schedulers.warmup_wrapper import WarmUpWrapper
 from src.utils import pylogger
 
 logger = pylogger.get_pylogger(__name__)
@@ -223,121 +225,24 @@ class JumpMOAImageModule(LightningModule):
             [group for group in params_groups if group["name"] in group_to_keep],
             lr=self.lr,
         )
-        # optimizer = self.optimizer(params=filter(lambda p: p.requires_grad, self.parameters()))
+
         if self.scheduler is not None:
             scheduler = self.scheduler(optimizer=optimizer)
+
+            lr_scheduler_dict = {
+                "scheduler": scheduler,
+                "monitor": "jump_moa/image/val/loss",
+                "interval": "epoch",
+                "frequency": 1,
+                "name": "lr/jump_moa/image",
+            }
+
+            if isinstance(scheduler, WarmUpWrapper) and isinstance(scheduler.wrapped_scheduler, ReduceLROnPlateau):
+                lr_scheduler_dict["reduce_on_plateau"] = True
+
             return {
                 "optimizer": optimizer,
-                "lr_scheduler": {
-                    "scheduler": scheduler,
-                    "monitor": "jump_moa/image/val/loss",
-                    "interval": "epoch",
-                    "frequency": 1,
-                    "name": "jump_moa/image",
-                },
+                "lr_scheduler": lr_scheduler_dict,
             }
-        return {"optimizer": optimizer}
 
-
-class JumpMOAImageGraphModule(JumpMOAImageModule):
-    dataset_name = "image_graph"
-
-    def __init__(
-        self,
-        cross_modal_module: Optional[LightningModule],
-        optimizer: torch.optim.Optimizer,
-        scheduler: torch.optim.lr_scheduler,
-        criterion: Optional[torch.nn.Module] = None,
-        image_encoder: Optional[nn.Module] = None,
-        molecule_encoder: Optional[nn.Module] = None,
-        image_encoder_attribute_name: str = "image_encoder",
-        molecule_encoder_attribute_name: str = "molecule_encoder",
-        example_input: Optional[torch.Tensor] = None,
-        example_input_path: Optional[str] = None,
-        **kwargs,
-    ):
-        super().__init__(
-            cross_modal_module=cross_modal_module,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            criterion=criterion,
-            image_encoder=image_encoder,
-            image_encoder_attribute_name=image_encoder_attribute_name,
-            example_input=example_input,
-            example_input_path=example_input_path,
-        )
-        self.save_hyperparameters(
-            logger=False, ignore=["cross_modal_module", "image_encoder", "molecule_encoder", "criterion"]
-        )
-
-        # encoders and head
-        if molecule_encoder is not None:
-            self.molecule_encoder = molecule_encoder
-        else:
-            self.molecule_encoder = getattr(cross_modal_module, molecule_encoder_attribute_name)
-        self.molecule_embedding_dim = self.molecule_encoder.out_dim
-        self.image_embedding_dim = self.image_encoder.out_dim
-        self.embedding_dim = self.molecule_embedding_dim + self.image_embedding_dim
-        self.head = nn.Sequential(
-            nn.Linear(self.embedding_dim, self.embedding_dim),
-            nn.ReLU(),
-            nn.Linear(self.embedding_dim, self.num_classes),
-        )
-
-    def extract(self, image, compound):
-        image_emb = self.image_encoder(image)
-        compound_emb = self.molecule_encoder(compound)
-        return torch.cat([image_emb, compound_emb], dim=1)
-
-    def forward(self, image, compound, **kwargs):
-        emb = self.extract(image, compound)
-        return self.head(emb)
-
-    def configure_optimizers(self):
-        params_groups = [
-            {
-                "params": list(self.head.parameters()),
-                "name": "moa_image_graph_head",
-            },
-            {
-                "params": list(self.image_encoder.parameters()),
-                "name": "moa_image_encoder",
-            },
-            {
-                "params": list(self.molecule_encoder.parameters()),
-                "name": "moa_molecule_encoder",
-            },
-        ]
-        filtered_params_groups = [
-            {
-                "params": list(filter(lambda p: p.requires_grad, group["params"])),
-                "name": group["name"],
-            }
-            for group in params_groups
-        ]
-
-        params_len = {group["name"]: len(group["params"]) for group in params_groups}
-        group_lens = {group["name"]: len(group["params"]) for group in filtered_params_groups}
-
-        group_to_keep = [group["name"] for group in filtered_params_groups if group_lens[group["name"]] > 0]
-
-        logger.info(f"Number of params in each groups: {params_len}")
-        logger.info(f"Number of require grad params in each groups: {group_lens}")
-
-        optimizer = self.optimizer(
-            [group for group in params_groups if group["name"] in group_to_keep],
-            lr=self.lr,
-        )
-        # optimizer = self.optimizer(params=filter(lambda p: p.requires_grad, self.parameters()))
-        if self.scheduler is not None:
-            scheduler = self.scheduler(optimizer=optimizer)
-            return {
-                "optimizer": optimizer,
-                "lr_scheduler": {
-                    "scheduler": scheduler,
-                    "monitor": "jump_moa/image/val/loss",
-                    "interval": "epoch",
-                    "frequency": 1,
-                },
-            }
         return {"optimizer": optimizer}

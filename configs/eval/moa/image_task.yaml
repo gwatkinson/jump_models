@@ -5,21 +5,16 @@ defaults:
   - /callbacks/eval/moa.yaml@moa_image_task.callbacks  #! This adds the callbacks
 
 moa_image_task:
-  evaluator:
-    _target_: src.eval.evaluators.Evaluator
-    name: JumpMOAImageModule
-    visualize_kwargs: null
+  model:
+    _target_: src.eval.moa.module.JumpMOAImageModule
 
+    lr: 1e-4
+    num_classes: 9  # when min is set to 500, else 26
 
-  callbacks:
-    model_checkpoint:
-      dirpath: ${eval.moa_image_task.trainer.default_root_dir}/checkpoints
+    scheduler:
+      warmup_steps: [10]
 
-    # image_freezer:
-    #   unfreeze_backbone_at_epoch: 11
-    #   backbone_initial_ratio_lr: 5e-2
-    #   group_name: moa_image_encoder_unfrozen
-
+    example_input_path: ${model.example_input_path}
 
 
   datamodule:
@@ -59,18 +54,6 @@ moa_image_task:
 
     use_cache: True
     force_split: False
-
-
-  model:
-    _target_: src.eval.moa.module.JumpMOAImageModule
-
-    lr: 5e-3
-    num_classes: 9  # when min is set to 500, else 26
-
-    scheduler:
-      warmup_steps: [10]
-
-    example_input_path: ${model.example_input_path}
     # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
 
 
@@ -80,6 +63,17 @@ moa_image_task:
     min_epochs: 0
     max_epochs: 100
     log_every_n_steps: 1
-    gradient_clip_val: 0.5
+    # gradient_clip_val: 0.5
     num_sanity_val_steps: 1
     check_val_every_n_epoch: 1
+
+
+  evaluator:
+    _target_: src.eval.evaluators.Evaluator
+    name: JumpMOAImageModule
+    visualize_kwargs: null
+
+
+  callbacks:
+    model_checkpoint:
+      dirpath: ${eval.moa_image_task.trainer.default_root_dir}/checkpoints

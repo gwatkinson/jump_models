@@ -270,7 +270,7 @@ class BasicJUMPModule(LightningModule):
                 "interval": self.interval,
                 "frequency": self.frequency,
                 "strict": True,
-                "name": "jump_cl",
+                "name": "lr/jump_cl",
             }
 
             if isinstance(scheduler, WarmUpWrapper) and isinstance(scheduler.wrapped_scheduler, ReduceLROnPlateau):

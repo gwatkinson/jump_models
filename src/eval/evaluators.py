@@ -58,6 +58,8 @@ class Evaluator:
 
     def run(self):
         """Run the evaluator."""
+        logger.info(f"Running evaluator {self.name}")
+
         self.finetune()
         outs = self.evaluate()
         self.visualize(outs, **self.visualize_kwargs)
