@@ -125,7 +125,7 @@ def main(ckpt_path: str, eval) -> None:
 
     cfg.ckpt_path = ckpt_path
 
-    eval_cfg_path = Path(cfg.root_dir) / "configs" / "eval" / f"{eval}.yaml"
+    eval_cfg_path = Path(cfg.paths.root_dir) / "configs" / "eval" / f"{eval}.yaml"
     eval_cfg = OmegaConf.load(eval_cfg_path)
 
     cfg.eval = eval_cfg
