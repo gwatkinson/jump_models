@@ -6,6 +6,7 @@ from typing import List, Optional, Tuple
 import click
 import hydra
 import pyrootutils
+from colorlog import ColoredFormatter
 from hydra import compose, initialize_config_dir
 from lightning import LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
@@ -33,9 +34,27 @@ pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 # ------------------------------------------------------------------------------------ #
 
 
-log = utils.get_pylogger(__name__)
+LOG_LEVEL = logging.INFO
+LOGFORMAT = "  %(log_color)s%(levelname)-8s%(reset)s | %(log_color)s%(message)s%(reset)s"
+logging.root.setLevel(LOG_LEVEL)
+formatter = ColoredFormatter(LOGFORMAT)
+stream = logging.StreamHandler()
+stream.setLevel(LOG_LEVEL)
+stream.setFormatter(formatter)
 
-logging.basicConfig(level=logging.INFO)
+log = utils.get_pylogger(__name__)
+log.setLevel(LOG_LEVEL)
+log.addHandler(stream)
+
+# import colorlog
+
+# handler = colorlog.StreamHandler()
+# handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(levelname)s:%(name)s:%(message)s'))
+
+# log = colorlog.getLogger(__name__)
+# log.addHandler(handler)
+
+# logging.basicConfig(level=logging.INFO)
 
 
 @utils.task_wrapper
