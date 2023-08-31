@@ -171,6 +171,9 @@ class CNNEncoder(nn.Module):
         else:
             raise
 
+        self.backbone.to("cpu")
+        self.projection_head.to("cpu")
+
         self.dropouts = nn.ModuleList([nn.Dropout(0.5) for _ in range(5)])
 
     def extract(self, x):
