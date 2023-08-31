@@ -71,7 +71,7 @@ class OGBClassificationModule(LightningModule):
         self.molecule_encoder = copy.deepcopy(getattr(cross_modal_module, molecule_encoder_attribute_name))
         self.model_name = self.molecule_encoder.__class__.__name__
 
-        self.embedding_dim = self.molecule_encoder["out_dim"]
+        self.embedding_dim = self.molecule_encoder.out_dim
         self.head = nn.Linear(self.embedding_dim, self.out_dim)
 
         # lr

@@ -131,7 +131,13 @@ class BasicJUMPModule(LightningModule):
         losses = self.criterion(image_emb, compound_emb)
         if isinstance(losses, dict):
             loss = losses.pop("loss")
-            self.log_dict({f"{stage}/{k}": v for k, v in losses.items()}, batch_size=batch_size, **kwargs)
+            self.log_dict(
+                {f"{stage}/{k}": v for k, v in losses.items()},
+                batch_size=batch_size,
+                prog_bar=False,
+                on_step=(stage == "train"),
+                on_epoch=True,
+            )
         else:
             loss = losses
 

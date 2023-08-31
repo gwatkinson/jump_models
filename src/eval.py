@@ -63,8 +63,8 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     if cfg.get("load_first_bacth"):
         log.info("Loading first batch...")
         datamodule.prepare_data()
-        datamodule.setup("fit")
-        dl = datamodule.train_dataloader(batch_size=2)
+        datamodule.setup("test")
+        dl = datamodule.test_dataloader(batch_size=2)
         example_input = next(iter(dl))
         model.example_input_array = example_input
 
@@ -114,8 +114,9 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
 
 @click.command()
 @click.argument("ckpt_path", type=click.Path(exists=True))
-@click.option("--eval", "-e", type=str, help="Evaluator config to run.", default=None)
-def main(ckpt_path: str, eval) -> None:
+@click.option("--eval_cfg", "-e", type=str, help="Evaluator config to run.", default=None)
+@click.option("--devices", "-d", help="List of devices to use", multiple=True, type=int)
+def main(ckpt_path: str, eval_cfg, devices) -> None:
     """Main entrypoint for evaluation.
 
     Loads the config from the relative position of the checkpoint path.
@@ -130,7 +131,7 @@ def main(ckpt_path: str, eval) -> None:
 
     cfg.ckpt_path = ckpt_path
 
-    if eval is not None:
+    if eval_cfg is not None:
         eval_cfg_path = Path(cfg.paths.root_dir) / "configs" / "eval" / f"{eval}.yaml"
         eval_cfg = OmegaConf.load(eval_cfg_path)
 
@@ -140,6 +141,11 @@ def main(ckpt_path: str, eval) -> None:
         log.info(OmegaConf.to_yaml(eval_hydra))
 
         cfg.eval = eval_cfg
+
+    log.info(OmegaConf.to_yaml(cfg.eval))
+
+    if devices is not None:
+        cfg.trainer.devices = list(devices)
 
     # apply extra utilities
     # (e.g. ask for tags if none are provided in cfg, print cfg tree, etc.)
