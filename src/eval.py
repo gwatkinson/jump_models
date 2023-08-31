@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 from typing import List, Optional, Tuple
@@ -32,6 +33,8 @@ pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
 
 log = utils.get_pylogger(__name__)
+
+logging.basicConfig(level=logging.INFO)
 
 
 @utils.task_wrapper
@@ -87,17 +90,19 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info("Starting testing!")
     trainer.test(model=model, datamodule=datamodule, ckpt_path=cfg.ckpt_path)  # ? This is enough to load the weights ?
 
-    log.info("Starting evaluation!")
-    log.info("Instantiating evaluators ...")
-    evaluator_list: Optional[EvaluatorList] = utils.instantiate_evaluator_list(
-        cfg.get("eval"),
-        cross_modal_module=model,
-        logger=logger,
-        ckpt_path=cfg.ckpt_path,
-    )
+    if cfg.get("evaluate"):
+        log.info("Starting evaluation!")
 
-    if evaluator_list is not None:
-        evaluator_list.run()
+        log.info("Instantiating evaluators ...")
+        evaluator_list: Optional[EvaluatorList] = utils.instantiate_evaluator_list(
+            cfg.get("eval"),
+            model_cfg=cfg.model,
+            logger=logger,
+            ckpt_path=cfg.ckpt_path,
+        )
+
+        if evaluator_list is not None:
+            evaluator_list.run()
 
     metric_dict = trainer.callback_metrics
 
@@ -109,7 +114,7 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
 
 @click.command()
 @click.argument("ckpt_path", type=click.Path(exists=True))
-@click.option("--eval", "-e", type=str, help="Evaluator config to run.", default="evaluators")
+@click.option("--eval", "-e", type=str, help="Evaluator config to run.", default=None)
 def main(ckpt_path: str, eval) -> None:
     """Main entrypoint for evaluation.
 
@@ -125,10 +130,16 @@ def main(ckpt_path: str, eval) -> None:
 
     cfg.ckpt_path = ckpt_path
 
-    eval_cfg_path = Path(cfg.paths.root_dir) / "configs" / "eval" / f"{eval}.yaml"
-    eval_cfg = OmegaConf.load(eval_cfg_path)
+    if eval is not None:
+        eval_cfg_path = Path(cfg.paths.root_dir) / "configs" / "eval" / f"{eval}.yaml"
+        eval_cfg = OmegaConf.load(eval_cfg_path)
 
-    cfg.eval = eval_cfg
+        log.info(OmegaConf.to_yaml(eval_cfg))
+
+        eval_hydra = hydra.utils.instantiate(eval_cfg)
+        log.info(OmegaConf.to_yaml(eval_hydra))
+
+        cfg.eval = eval_cfg
 
     # apply extra utilities
     # (e.g. ask for tags if none are provided in cfg, print cfg tree, etc.)
