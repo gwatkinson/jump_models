@@ -11,6 +11,7 @@ data_root_dir: ${paths.projects_dir}/cpjump1
 metadata_path: ${paths.data_root_dir}/jump/models/metadata
 raw_metadata_path: ${paths.data_root_dir}/jump/metadata
 load_data_path: ${paths.data_root_dir}/jump/load_data
+model_dir: ${paths.data_root_dir}/jump/s3_cache
 
 # path to split folders
 split_path: ${paths.data_root_dir}/jump/models/splits
