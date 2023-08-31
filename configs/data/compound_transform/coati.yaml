@@ -1,2 +1,4 @@
 _target_: src.modules.compound_transforms.coati.COATITransform
 compound_str_type: inchi
+pretrained_name: ${model.molecule_encoder.pretrained_name}
+padding_length: ${model.molecule_encoder.padding_length}

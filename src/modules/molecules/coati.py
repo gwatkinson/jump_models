@@ -1,9 +1,8 @@
 """Molecule encoder using the models from
 https://github.com/terraytherapeutics/COATI/tree/main."""
 
-from typing import List, Literal, Optional
+from typing import Literal
 
-import torch
 import torch.nn as nn
 
 from src.coati.models.io import load_e3gnn_smiles_clip_e2e
@@ -43,27 +42,22 @@ class COATI(nn.Module):
         out_dim: int = 512,
         padding_length: int = 250,
         freeze: bool = False,
-        device: Optional[str] = None,
     ):
         super().__init__()
 
         self.pretrained_name = pretrained_name
-        self.out_dim = out_dim
-        self.padding_length = padding_length
-
-        self.device = torch.device(device) if device is not None else None
-
         encoder, tokenizer = load_e3gnn_smiles_clip_e2e(
             doc_url=COATI_NAME_TO_URL[pretrained_name],
             freeze=freeze,
         )
 
+        self.padding_length = padding_length
         tokenizer.n_seq = padding_length
         self.tokenizer = tokenizer
 
         self.backbone = encoder.xformer
-        self.backbone
 
+        self.out_dim = out_dim
         self.pretrained_dim = encoder.xformer_config.n_embd
 
         self.projection_head = nn.Sequential(
@@ -76,36 +70,10 @@ class COATI(nn.Module):
 
         logger.info(f"Using pretrained model: {self.pretrained_name}")
 
-    def to(self, device):  # TODO: remove this once we have a proper device management
-        module = super().to(device)
-        module.device = device
-        module.backbone = module.backbone.to(device)
-        module.projection_head = module.projection_head.to(device)
-        return module
-
-    def tokenize(self, smiles: List[str]) -> torch.Tensor:
-        batch_tokens = torch.tensor(
-            [
-                self.tokenizer.tokenize_text("[SMILES]" + s + "[STOP]", pad=True)
-                if s != "*"
-                else self.tokenizer.tokenize_text("[SMILES]C[STOP]", pad=True)
-                for s in smiles
-            ],
-            # device="cpu",
-            dtype=torch.int,
-        )
-
-        return batch_tokens
-
     def extract(self, idx):
         return self.backbone.encode(idx, self.tokenizer)
 
-    def forward(self, smiles: List[str], **kwargs):
-        tokens = self.tokenize(smiles)
-
-        if self.device:
-            tokens = tokens.to(self.device)
-
+    def forward(self, tokens, **kwargs):
         z = self.extract(tokens)
         z = self.projection_head(z)
         return z
