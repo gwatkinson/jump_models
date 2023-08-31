@@ -45,5 +45,10 @@ class COATITransform(DefaultCompoundTransform):
             ],
             dtype=torch.int,
         ).squeeze()
+        # except Exception:  # TODO: Is this the way to go ? Can we skip the observation if it fails ?
+        #     tokens = torch.tensor(
+        #         [self.tokenizer.tokenize_text("[SMILES][STOP]", pad=True)],
+        #         dtype=torch.int,
+        #     ).squeeze()
 
         return tokens

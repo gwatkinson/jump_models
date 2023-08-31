@@ -26,5 +26,5 @@ _default_collate_fn_map[DGLGraph] = collate_dgl_graph_fn
 _default_collate_fn_map[SmilesList] = collate_smiles_list
 
 
-def default_collate(x):
-    return collate(x, collate_fn_map=_default_collate_fn_map)
+def default_collate(batch):
+    return collate(batch, collate_fn_map=_default_collate_fn_map)

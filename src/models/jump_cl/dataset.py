@@ -58,17 +58,32 @@ class MoleculeImageDataset(Dataset):
         """
         super().__init__()
 
-        # data
-        self.load_df = load_df
-        self.compound_dict = compound_dict
-        self.compound_list = list(self.compound_dict.keys())
-        self.n_compounds = len(self.compound_list)
-        self.image_list = self.load_df.index.tolist()
-        self.n_images = len(self.image_list)
-
         # transforms
         self.transform = transform
         self.compound_transform = compound_transform
+
+        # data
+        self.load_df = load_df
+        self.compound_dict = compound_dict
+        self.image_list = self.load_df.index.tolist()
+
+        py_logger.info("Checking compounds with transformation...")
+        bad_compounds = []
+        for compound in self.compound_dict:
+            try:
+                self.compound_transform(compound)
+            except Exception as e:
+                bad_compounds.append(compound)
+                py_logger.warning(f"Could not transform compound {compound}. Error: {e}")
+
+        for compound in bad_compounds:
+            del self.compound_dict[compound]  # remove bad compounds from the dict
+
+        self.compound_list = list(self.compound_dict.keys())
+
+        # lenghts
+        self.n_compounds = len(self.compound_list)
+        self.n_images = len(self.image_list)
 
         # sampler
         self.max_tries = max_tries
@@ -81,9 +96,9 @@ class MoleculeImageDataset(Dataset):
         self.channels = channels
         self.col_fstring = col_fstring
 
-        # caching
-        self.use_compond_cache = use_compond_cache
-        self.cached_compounds = {}
+        # # caching
+        # self.use_compond_cache = use_compond_cache
+        # self.cached_compounds = {}
 
     def __len__(self):
         return self.n_compounds
