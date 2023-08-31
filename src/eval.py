@@ -109,7 +109,8 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
 
 @click.command()
 @click.argument("ckpt_path", type=click.Path(exists=True))
-def main(ckpt_path: str) -> None:
+@click.option("--eval", "-e", type=str, help="Evaluator config to run.", default="evaluators")
+def main(ckpt_path: str, eval) -> None:
     """Main entrypoint for evaluation.
 
     Loads the config from the relative position of the checkpoint path.
@@ -121,6 +122,13 @@ def main(ckpt_path: str) -> None:
 
     cfg.paths.output_dir = Path(ckpt_path).parent.parent
     cfg.paths.work_dir = os.getcwd()
+
+    cfg.ckpt_path = ckpt_path
+
+    eval_cfg_path = Path(cfg.root_dir) / "configs" / "eval" / f"{eval}.yaml"
+    eval_cfg = OmegaConf.load(eval_cfg_path)
+
+    cfg.eval = eval_cfg
 
     # apply extra utilities
     # (e.g. ask for tags if none are provided in cfg, print cfg tree, etc.)
