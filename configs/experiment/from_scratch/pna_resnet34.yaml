@@ -68,9 +68,8 @@ model:
     pretrained: False
 
   scheduler:
-    # warmup_steps:
-    #   - ${model.scheduler.last_epoch}
-    last_epoch: 10
+    warmup_epochs: 10
+    max_epochs: ${trainer.max_epochs}
 
   example_input_path: null
 

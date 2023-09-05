@@ -64,8 +64,8 @@ model:
   lr: 1e-4
 
   scheduler:
-    warmup_steps: [5]
-    last_epoch: 5
+    warmup_epochs: 5
+    max_epochs: ${trainer.max_epochs}
 
   example_input_path: null
 

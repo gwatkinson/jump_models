@@ -16,8 +16,8 @@ optimizer:
   lr: ${model.lr}
 
 scheduler:
-  T_max: ${trainer.max_epochs}
-  warmup_epochs: 5
+    warmup_epochs: 10
+    max_epochs: ${trainer.max_epochs}
 
 # /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
 example_input_path: ???
