@@ -56,8 +56,6 @@ def print_config_tree(
 
     # add fields from `print_order` to queue
     for field in print_order:
-        if field == "eval" and not print_eval:
-            continue
         queue.append(field) if field in cfg else log.warning(
             f"Field '{field}' not found in config. Skipping '{field}' config printing..."
         )
@@ -69,6 +67,9 @@ def print_config_tree(
 
     # generate config tree from queue
     for field in queue:
+        if field == "eval" and not print_eval:
+            continue
+
         branch = tree.add(field, style=style, guide_style=style)
 
         config_group = cfg[field]

@@ -70,9 +70,9 @@ class ScaffoldSplitter(BaseSplitter):
 
         return output
 
-    def split_train(self) -> List[str]:
+    def split_train(self, total_train_cpds=None) -> List[str]:
+        total_train_cpds = total_train_cpds or self.total_train_cpds
         train_cutoff = self.train
-        total_train_cpds = [self.compound_list[i] for i in self.total_train_cpds]
         scaffold_sets = self.generate_scaffolds(total_train_cpds)
 
         train_cpds = []

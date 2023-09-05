@@ -293,7 +293,7 @@ class BasicJUMPDataModule(LightningDataModule):
                 py_logger.debug(f"len(retrieval_ids): {len(retrieval_ids)}")
 
                 if len(retrieval_ids) > 0:
-                    py_logger.debug(f"Saving retrieval ids to {retrieval_ids}")
+                    py_logger.debug(f"Saving retrieval ids to {retrieval_ids_path}")
                     retrieval_ids_path.parent.mkdir(exist_ok=True)
                     pd.Series(retrieval_ids).to_csv(retrieval_ids_path, index=False)
 
