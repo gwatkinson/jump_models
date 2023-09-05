@@ -22,9 +22,7 @@ tags:
   - from_scratch
   - med_jump_cl
   - pna
-  - resnet
-  - ${model.molecule_encoder.pretrained_name}
-  - ${model.image_encoder.instance_model_name}
+  - resnet34
 
 seed: 12345
 
