@@ -6,7 +6,7 @@ from src.modules.layers.utils import _get_layer
 from src.modules.losses import ClampedParameter
 from src.utils import pylogger
 
-log = pylogger.get_logger(__name__)
+log = pylogger.get_pylogger(__name__)
 
 
 class TemperatureLoggingCallback(Callback):
