@@ -2,7 +2,7 @@ defaults:
   - /callbacks/lightning/rich_progress_bar@_here_
   - /callbacks/lightning/model_checkpoint@_here_
   - /callbacks/lightning/early_stopping@_here_
-  - /callbacks/lightning/lr_finder@_here_
+  # - /callbacks/lightning/lr_finder@_here_
   - /callbacks/custom/wandb_plotter@_here_
   - /callbacks/custom/nan_loss@_here_
   # - /callbacks/custom/molecule_freezer@_here_
@@ -26,8 +26,8 @@ early_stopping:
 wandb_plotter:
   watch: False
   log_freq: 50
-  plot_every_n_epoch: 4
-  prefix: jump_moa/image/plots
+  plot_every_n_epoch: 1
+  prefix: ???
   cmap: Oranges_r
   fmt: ".2f"
   per_fmt: ".1%"

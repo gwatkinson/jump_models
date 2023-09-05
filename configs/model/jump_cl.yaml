@@ -4,8 +4,8 @@ defaults:
   - image_encoder: ???
   - molecule_encoder: ???
   - criterion: info_nce.yaml
-  - optimizer: adam.yaml
-  - scheduler: on_plateau_with_warmup.yaml
+  - optimizer: adamw.yaml
+  - scheduler: cosine_annealing_with_warmup.yaml
   - _self_
 
 embedding_dim: ???
@@ -14,6 +14,12 @@ batch_size: ${data.batch_size}
 
 optimizer:
   lr: ${model.lr}
+
+scheduler:
+  T_max: ${trainer.max_epochs}
+  warmup_steps:
+    - ${model.scheduler.last_epoch}
+  last_epoch: 5
 
 # /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
 example_input_path: ???
@@ -27,3 +33,5 @@ image_backbone: backbone
 image_head: projection_head
 molecule_backbone: backbone
 molecule_head: projection_head
+
+split_lr_in_groups: False

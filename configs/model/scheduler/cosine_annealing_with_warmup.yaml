@@ -1,6 +1,10 @@
-_target_: flash.core.optimizers.LinearWarmupCosineAnnealingLR  # or pl_bolts.optimizers.lr_scheduler.LinearWarmupCosineAnnealingLR but both or not compatible with lightning 2.0.0
-_partial_: true
-warmup_epochs: 15
-max_epochs: ${trainer.max_epochs}
-warmup_start_lr: 1e-5
-eta_min: 1e-7
+_target_: src.modules.lr_schedulers.warmup_wrapper.WarmUpWrapper
+_partial_: True
+warmup_steps:
+  - ???
+interpolation: linear
+
+wrapped_scheduler: CosineAnnealingLR
+T_max: ${trainer.max_epochs}
+eta_min: 0
+last_epoch: -1

@@ -13,10 +13,10 @@ drop_last: null
 
 
 transform:
-  _target_: src.modules.transforms.DefaultJUMPTransform
+  _target_: src.modules.transforms.SimpleTransform
   _convert_: object
   size: ???
-  dim: [-2, -1]
+  # dim: [-2, -1] # for normalizing
 
 force_split: False
 

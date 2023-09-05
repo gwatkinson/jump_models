@@ -1,6 +1,6 @@
 defaults:
-  - /model/optimizer/adam.yaml@bbbp.model.optimizer
-  - /model/scheduler/on_plateau_with_warmup.yaml@bbbp.model.scheduler
+  - /model/optimizer/adamw.yaml@bbbp.model.optimizer
+  - /model/scheduler/cosine_annealing_with_warmup.yaml@bbbp.model.scheduler
   - /trainer/gpu.yaml@bbbp.trainer
   - /callbacks/eval/ogb.yaml@bbbp.callbacks
 
@@ -12,6 +12,7 @@ bbbp:
 
     scheduler:
       warmup_steps: [3]
+      last_epoch: 3
 
     example_input_path: ${model.example_input_path}
     # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
@@ -27,6 +28,7 @@ bbbp:
     pin_memory: False
     prefetch_factor: 2
 
+    split_lr_in_groups: False
 
     compound_transform: ${data.compound_transform}
 
@@ -62,3 +64,6 @@ bbbp:
     model_checkpoint:
       monitor: ogb/bbbp/val/loss
       dirpath: ${eval.bbbp.trainer.default_root_dir}/checkpoints
+
+    wandb_plotter:
+      prefix: ogb/bbbp

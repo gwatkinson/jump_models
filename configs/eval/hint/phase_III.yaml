@@ -1,6 +1,6 @@
 defaults:
-  - /model/optimizer/adam.yaml@phase_III.model.optimizer
-  - /model/scheduler/on_plateau_with_warmup.yaml@phase_III.model.scheduler
+  - /model/optimizer/adamw.yaml@phase_III.model.optimizer
+  - /model/scheduler/cosine_annealing_with_warmup.yaml@phase_III.model.scheduler
   - /trainer/gpu.yaml@phase_III.trainer
   - /callbacks/eval/hint.yaml@phase_III.callbacks
 
@@ -14,6 +14,7 @@ phase_III:
 
     scheduler:
       warmup_steps: [5]
+      last_epoch: 5
 
     example_input_path: ${model.example_input_path}
     # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
@@ -22,7 +23,9 @@ phase_III:
   datamodule:
     _target_: src.eval.clinical_prediction.datamodule.HintClinicalDataModulePhaseIII
 
-    hint_dir: ${paths.data_root_dir}/hint/
+    hint_dir: ${paths.data_root_dir}/hint
+
+    split_lr_in_groups: False
 
     smiless_col: smiless
     label_col: label
@@ -34,7 +37,7 @@ phase_III:
 
 
   trainer:
-    default_root_dir: ${paths.output_dir}/eval/hint/phase_III/
+    default_root_dir: ${paths.output_dir}/eval/hint/phase_III
     devices: ${trainer.devices}
     min_epochs: 0
     max_epochs: 200
@@ -57,4 +60,7 @@ phase_III:
     model_checkpoint:
       monitor: hint/phase_III/val/loss
       dirpath: ${eval.phase_III.trainer.default_root_dir}/checkpoints
+
+    wandb_plotter:
+      prefix: hint/phase_III
 

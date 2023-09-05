@@ -1,0 +1,9 @@
+temperature_logger:
+  _target_: src.callbacks.temperature_log.TemperatureLoggingCallback
+
+  attribute_name:
+    - criterion
+    - temperature
+  key: model/temperature
+  interval: step
+  frequency: 1

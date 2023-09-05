@@ -27,3 +27,5 @@ image_backbone: backbone
 image_head: projection_head
 molecule_backbone: null
 molecule_head: null
+
+split_lr_in_groups: False

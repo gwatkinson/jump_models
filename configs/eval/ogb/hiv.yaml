@@ -1,6 +1,6 @@
 defaults:
-  - /model/optimizer/adam.yaml@hiv.model.optimizer
-  - /model/scheduler/on_plateau_with_warmup.yaml@hiv.model.scheduler
+  - /model/optimizer/adamw.yaml@hiv.model.optimizer
+  - /model/scheduler/cosine_annealing_with_warmup.yaml@hiv.model.scheduler
   - /trainer/gpu.yaml@hiv.trainer
   - /callbacks/eval/ogb.yaml@hiv.callbacks
 
@@ -12,6 +12,7 @@ hiv:
 
     scheduler:
       warmup_steps: [3]
+      last_epoch: 3
 
     example_input_path: ${model.example_input_path}
     # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
@@ -26,6 +27,8 @@ hiv:
     num_workers: 16
     pin_memory: False
     prefetch_factor: 2
+
+    split_lr_in_groups: False
 
     compound_transform: ${data.compound_transform}
 
@@ -61,3 +64,6 @@ hiv:
     model_checkpoint:
       monitor: ogb/hiv/val/loss
       dirpath: ${eval.hiv.trainer.default_root_dir}/checkpoints
+
+    wandb_plotter:
+      prefix: ogb/hiv

@@ -5,8 +5,8 @@ defaults:
   - override /model: jump_cl.yaml
   - override /model/image_encoder: resnet18.yaml
   - override /model/molecule_encoder: coati_tall.yaml
-  - override /model/optimizer: adam.yaml
-  - override /model/scheduler: on_plateau_with_warmup.yaml
+  - override /model/optimizer: adamw.yaml
+  - override /model/scheduler: cosine_annealing_with_warmup.yaml
   - override /callbacks: default.yaml
   - override /trainer: gpu.yaml
   - override /logger: many_loggers.yaml
@@ -17,6 +17,7 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 tags:
+  - big_images
   - small_jump_cl
   - nlp_coati
   - clip_like
@@ -40,20 +41,22 @@ trainer:
   devices: ???
 
 data:
-  batch_size: 128
+  batch_size: 64
   num_workers: 24
-  prefetch_factor: 3
+  prefetch_factor: 2
   drop_last: True
 
   transform:
-    size: 128
+    size: 512
 
   splitter:
-    train: 1024
-    test: 256
-    val: 128
+    train: 4096
+    test: 8192
+    val: 4096
+    retrieval: 4096
 
-  split_path: ${paths.split_path}/fp_small3/
+  split_path: ${paths.split_path}/scaffold_split/
+  train_ids_name: train_small
 
 
 model:
@@ -62,20 +65,14 @@ model:
 
   scheduler:
     warmup_steps: [5]
-
-  optimizer:
-    weight_decay: 3e-4
+    last_epoch: 5
 
   example_input_path: null
-  # example_input_path: ${paths.data_root_dir}/jump/models/example_batch/simple_jump_cl/batch.pth
 
 callbacks:
   wandb_watcher:
     log_freq: 100
     watch_log: all
-
-  # image_backbone_freezer:
-  #   unfreeze_backbone_at_epoch: 10
 
 
 logger:

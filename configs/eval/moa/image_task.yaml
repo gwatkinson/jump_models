@@ -1,6 +1,6 @@
 defaults:
-  - /model/optimizer/adam.yaml@moa_image_task.model.optimizer
-  - /model/scheduler/on_plateau_with_warmup.yaml@moa_image_task.model.scheduler
+  - /model/optimizer/adamw.yaml@moa_image_task.model.optimizer
+  - /model/scheduler/cosine_annealing_with_warmup.yaml@moa_image_task.model.scheduler
   - /trainer/gpu.yaml@moa_image_task.trainer
   - /callbacks/eval/moa.yaml@moa_image_task.callbacks  #! This adds the callbacks
 
@@ -13,6 +13,7 @@ moa_image_task:
 
     scheduler:
       warmup_steps: [10]
+      last_epoch: 10
 
     example_input_path: ${model.example_input_path}
 
@@ -27,6 +28,8 @@ moa_image_task:
     num_workers: 16
     pin_memory: False
     prefetch_factor: 2
+
+    split_lr_in_groups: False
 
     transform: ${data.transform}
 

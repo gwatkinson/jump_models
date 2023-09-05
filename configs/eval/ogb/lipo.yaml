@@ -1,6 +1,6 @@
 defaults:
-  - /model/optimizer/adam.yaml@lipo.model.optimizer
-  - /model/scheduler/on_plateau_with_warmup.yaml@lipo.model.scheduler
+  - /model/optimizer/adamw.yaml@lipo.model.optimizer
+  - /model/scheduler/cosine_annealing_with_warmup.yaml@lipo.model.scheduler
   - /trainer/gpu.yaml@lipo.trainer
   - /callbacks/eval/ogb.yaml@lipo.callbacks
 
@@ -12,6 +12,7 @@ lipo:
 
     scheduler:
       warmup_steps: [3]
+      last_epoch: 3
 
     example_input_path: ${model.example_input_path}
     # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
@@ -26,6 +27,8 @@ lipo:
     num_workers: 16
     pin_memory: False
     prefetch_factor: 2
+
+    split_lr_in_groups: False
 
     compound_transform: ${data.compound_transform}
 
@@ -61,3 +64,6 @@ lipo:
     model_checkpoint:
       monitor: ogb/lipo/val/loss
       dirpath: ${eval.lipo.trainer.default_root_dir}/checkpoints
+
+    wandb_plotter:
+      prefix: ogb/lipo

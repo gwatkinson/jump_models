@@ -1,6 +1,6 @@
 defaults:
-  - /model/optimizer/adam.yaml@tox21.model.optimizer
-  - /model/scheduler/on_plateau_with_warmup.yaml@tox21.model.scheduler
+  - /model/optimizer/adamw.yaml@tox21.model.optimizer
+  - /model/scheduler/cosine_annealing_with_warmup.yaml@tox21.model.scheduler
   - /trainer/gpu.yaml@tox21.trainer
   - /callbacks/eval/ogb.yaml@tox21.callbacks
 
@@ -12,6 +12,7 @@ tox21:
 
     scheduler:
       warmup_steps: [3]
+      last_epoch: 3
 
     example_input_path: ${model.example_input_path}
     # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
@@ -25,6 +26,8 @@ tox21:
     num_workers: 16
     pin_memory: False
     prefetch_factor: 2
+
+    split_lr_in_groups: False
 
     compound_transform: ${data.compound_transform}
 
@@ -60,4 +63,7 @@ tox21:
     model_checkpoint:
       monitor: ogb/tox21/val/loss
       dirpath: ${eval.tox21.trainer.default_root_dir}/checkpoints
+
+    wandb_plotter:
+      prefix: ogb/tox21
 

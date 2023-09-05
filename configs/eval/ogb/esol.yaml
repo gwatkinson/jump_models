@@ -1,6 +1,6 @@
 defaults:
-  - /model/optimizer/adam.yaml@esol.model.optimizer
-  - /model/scheduler/on_plateau_with_warmup.yaml@esol.model.scheduler
+  - /model/optimizer/adamw.yaml@esol.model.optimizer
+  - /model/scheduler/cosine_annealing_with_warmup.yaml@esol.model.scheduler
   - /trainer/gpu.yaml@esol.trainer
   - /callbacks/eval/ogb.yaml@esol.callbacks
 
@@ -12,6 +12,7 @@ esol:
 
     scheduler:
       warmup_steps: [3]
+      last_epoch: 3
 
     example_input_path: ${model.example_input_path}
     # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
@@ -26,6 +27,8 @@ esol:
     num_workers: 16
     pin_memory: False
     prefetch_factor: 2
+
+    split_lr_in_groups: False
 
     compound_transform: ${data.compound_transform}
 
@@ -62,3 +65,6 @@ esol:
     model_checkpoint:
       monitor: ogb/esol/val/loss
       dirpath: ${eval.esol.trainer.default_root_dir}/checkpoints
+
+    wandb_plotter:
+      prefix: ogb/esol

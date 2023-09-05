@@ -4,7 +4,7 @@ defaults:
   - override /data: jump_cl.yaml
   - override /model: jump_cl.yaml
   - override /model/image_encoder: vit_base.yaml
-  - override /model/molecule_encoder: coati.yaml
+  - override /model/molecule_encoder: coati_tall.yaml
   - override /model/optimizer: adam.yaml
   - override /model/scheduler: on_plateau_with_warmup.yaml
   - override /callbacks: default.yaml

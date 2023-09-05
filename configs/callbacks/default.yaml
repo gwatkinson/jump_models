@@ -6,6 +6,7 @@ defaults:
   - lightning/timer@_here_
   - custom/nan_loss@_here_
   - custom/wandb_watcher@_here_
+  - custom/temperature_log@_here_
   - lightning/lr_monitor@_here_
 
 model_checkpoint:
