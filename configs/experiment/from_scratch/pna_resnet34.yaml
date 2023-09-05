@@ -64,6 +64,9 @@ model:
   embedding_dim: 512
   lr: 3e-4
 
+  image_encoder:
+    pretrained: False
+
   scheduler:
     # warmup_steps:
     #   - ${model.scheduler.last_epoch}
@@ -86,7 +89,7 @@ callbacks:
 logger:
   wandb:
     tags: ${tags}
-    project: "coati_med"
+    project: "from_scratch"
     group: null
     job_type: ""
     log_model: True
