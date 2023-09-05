@@ -30,38 +30,32 @@ class ScaffoldSplitter(BaseSplitter):
         random.shuffle(scaffold_sets)
 
         py_logger.info("Generating sets ...")
-        if self.input_type == "float":
-            train_cutoff = int(self.train * self.n_compounds)
-            val_cutoff = int(self.val * self.n_compounds)
-            test_cutoff = int(self.test * self.n_compounds)
-            retrieval_cutoff = int(self.retrieval * self.n_compounds)
-        elif self.input_type == "int":
-            train_cutoff = self.train
-            val_cutoff = self.val
-            test_cutoff = self.test
-            retrieval_cutoff = self.retrieval
 
-        train_cpds: List[str] = []
+        val_cutoff = self.val
+        test_cutoff = self.test
+        retrieval_cutoff = self.retrieval
+
+        total_train_cpds: List[str] = []
         val_cpds: List[str] = []
         test_cpds: List[str] = []
         retrieval_cpds: List[str] = []
 
         for scaffold_set in scaffold_sets:
-            if len(train_cpds) + len(scaffold_set) <= train_cutoff:
-                train_cpds += scaffold_set
-            elif len(val_cpds) + len(scaffold_set) <= val_cutoff:
+            if len(val_cpds) + len(scaffold_set) <= val_cutoff:
                 val_cpds += scaffold_set
             elif len(test_cpds) + len(scaffold_set) <= test_cutoff:
                 test_cpds += scaffold_set
             elif len(retrieval_cpds) + len(scaffold_set) <= retrieval_cutoff:
                 retrieval_cpds += scaffold_set
+            else:
+                total_train_cpds += scaffold_set  # Put all the other compounds in the train set
 
-        random.shuffle(train_cpds)
         random.shuffle(val_cpds)
         random.shuffle(test_cpds)
+        random.shuffle(total_train_cpds)
 
         output = {
-            "train": train_cpds,
+            "total_train": total_train_cpds,
             "val": val_cpds,
             "test": test_cpds,
         }
@@ -69,20 +63,43 @@ class ScaffoldSplitter(BaseSplitter):
         if retrieval_cutoff > 0:
             output["retrieval"] = retrieval_cpds
 
+        self.total_train_cpds = total_train_cpds
+        self.val_cpds = val_cpds
+        self.test_cpds = test_cpds
+        self.retrieval_cpds = retrieval_cpds
+
         return output
 
-    def generate_scaffolds(self) -> List[List[int]]:
+    def split_train(self) -> List[str]:
+        train_cutoff = self.train
+        total_train_cpds = [self.compound_list[i] for i in self.total_train_cpds]
+        scaffold_sets = self.generate_scaffolds(total_train_cpds)
+
+        train_cpds = []
+
+        for scaffold_set in scaffold_sets:
+            if len(train_cpds) + len(scaffold_set) <= train_cutoff:
+                train_cpds += scaffold_set
+            elif len(train_cpds) == train_cutoff:
+                break
+
+        random.shuffle(train_cpds)
+
+        self.train_cpds = train_cpds
+
+        return train_cpds
+
+    def generate_scaffolds(self, compound_list=None) -> List[List[int]]:
         """Generate the scaffolds.
 
         Inspired bypchem/splits/splitters.py#L1565
         """
-        if self.compound_list is None:
-            raise ValueError("Compound list is None.")
+        compound_list = compound_list or self.compound_list
 
         scaffolds = defaultdict(list)
 
         py_logger.info("Generating scaffolds ...")
-        for inchi in self.compound_list:
+        for inchi in compound_list:
             scaffold = self._generate_scaffold(inchi, include_chirality=False)
             if scaffold is None:
                 continue

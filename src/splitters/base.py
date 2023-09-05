@@ -73,10 +73,10 @@ class BaseSplitter(ABC):
 
     def __init__(
         self,
-        train: Union[float, int],
-        val: Union[float, int],
-        test: Union[float, int],
-        retrieval: Union[float, int] = 0,
+        train: int,
+        val: int,
+        test: int,
+        retrieval: int = 0,
         compound_list: Optional[List[str]] = None,
         random_state: int = 42,
     ):
@@ -84,7 +84,6 @@ class BaseSplitter(ABC):
         self.val = val
         self.test = test
         self.retrieval = retrieval or 0
-        self.total = self.train + self.val + self.test + self.retrieval
 
         self.random_state = random_state
 
@@ -94,13 +93,6 @@ class BaseSplitter(ABC):
         if self.compound_list is not None:
             py_logger.debug("Checking train, val and test values in init.")
             self.normalize_train_val_test()
-
-    @property
-    def input_type(self):
-        if isinstance(self.train, int) and isinstance(self.val, int) and isinstance(self.test, int):
-            return "int"
-        elif isinstance(self.train, float) and isinstance(self.val, float) and isinstance(self.test, float):
-            return "float"
 
     @property
     def n_compounds(self):
@@ -118,37 +110,31 @@ class BaseSplitter(ABC):
 
     def normalize_train_val_test(self):
         """Normalize the train, val and test values."""
-        if self.input_type == "int":
-            py_logger.debug("Train, val and test are integers.")
-            if self.total > self.n_compounds:
-                py_logger.warning(
-                    f"Total split size ({self.total}) is larger than the dataset size ({self.n_compounds})."
-                )
-                py_logger.warning("Normalizing train, val and test to 1.")
-                self.train = self.train / self.total
-                self.val = self.val / self.total
-                self.test = self.test / self.total
-                self.retrieval = self.retrieval / self.total
-                self.normalized = True
-        elif self.input_type == "float":
-            py_logger.debug("Train, val and test are floats. Normalizing to 1.")
-            self.train = self.train / self.total
-            self.val = self.val / self.total
-            self.test = self.test / self.total
-            self.retrieval = self.retrieval / self.total
-            self.normalized = True
-        else:
-            raise ValueError("Train, val and test must be either integers or floats.")
+        py_logger.debug("Train, val and test are integers.")
+
+        self.total_train = self.n_compounds - self.val - self.test - self.retrieval
+
+        if self.train < 0:
+            self.train = self.total_train
+
+        if (total := self.total_train + self.val + self.test + self.retrieval) > self.n_compounds:
+            py_logger.warning(f"Total split size ({total}) is larger than the dataset size ({self.n_compounds}).")
+            raise ValueError(f"Total split size ({total}) is larger than the dataset size ({self.n_compounds}).")
 
         py_logger.debug(f"Train: {self.train}, val: {self.val}, test: {self.test}, retrieval: {self.retrieval}")
 
     @abstractmethod
     def split(self) -> Dict[str, List[str]]:
-        """Split the data into train, val and test sets."""
+        """Split the data into total_train, val and test sets."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def split_train(self) -> List[str]:
+        """Subsplit a train list into a smaller train list."""
         raise NotImplementedError
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(train={self.train}, val={self.val}, test={self.test}, total={self.total}, len_compound_list={self.n_compounds})"
+        return f"{self.__class__.__name__}(train={self.train}, val={self.val}, test={self.test}, len_compound_list={self.n_compounds})"
 
     def __call__(
         self,
