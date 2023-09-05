@@ -59,6 +59,7 @@ class HintClinicalModule(LightningModule):
         example_input: Optional[torch.Tensor] = None,
         example_input_path: Optional[str] = None,
         lr: float = 1e-3,
+        split_lr_in_groups: bool = False,
         **kwargs,
     ):
         super().__init__()
@@ -106,6 +107,7 @@ class HintClinicalModule(LightningModule):
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.lr = lr
+        self.split_lr_in_groups = split_lr_in_groups
 
         # example input
         if example_input is not None:
@@ -221,14 +223,7 @@ class HintClinicalModule(LightningModule):
     def on_test_epoch_end(self):
         pass
 
-    def configure_optimizers(self):
-        """Choose what optimizers and learning-rate schedulers to use in your
-        optimization. Normally you'd need one. But in the case of GANs or
-        similar you might have multiple.
-
-        Examples:
-            https://lightning.ai/docs/pytorch/latest/common/lightning_module.html#configure-optimizers
-        """
+    def split_groups(self):
         params_groups = [
             {
                 "params": list(self.head.parameters()),
@@ -260,6 +255,14 @@ class HintClinicalModule(LightningModule):
             lr=self.lr,
         )
 
+        return optimizer
+
+    def configure_optimizers(self):
+        if self.split_lr_in_groups:
+            optimizer = self.split_groups()
+        else:
+            optimizer = self.optimizer(filter(lambda p: p.requires_grad, self.parameters()), lr=self.lr)
+
         # optimizer = self.optimizer(params=filter(lambda p: p.requires_grad, self.parameters()))
         if self.scheduler is not None:
             scheduler = self.scheduler(optimizer=optimizer)
@@ -269,7 +272,7 @@ class HintClinicalModule(LightningModule):
                 "monitor": f"{self.log_prefix}/val/loss",
                 "interval": "epoch",
                 "frequency": 1,
-                "name": f"lr/{self.log_prefix}",
+                "name": f"{self.log_prefix}/lr",
             }
 
             if isinstance(scheduler, WarmUpWrapper) and isinstance(scheduler.wrapped_scheduler, ReduceLROnPlateau):

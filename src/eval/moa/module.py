@@ -39,6 +39,7 @@ class JumpMOAImageModule(LightningModule):
         example_input_path: Optional[str] = None,
         lr: float = 1e-3,
         num_classes: int = 26,
+        split_lr_in_groups: bool = False,
         **kwargs,
     ):
         super().__init__()
@@ -77,6 +78,7 @@ class JumpMOAImageModule(LightningModule):
         self.embedding_dim = self.image_encoder.out_dim
         self.head = nn.Linear(self.embedding_dim, self.num_classes)
         self.lr = lr
+        self.split_lr_in_groups = split_lr_in_groups
 
         # loss function
         if criterion is None:
@@ -194,7 +196,7 @@ class JumpMOAImageModule(LightningModule):
     def on_test_epoch_end(self):
         pass
 
-    def configure_optimizers(self):
+    def split_groups(self):
         params_groups = [
             {
                 "params": list(self.head.parameters()),
@@ -226,6 +228,14 @@ class JumpMOAImageModule(LightningModule):
             lr=self.lr,
         )
 
+        return optimizer
+
+    def configure_optimizers(self):
+        if self.split_lr_in_groups:
+            optimizer = self.split_groups()
+        else:
+            optimizer = self.optimizer(filter(lambda p: p.requires_grad, self.parameters()), lr=self.lr)
+
         if self.scheduler is not None:
             scheduler = self.scheduler(optimizer=optimizer)
 
@@ -234,7 +244,7 @@ class JumpMOAImageModule(LightningModule):
                 "monitor": "jump_moa/image/val/loss",
                 "interval": "epoch",
                 "frequency": 1,
-                "name": "lr/jump_moa/image",
+                "name": "jump_moa/image/lr",
             }
 
             if isinstance(scheduler, WarmUpWrapper) and isinstance(scheduler.wrapped_scheduler, ReduceLROnPlateau):
