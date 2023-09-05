@@ -51,6 +51,6 @@ class TemperatureLoggingCallback(Callback):
         if self.interval == "step" and (batch_idx % self.frequency == 0):
             self.log_temperature(trainer, pl_module)
 
-    def on_train_epoch_end(self, trainer, pl_module, outputs):
+    def on_train_epoch_end(self, trainer, pl_module):
         if self.interval == "epoch" and (trainer.current_epoch % self.frequency == 0):
             self.log_temperature(trainer, pl_module)

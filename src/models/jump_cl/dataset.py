@@ -33,6 +33,7 @@ class MoleculeImageDataset(Dataset):
         channels: List[str] = default_channels,
         col_fstring: str = "FileName_Orig{channel}",
         max_tries: int = 10,
+        check_transform: bool = True,
         use_compond_cache: bool = False,
     ):
         """Initializes the dataset.
@@ -67,17 +68,19 @@ class MoleculeImageDataset(Dataset):
         self.compound_dict = compound_dict
         self.image_list = self.load_df.index.tolist()
 
-        py_logger.info("Checking compounds with transformation...")
-        bad_compounds = []
-        for compound in self.compound_dict:
-            try:
-                self.compound_transform(compound)
-            except Exception as e:
-                bad_compounds.append(compound)
-                py_logger.warning(f"Could not transform compound {compound}. Error: {e}")
+        self.check_transform = check_transform
+        if check_transform:
+            py_logger.info("Checking compounds with transformation...")
+            bad_compounds = []
+            for compound in self.compound_dict:
+                try:
+                    self.compound_transform(compound)
+                except Exception as e:
+                    bad_compounds.append(compound)
+                    py_logger.warning(f"Could not transform compound {compound}. Error: {e}")
 
-        for compound in bad_compounds:
-            del self.compound_dict[compound]  # remove bad compounds from the dict
+            for compound in bad_compounds:
+                del self.compound_dict[compound]  # remove bad compounds from the dict
 
         self.compound_list = list(self.compound_dict.keys())
 

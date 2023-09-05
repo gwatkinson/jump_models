@@ -185,7 +185,7 @@ class RegLoss(CombinationLoss):
         loss_fn: _Loss,
         alpha: float = 0.05,
         norm: bool = True,
-        mse_reg: float = 1,
+        mse_reg: float = 1.0,
         l1_reg: float = 0,
         uniformity_reg: float = 0,
         variance_reg: float = 1.0,
@@ -236,6 +236,8 @@ class RegWithTemperatureLoss(RegLoss):
             name=self.name,
             **kwargs,
         )
+
+        self.temperature = loss_fn.temperature
 
         super().__init__(
             loss_fn=loss_fn,
