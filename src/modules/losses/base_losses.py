@@ -6,7 +6,7 @@ from torch import Tensor, nn
 from torch.nn.modules.loss import _Loss
 
 
-def uniformity_loss(x1: Tensor, x2: Tensor, t=2) -> Tensor:
+def uniformity_loss_fn(x1: Tensor, x2: Tensor, t=2) -> Tensor:
     sq_pdist_x1 = torch.pdist(x1, p=2).pow(2)
     uniformity_x1 = sq_pdist_x1.mul(-t).exp().mean().log()
     sq_pdist_x2 = torch.pdist(x2, p=2).pow(2)
@@ -14,7 +14,7 @@ def uniformity_loss(x1: Tensor, x2: Tensor, t=2) -> Tensor:
     return (uniformity_x1 + uniformity_x2) / 2
 
 
-def cov_loss(x):
+def cov_loss_fn(x):
     batch_size, metric_dim = x.size()
     x = x - x.mean(dim=0)
     cov = (x.T @ x) / (batch_size - 1)
@@ -22,7 +22,7 @@ def cov_loss(x):
     return off_diag_cov.pow_(2).sum() / metric_dim
 
 
-def std_loss(x):
+def std_loss_fn(x):
     std = torch.sqrt(x.var(dim=0) + 1e-04)
     return torch.mean(torch.relu(1 - std))
 
@@ -74,7 +74,7 @@ class LossWithTemperature(_Loss):
             requires_grad=temperature_requires_grad,
         )
 
-    def forward(z1, z2):
+    def forward(z1, z2, **kwargs):
         raise NotImplementedError
 
 
@@ -82,6 +82,7 @@ class RegularizationLoss(_Loss):
     def __init__(
         self,
         mse_reg: float = 1,
+        l1_reg: float = 0,
         uniformity_reg: float = 0,
         variance_reg: float = 0,
         covariance_reg: float = 0,
@@ -93,22 +94,40 @@ class RegularizationLoss(_Loss):
         self.variance_reg = variance_reg
         self.covariance_reg = covariance_reg
         self.mse_reg = mse_reg
-        self.name = name or "regularization_loss"
+        self.l1_reg = l1_reg
+        self.name = name or "Regularization"
 
         self.mse_loss = nn.MSELoss()
+        self.l1_loss = nn.L1Loss()
 
     def forward(self, z1, z2, **kwargs) -> Tensor:
         batch_size, _ = z1.size()
         loss = 0
+        loss_dict = {}
         if self.mse_reg > 0:
-            loss += self.mse_reg * self.mse_loss(z1, z2)
+            mse_reg = self.mse_reg * self.mse_loss(z1, z2)
+            loss += mse_reg
+            loss_dict["mse_loss"] = mse_reg
+        if self.l1_reg > 0:
+            l1_loss = self.l1_reg * self.l1_loss(z1, z2)
+            loss += l1_loss
+            loss_dict["l1_loss"] = l1_loss
         if self.variance_reg > 0:
-            loss += self.variance_reg * (std_loss(z1) + std_loss(z2))
+            std_loss = self.variance_reg * (std_loss_fn(z1) + std_loss_fn(z2))
+            loss += std_loss
+            loss_dict["std_loss"] = std_loss
         if self.covariance_reg > 0:
-            loss += self.covariance_reg * (cov_loss(z1) + cov_loss(z2))
+            cov_loss = self.covariance_reg * (cov_loss_fn(z1) + cov_loss_fn(z2))
+            loss += cov_loss
+            loss_dict["cov_loss"] = cov_loss
         if self.uniformity_reg > 0:
-            loss += self.uniformity_reg * uniformity_loss(z1, z2)
-        return {"loss": loss}
+            uniformity_loss = self.uniformity_reg * uniformity_loss_fn(z1, z2)
+            loss += uniformity_loss
+            loss_dict["uniformity_loss"] = uniformity_loss
+
+        loss_dict["loss"] = loss
+
+        return loss_dict
 
 
 class CombinationLoss(_Loss):

@@ -2,7 +2,8 @@ from typing import Any, Dict, List, Literal, Optional
 
 import datamol as dm
 from molfeat.trans.concat import FeatConcat
-from torch.utils.data import default_collate
+
+from src.modules.collate_fn import default_collate
 
 
 class FPTransform:

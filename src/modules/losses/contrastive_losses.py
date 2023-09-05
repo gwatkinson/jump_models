@@ -1,3 +1,5 @@
+# Modified from https://github.com/HannesStark/3DInfomax/blob/master/commons/losses.py
+
 from typing import Optional
 
 # from torch.distributions import MultivariateNormal
@@ -44,14 +46,14 @@ class InfoNCE(LossWithTemperature):
         temperature: float = 0.5,
         return_rank: bool = False,
         eps: float = 1e-8,
-        name: Optional[str] = None,
+        name: str = "InfoNCE",
         **kwargs,
     ):
         # Access temperature as self.temperature.value
         super().__init__(temperature=temperature, **kwargs)
         self.norm = norm
         self.eps = eps
-        self.name = name or "InfoNCE"
+        self.name = name
         self.return_rank = return_rank
 
     def forward(self, z1, z2, **kwargs) -> Tensor:

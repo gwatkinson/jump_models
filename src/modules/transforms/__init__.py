@@ -2,6 +2,6 @@
 
 import torchvision
 
-from src.modules.transforms.default import DefaultJUMPTransform
+from src.modules.transforms.default import NormalizeBeforeCrop, SimpleTransform, SimpleWithNormalize
 
 torchvision.disable_beta_transforms_warning()
