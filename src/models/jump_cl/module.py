@@ -273,7 +273,14 @@ class BasicJUMPModule(LightningModule):
         if self.split_lr_in_groups:
             optimizer = self.splits_groups()
         else:
-            optimizer = self.optimizer(filter(lambda p: p.requires_grad, self.parameters()), lr=self.lr)
+            optimizer = self.optimizer(
+                {
+                    "params": filter(lambda p: p.requires_grad, self.parameters()),
+                    "name": "pretraining",
+                    "lr": self.lr,
+                    "initial_lr": self.lr,
+                }
+            )
 
         if self.scheduler is not None:
             scheduler = self.scheduler(optimizer=optimizer)
