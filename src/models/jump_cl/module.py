@@ -45,6 +45,7 @@ class BasicJUMPModule(LightningModule):
         image_head: str = "projection_head",
         molecule_backbone: str = "backbone",
         molecule_head: str = "projection_head",
+        split_lr_in_groups: bool = False,
         **kwargs,
     ):
         super().__init__()
@@ -57,6 +58,7 @@ class BasicJUMPModule(LightningModule):
         self.image_encoder = image_encoder
         self.molecule_encoder = molecule_encoder
         self.criterion = criterion
+        self.split_lr_in_groups = split_lr_in_groups
 
         if image_backbone is not None:
             self.image_backbone = getattr(self.image_encoder, image_backbone)
@@ -128,7 +130,11 @@ class BasicJUMPModule(LightningModule):
         compound_emb = self.molecule_encoder(batch["compound"])
         batch_size = image_emb.shape[0]
 
-        losses = self.criterion(image_emb, compound_emb)
+        total_image_emb = self.all_gather(image_emb, sync_grads=True)
+        total_compound_emb = self.all_gather(compound_emb, sync_grads=True)
+
+        losses = self.criterion(total_image_emb, total_compound_emb)
+
         if isinstance(losses, dict):
             loss = losses.pop("loss")
             self.log_dict(
@@ -190,7 +196,7 @@ class BasicJUMPModule(LightningModule):
     def lr_scheduler_step(self, scheduler, metrics):
         super().lr_scheduler_step(scheduler, metrics)
 
-    def configure_optimizers(self):
+    def splits_groups(self):
         params_groups = [
             {
                 "params": list(self.criterion.parameters()),
@@ -261,6 +267,14 @@ class BasicJUMPModule(LightningModule):
             lr=self.lr,
         )
 
+        return optimizer
+
+    def configure_optimizers(self):
+        if self.split_lr_in_groups:
+            optimizer = self.splits_groups()
+        else:
+            optimizer = self.optimizer(filter(lambda p: p.requires_grad, self.parameters()), lr=self.lr)
+
         if self.scheduler is not None:
             scheduler = self.scheduler(optimizer=optimizer)
 
@@ -270,7 +284,7 @@ class BasicJUMPModule(LightningModule):
                 "interval": self.interval,
                 "frequency": self.frequency,
                 "strict": True,
-                "name": "lr/jump_cl",
+                "name": "jump_cl/lr",
             }
 
             if isinstance(scheduler, WarmUpWrapper) and isinstance(scheduler.wrapped_scheduler, ReduceLROnPlateau):

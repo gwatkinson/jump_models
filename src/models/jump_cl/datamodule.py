@@ -19,29 +19,6 @@ py_logger = pylogger.get_pylogger(__name__)
 
 
 class BasicJUMPDataModule(LightningDataModule):
-    """Basic LightningDataModule for the JUMP dataset.
-
-    A DataModule implements 6 key methods:
-        def prepare_data(self):
-            # things to do on 1 GPU/TPU (not on every GPU/TPU in DDP)
-            # download data, pre-process, split, save to disk, etc...
-        def setup(self, stage):
-            # things to do on every process in DDP
-            # load data, set variables, etc...
-        def train_dataloader(self):
-            # return train dataloader
-        def val_dataloader(self):
-            # return validation dataloader
-        def test_dataloader(self):
-            # return test dataloader
-        def teardown(self):
-            # called on every process in DDP
-            # clean up after fit or test
-
-    This allows you to share a full dataset without explaining how to download,
-    split, transform and process the data.
-    """
-
     dataset_cls = MoleculeImageDataset  # The dataset class to use
 
     def __init__(
@@ -50,6 +27,7 @@ class BasicJUMPDataModule(LightningDataModule):
         compound_metadata_path: str,
         split_path: str,
         dataloader_config: DictConfig,
+        train_ids_name: str = "train",
         force_split: bool = False,
         compound_col: str = "Metadata_InChI",
         transform: Optional[Callable] = None,
@@ -123,17 +101,19 @@ class BasicJUMPDataModule(LightningDataModule):
 
         # other
         self.compound_col = compound_col
-        self.split_path = split_path
         self.image_metadata_path = image_metadata_path
         self.compound_metadata_path = compound_metadata_path
         self.use_compond_cache = use_compond_cache
 
         # split paths
+        self.split_path = split_path
         self.force_split = force_split
-        self.train_ids_path = osp.join(split_path, "train_ids.csv")
-        self.val_ids_path = osp.join(split_path, "val_ids.csv")
-        self.test_ids_path = osp.join(split_path, "test_ids.csv")
-        self.retrieval_ids_path = osp.join(split_path, "retrieval_ids.csv")
+        self.total_train_ids_path = osp.join(split_path, "total_train.csv")
+        self.train_ids_name = train_ids_name
+        self.train_ids_path = osp.join(split_path, f"{train_ids_name}.csv")
+        self.val_ids_path = osp.join(split_path, "val.csv")
+        self.test_ids_path = osp.join(split_path, "test.csv")
+        self.retrieval_ids_path = osp.join(split_path, "retrieval.csv")
 
         # kwargs
         self.index_str = kwargs.get(
@@ -197,6 +177,7 @@ class BasicJUMPDataModule(LightningDataModule):
         """
         img_path = Path(self.image_metadata_path)
         comp_path = Path(self.compound_metadata_path)
+        total_train_ids_path = Path(self.total_train_ids_path)
         train_ids_path = Path(self.train_ids_path)
         test_ids_path = Path(self.test_ids_path)
         val_ids_path = Path(self.val_ids_path)
@@ -257,11 +238,11 @@ class BasicJUMPDataModule(LightningDataModule):
                 json.dump(compound_dict, handle)
 
         # Prepare train, test and val ids
-        split_not_exists = not train_ids_path.exists() or not test_ids_path.exists() or not val_ids_path.exists()
+        split_not_exists = not total_train_ids_path.exists() or not test_ids_path.exists() or not val_ids_path.exists()
         split_empty = (
             self.force_split
             or split_not_exists
-            or len(pd.read_csv(train_ids_path)) == 0
+            or len(pd.read_csv(total_train_ids_path)) == 0
             or len(pd.read_csv(test_ids_path)) == 0
             or len(pd.read_csv(val_ids_path)) == 0
         )
@@ -296,14 +277,14 @@ class BasicJUMPDataModule(LightningDataModule):
                 raise ValueError("One of the splits is empty.")
 
             py_logger.debug(
-                f"Saving train, test and val ids to {train_ids_path}, {test_ids_path} and {val_ids_path} respectively ..."
+                f"Saving train, test and val ids to {total_train_ids_path}, {test_ids_path} and {val_ids_path} respectively ..."
             )
 
-            train_ids_path.parent.mkdir(exist_ok=True)
+            total_train_ids_path.parent.mkdir(exist_ok=True)
             test_ids_path.parent.mkdir(exist_ok=True)
             val_ids_path.parent.mkdir(exist_ok=True)
 
-            pd.Series(train_ids).to_csv(train_ids_path, index=False)
+            pd.Series(train_ids).to_csv(total_train_ids_path, index=False)
             pd.Series(test_ids).to_csv(test_ids_path, index=False)
             pd.Series(val_ids).to_csv(val_ids_path, index=False)
 
@@ -316,8 +297,35 @@ class BasicJUMPDataModule(LightningDataModule):
                     retrieval_ids_path.parent.mkdir(exist_ok=True)
                     pd.Series(retrieval_ids).to_csv(retrieval_ids_path, index=False)
 
-        train_compound_path = Path(self.split_path) / "train_compound_dict.json"
-        train_load_df_path = Path(self.split_path) / "train_load_df.parquet"
+        if not train_ids_path.exists() or len(pd.read_csv(train_ids_path)) == 0:
+            py_logger.info(f"Missing train ids from {self.split_path}")
+
+            if "total_train_ids_path" not in locals():
+                py_logger.debug(f"Loading total train ids from {total_train_ids_path} ...")
+                total_train_ids = pd.read_csv(total_train_ids_path).iloc[:, 0].tolist()
+
+            py_logger.info("Creating the train ids from the total train ids...")
+            if self.splitter.compound_list is None:
+                if "compound_dict" not in locals():
+                    py_logger.debug(f"Loading compound dictionary from {comp_path} ...")
+                    with open(comp_path) as handle:
+                        compound_dict = json.load(handle)
+                compound_list = list(compound_dict.keys())
+                compound_list.sort()
+                self.splitter.set_compound_list(compound_list)
+
+            train_ids = self.splitter.split_train(total_train_ids)
+            py_logger.debug(f"len(train_ids): {len(train_ids)}")
+
+            if len(train_ids) == 0:
+                raise ValueError("The train split is empty.")
+
+            py_logger.debug(f"Saving train ids to {train_ids_path} ...")
+            train_ids_path.parent.mkdir(exist_ok=True)
+            pd.Series(train_ids).to_csv(train_ids_path, index=False)
+
+        train_compound_path = Path(self.split_path) / f"{self.train_ids_name}_compound_dict.json"
+        train_load_df_path = Path(self.split_path) / f"{self.train_ids_name}_load_df.parquet"
         if not train_compound_path.exists() or not train_load_df_path.exists():
             if "load_df_with_meta" not in locals():
                 py_logger.debug(f"Loading local load data df from {img_path} ...")
@@ -416,43 +424,13 @@ class BasicJUMPDataModule(LightningDataModule):
         `trainer.test()`, so be careful not to execute things like
         random split twice!
         """
-
-        # if self.load_df is None:
-        #     py_logger.info(f"Loading image metadata df from {self.image_metadata_path}")
-        #     self.load_df = load_load_df_from_parquet(self.image_metadata_path)
-        #     if self.data_root_dir is not None:
-        #         for channel in self.channels:
-        #             self.load_df.loc[:, f"FileName_Orig{channel}"] = self.load_df[
-        #                 f"FileName_Orig{channel}"
-        #             ].str.replace("/projects/", self.data_root_dir)
-
-        #     self.image_list = self.load_df.index.tolist()
-        #     self.n_images = len(self.image_list)
-
-        # if self.compound_dict is None:
-        #     py_logger.info(f"Loading compound dictionary from {self.compound_metadata_path}")
-        #     with open(self.compound_metadata_path) as handle:
-        #         self.compound_dict = json.load(handle)
-        #     self.compound_list = list(self.compound_dict.keys())
-        #     self.n_compounds = len(self.compound_list)
-
-        # if self.train_cpds is None or self.val_cpds is None or self.test_cpds is None:
-        #     py_logger.info(f"Loading train ids from {self.train_ids_path}")
-        #     self.train_cpds = pd.read_csv(self.train_ids_path).iloc[:, 0].tolist()
-        #     self.val_cpds = pd.read_csv(self.val_ids_path).iloc[:, 0].tolist()
-        #     self.test_cpds = pd.read_csv(self.test_ids_path).iloc[:, 0].tolist()
-
-        #     py_logger.info(
-        #         f"Train, test, val lengths: {len(self.train_cpds)}, {len(self.test_cpds)}, {len(self.val_cpds)}"
-        #     )
-
         if self.train_dataset is None and (stage == "fit" or stage is None):
             py_logger.info("Preparing train dataset")
 
-            train_load_df = pd.read_parquet(Path(self.split_path) / "train_load_df.parquet")
+            train_load_df = pd.read_parquet(Path(self.split_path) / f"{self.train_ids_name}_load_df.parquet")
             train_load_df = self.replace_root_dir(train_load_df)
 
-            with open(Path(self.split_path) / "train_compound_dict.json") as handle:
+            with open(Path(self.split_path) / f"{self.train_ids_name}_compound_dict.json") as handle:
                 train_compound_dict = json.load(handle)
 
             self.train_dataset = self.dataset_cls(
