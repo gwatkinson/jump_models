@@ -265,15 +265,15 @@ class BasicJUMPDataModule(LightningDataModule):
             py_logger.info(f"Creating the splits from {self.splitter}")
             split_ids = self.splitter.split()
 
-            train_ids = split_ids["train"]
+            total_train_ids = split_ids["total_train"]
             test_ids = split_ids["test"]
             val_ids = split_ids["val"]
 
-            py_logger.debug(f"len(train_ids): {len(train_ids)}")
+            py_logger.debug(f"len(total_train_ids): {len(total_train_ids)}")
             py_logger.debug(f"len(test_ids): {len(test_ids)}")
             py_logger.debug(f"len(val_ids): {len(val_ids)}")
 
-            if len(train_ids) == 0 or len(test_ids) == 0 or len(val_ids) == 0:
+            if len(total_train_ids) == 0 or len(test_ids) == 0 or len(val_ids) == 0:
                 raise ValueError("One of the splits is empty.")
 
             py_logger.debug(
@@ -284,7 +284,7 @@ class BasicJUMPDataModule(LightningDataModule):
             test_ids_path.parent.mkdir(exist_ok=True)
             val_ids_path.parent.mkdir(exist_ok=True)
 
-            pd.Series(train_ids).to_csv(total_train_ids_path, index=False)
+            pd.Series(total_train_ids).to_csv(total_train_ids_path, index=False)
             pd.Series(test_ids).to_csv(test_ids_path, index=False)
             pd.Series(val_ids).to_csv(val_ids_path, index=False)
 

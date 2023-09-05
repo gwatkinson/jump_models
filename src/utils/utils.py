@@ -36,7 +36,7 @@ def extras(cfg: DictConfig) -> None:
     # pretty print config tree using Rich library
     if cfg.extras.get("print_config"):
         log.info("Printing config tree with Rich! <cfg.extras.print_config=True>")
-        rich_utils.print_config_tree(cfg, resolve=True, save_to_file=True)
+        rich_utils.print_config_tree(cfg, resolve=True, save_to_file=True, print_eval=cfg.extras.get("print_eval"))
 
 
 def task_wrapper(task_func: Callable) -> Callable:

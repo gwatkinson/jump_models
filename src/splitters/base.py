@@ -104,8 +104,6 @@ class BaseSplitter(ABC):
     def set_compound_list(self, compound_list: List[str]):
         """Set the compound list."""
         self.compound_list = compound_list
-        py_logger.debug("Checking train, val and test values from set_compound_list function.")
-        py_logger.debug(f"Before: Train: {self.train}, val: {self.val}, test: {self.test}")
         self.normalize_train_val_test()
 
     def normalize_train_val_test(self):

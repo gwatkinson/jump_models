@@ -28,6 +28,7 @@ def print_config_tree(
         "data",
         "model",
     ),
+    print_eval: bool = False,
     resolve: bool = True,
     save_to_file: bool = False,
 ) -> None:
@@ -55,6 +56,8 @@ def print_config_tree(
 
     # add fields from `print_order` to queue
     for field in print_order:
+        if field == "eval" and not print_eval:
+            continue
         queue.append(field) if field in cfg else log.warning(
             f"Field '{field}' not found in config. Skipping '{field}' config printing..."
         )
