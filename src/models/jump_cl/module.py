@@ -143,6 +143,7 @@ class BasicJUMPModule(LightningModule):
                 prog_bar=False,
                 on_step=(stage == "train"),
                 on_epoch=True,
+                batch_size=batch_size,
             )
         else:
             loss = losses
@@ -150,23 +151,13 @@ class BasicJUMPModule(LightningModule):
         self.loss_dict[stage](loss)
         self.log(f"{stage}/loss", self.loss_dict[stage], batch_size=batch_size, **kwargs)
 
-        # self.steps[stage] += 1
-        # self.log(f"{stage}/steps", self.steps[stage], prog_bar=False, on_epoch=False, on_step=True)
+        # if self.trainer.num_devices > 1:
+        #     devices_loss = self.all_gather(loss)  # Need to gather losses when using DDP to not fall out of sync
+        #     condition = all(torch.isfinite(loss) for loss in devices_loss)
+        # else:
+        #     condition = torch.isfinite(loss)
 
-        if stage == "train":
-            try:
-                temperature = self.criterion.temperature.value.item()
-                self.log("model/temperature", temperature, prog_bar=False, on_epoch=True, on_step=False)
-            except AttributeError:
-                pass
-
-        if self.trainer.num_devices > 1:
-            devices_loss = self.all_gather(loss)  # Need to gather losses when using DDP to not fall out of sync
-            condition = all(torch.isfinite(loss) for loss in devices_loss)
-        else:
-            condition = torch.isfinite(loss)
-
-        if not condition:
+        if not torch.isfinite(loss):
             logger.info(f"Loss of batch {batch_idx} is {loss}. Returning None.")
             return None
 

@@ -3,6 +3,6 @@ _partial_: True
 
 warmup_epochs: ???
 max_epochs: ${trainer.max_epochs}
-warmup_start_lr: 0.0
+warmup_start_lr: 1e-6
 eta_min: 0.0
 last_epoch: -1

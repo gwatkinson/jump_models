@@ -186,6 +186,7 @@ class RegLoss(CombinationLoss):
         alpha: float = 0.05,
         norm: bool = True,
         mse_reg: float = 1,
+        l1_reg: float = 0,
         uniformity_reg: float = 0,
         variance_reg: float = 1.0,
         covariance_reg: float = 0.05,
@@ -196,7 +197,11 @@ class RegLoss(CombinationLoss):
         losses = [
             loss_fn,
             RegularizationLoss(
-                mse_reg=mse_reg, uniformity_reg=uniformity_reg, variance_reg=variance_reg, covariance_reg=covariance_reg
+                mse_reg=mse_reg,
+                l1_loss=l1_reg,
+                uniformity_reg=uniformity_reg,
+                variance_reg=variance_reg,
+                covariance_reg=covariance_reg,
             ),
         ]
 
@@ -213,6 +218,7 @@ class RegWithTemperatureLoss(RegLoss):
         norm: bool = True,
         temperature: float = 0.5,
         mse_reg: float = 1,
+        l1_reg: float = 0,
         uniformity_reg: float = 0,
         variance_reg: float = 1.0,
         covariance_reg: float = 0.05,
@@ -236,6 +242,7 @@ class RegWithTemperatureLoss(RegLoss):
             alpha=alpha,
             norm=norm,
             mse_reg=mse_reg,
+            l1_reg=l1_reg,
             uniformity_reg=uniformity_reg,
             variance_reg=variance_reg,
             covariance_reg=covariance_reg,

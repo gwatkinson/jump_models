@@ -5,6 +5,7 @@ defaults:
   - override /model: jump_cl.yaml
   - override /model/image_encoder: resnet34.yaml
   - override /model/molecule_encoder: pna.yaml
+  - override /model/criterion: ntxent_reg.yaml
   - override /model/optimizer: adamw.yaml
   - override /model/scheduler: cosine_annealing_with_warmup.yaml
   - override /callbacks: default.yaml
@@ -31,15 +32,30 @@ compile: False
 
 evaluate: True
 
-trainer:
-  min_epochs: 5
-  max_epochs: 100
-  log_every_n_steps: 1
-  # gradient_clip_val: 0.5
-  num_sanity_val_steps: 1
-  # reload_dataloaders_every_n_epochs: 1
 
-  devices: ???
+model:
+  embedding_dim: 512
+  lr: 3e-4
+
+  image_encoder:
+    pretrained: False
+
+  scheduler:
+    warmup_epochs: 10
+    max_epochs: ${trainer.max_epochs}
+
+  criterion:
+    temperature: 0.5
+    alpha: 0.05
+    mse_reg: 0.1
+    l1_reg: 0.1
+    uniformity_reg: 0
+    variance_reg: 1
+    covariance_reg: 0.25
+
+  example_input_path: null
+
+
 
 data:
   batch_size: 64
@@ -60,18 +76,15 @@ data:
   train_ids_name: train_med
 
 
-model:
-  embedding_dim: 512
-  lr: 3e-4
+trainer:
+  min_epochs: 5
+  max_epochs: 100
+  log_every_n_steps: 1
+  # gradient_clip_val: 0.5
+  num_sanity_val_steps: 1
+  # reload_dataloaders_every_n_epochs: 1
 
-  image_encoder:
-    pretrained: False
-
-  scheduler:
-    warmup_epochs: 10
-    max_epochs: ${trainer.max_epochs}
-
-  example_input_path: null
+  devices: ???
 
 
 callbacks:
