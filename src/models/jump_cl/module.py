@@ -143,7 +143,6 @@ class BasicJUMPModule(LightningModule):
                 prog_bar=False,
                 on_step=(stage == "train"),
                 on_epoch=True,
-                batch_size=batch_size,
             )
         else:
             loss = losses
