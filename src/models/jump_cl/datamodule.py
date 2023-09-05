@@ -300,7 +300,7 @@ class BasicJUMPDataModule(LightningDataModule):
         if not train_ids_path.exists() or len(pd.read_csv(train_ids_path)) == 0:
             py_logger.info(f"Missing train ids from {self.split_path}")
 
-            if "total_train_ids_path" not in locals():
+            if "total_train_ids" not in locals():
                 py_logger.debug(f"Loading total train ids from {total_train_ids_path} ...")
                 total_train_ids = pd.read_csv(total_train_ids_path).iloc[:, 0].tolist()
 
