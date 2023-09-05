@@ -12,8 +12,8 @@ moa_image_task:
     num_classes: 9  # when min is set to 500, else 26
 
     scheduler:
-      warmup_steps: [10]
-      last_epoch: 10
+      warmup_epochs: 10
+      max_epochs: ${eval.moa_image_task.trainer.max_epochs}
 
     example_input_path: ${model.example_input_path}
 

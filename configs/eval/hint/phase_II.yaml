@@ -13,8 +13,8 @@ phase_II:
     compound_transform: ${data.compound_transform}
 
     scheduler:
-      warmup_steps: [5]
-      last_epoch: 5
+      warmup_epochs: 5
+      max_epochs: ${eval.phase_II.trainer.max_epochs}
 
     example_input_path: ${model.example_input_path}
     # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt

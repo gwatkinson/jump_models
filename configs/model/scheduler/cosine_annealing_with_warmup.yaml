@@ -1,10 +1,8 @@
-_target_: src.modules.lr_schedulers.warmup_wrapper.WarmUpWrapper
+_target_: src.modules.lr_schedulers.cosine_lr.LinearWarmupCosineAnnealingLR
 _partial_: True
-warmup_steps:
-  - ???
-interpolation: linear
 
-wrapped_scheduler: CosineAnnealingLR
-T_max: ${trainer.max_epochs}
-eta_min: 0
+warmup_epochs: ???
+max_epochs: ${trainer.max_epochs}
+warmup_start_lr: 0.0
+eta_min: 0.0
 last_epoch: -1

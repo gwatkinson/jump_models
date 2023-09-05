@@ -11,8 +11,8 @@ tox21:
     lr: 5e-4
 
     scheduler:
-      warmup_steps: [3]
-      last_epoch: 3
+      warmup_epochs: 3
+      max_epochs: ${eval.tox21.trainer.max_epochs}
 
     example_input_path: ${model.example_input_path}
     # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
