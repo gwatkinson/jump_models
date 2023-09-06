@@ -9,7 +9,7 @@ moa_image_task:
     _target_: src.eval.moa.module.JumpMOAImageModule
 
     lr: 1e-4
-    num_classes: 9  # when min is set to 500, else 26
+    num_classes: 26  # when min is set to 500, else 26
 
     scheduler:
       warmup_epochs: 10

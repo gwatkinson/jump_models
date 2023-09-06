@@ -167,6 +167,9 @@ def main(ckpt_path: str, eval_cfg, devices) -> None:
     if devices is not None:
         cfg.trainer.devices = list(devices)
 
+        for evaluator in cfg.eval:
+            evaluator.trainer.devices = list(devices)
+
     # apply extra utilities
     # (e.g. ask for tags if none are provided in cfg, print cfg tree, etc.)
     utils.extras(cfg)

@@ -132,12 +132,15 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     # merge train and test metrics
     metric_dict = {**train_metrics, **test_metrics}
 
-    # if evaluator_list is not None:
-    #     object_dict["evaluators"] = evaluator_list
+    if logger and evaluator_list:
+        eval_dict = {
+            "cfg": cfg,
+            "evaluators": evaluator_list,
+            "trainer": trainer,
+        }
 
-    #     if logger:
-    #         log.info("Logging evaluation metrics!")
-    #         logger.log_hyperparams({"evaluator_list": evaluator_list})
+        log.info("Logging hyperparameters!")
+        utils.log_hyperparameters(eval_dict)
 
     return metric_dict, object_dict
 
