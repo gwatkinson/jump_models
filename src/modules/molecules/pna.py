@@ -214,16 +214,6 @@ class PNA(nn.Module):
         )
         self.out_dim = out_dim
 
-        self.backbone = self.node_gnn
-
-        self.projection_head = nn.Sequential(
-            nn.Linear(target_dim, out_dim),
-            nn.ReLU(),
-            nn.LayerNorm(out_dim),
-            nn.Dropout(0.1),
-            nn.Linear(out_dim, out_dim),
-        )
-
         if ckpt_path is not None:
             ckpt = torch.load(ckpt_path, map_location=torch.device("cpu"))
 
@@ -239,6 +229,16 @@ class PNA(nn.Module):
                 )
 
             self.load_state_dict(ckpt["model_state_dict"])
+
+        self.backbone = self.node_gnn
+
+        self.projection_head = nn.Sequential(
+            nn.Linear(target_dim, out_dim),
+            nn.ReLU(),
+            nn.LayerNorm(out_dim),
+            nn.Dropout(0.1),
+            nn.Linear(out_dim, out_dim),
+        )
 
     def forward(self, graph: dgl.DGLGraph):
         self.node_gnn(graph)
