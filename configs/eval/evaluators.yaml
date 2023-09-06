@@ -1,5 +1,8 @@
 defaults:
   - retrieval/idr_graph_retrieval@_here_
+  - batch_effect/batch_effect_random@_here_
+  - batch_effect/batch_effect_plate_aware@_here_
+  - batch_effect/batch_effect_source_aware@_here_
   - moa/image_task@_here_
   - ogb/tox21@_here_
   - ogb/lipo@_here_

@@ -17,17 +17,15 @@ moa_image_task:
 
     example_input_path: ${model.example_input_path}
 
+    split_lr_in_groups: False
 
   datamodule:
     _target_: src.eval.moa.datamodule.JumpMOADataModule
-
 
     batch_size: 256
     num_workers: 16
     pin_memory: False
     prefetch_factor: 2
-
-    split_lr_in_groups: False
 
     transform: ${data.transform}
 

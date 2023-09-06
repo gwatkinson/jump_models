@@ -19,13 +19,13 @@ phase_III:
     example_input_path: ${model.example_input_path}
     # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
 
+    split_lr_in_groups: False
+
 
   datamodule:
     _target_: src.eval.clinical_prediction.datamodule.HintClinicalDataModulePhaseIII
 
     hint_dir: ${paths.data_root_dir}/hint
-
-    split_lr_in_groups: False
 
     smiless_col: smiless
     label_col: label

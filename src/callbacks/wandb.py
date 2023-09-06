@@ -122,10 +122,10 @@ class WandbPlottingCallback(WandbTrainingCallback):
                     df_cm = pd.DataFrame(array, index=index, columns=index)
                     df_cm.index.name = "Actual"
                     df_cm.columns.name = "Predicted"
-                    df_cm_normed = array / array.sum(axis=1, keepdims=True)
+                    # df_cm_normed = array / array.sum(axis=1, keepdims=True)
 
                     fig_, ax_ = plt.subplots(**self.fig_kws)
-                    sns.heatmap(df_cm_normed, annot=df_cm, ax=ax_, **self.plot_kws)
+                    sns.heatmap(df_cm, annot=True, ax=ax_, **self.plot_kws)
 
                     # fig_, ax_ = pp_matrix(df_cm, **self.kwargs)
                 else:

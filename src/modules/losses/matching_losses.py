@@ -16,9 +16,26 @@ class CatFusion:
     def __call__(self, graph_emb, img_emb):
         return torch.cat([graph_emb, img_emb], dim=1)
 
+        # channel_to_encoder_dim: Dict[str, int],
+        # mlp: nn.Module,
+        # pooling_function: nn.TransformerEncoder,
+        # apply_attention: bool = False,
+        # attention_dim: Optional[int] = None,
+        # modality_normalize: bool = False,
+        # norm_factor: float = 2.0,
 
-class SimpleDeepsetFusionWithTransformer:
-    pass
+
+#         # use_auto_mapping: bool = False,
+# class SimpleDeepsetFusionWithTransformer(DeepsetFusionWithTransformer):
+#     def __init__(
+#         self,
+#     ):
+#         super().__init__(
+#             channel_to_encoder_dim={
+#                 "image":
+#             }
+#         )
+#         pass
 
 
 class GraphImageMatchingLoss(_Loss):

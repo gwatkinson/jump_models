@@ -1,0 +1,4 @@
+defaults:
+  - batch_effect/batch_effect_random@_here_
+  - batch_effect/batch_effect_plate_aware@_here_
+  - batch_effect/batch_effect_source_aware@_here_

@@ -177,8 +177,8 @@ class JumpMOAImageModule(LightningModule):
             self.other_metrics_dict[stage], on_step=False, on_epoch=True, prog_bar=False, batch_size=batch_size
         )
 
-        if not torch.isfinite(loss):
-            loss = None
+        # if not torch.isfinite(loss):  # TODO: Make this device agnostic
+        #     loss = None
 
         return {"loss": loss}
 
@@ -241,7 +241,9 @@ class JumpMOAImageModule(LightningModule):
         if self.split_lr_in_groups:
             optimizer = self.split_groups()
         else:
-            optimizer = self.optimizer(filter(lambda p: p.requires_grad, self.parameters()), lr=self.lr)
+            optimizer = self.optimizer(
+                filter(lambda p: p.requires_grad, self.parameters()), lr=self.lr, name="learning_rate"
+            )
 
         if self.scheduler is not None:
             scheduler = self.scheduler(optimizer=optimizer)
@@ -251,7 +253,7 @@ class JumpMOAImageModule(LightningModule):
                 "monitor": "jump_moa/image/val/loss",
                 "interval": "epoch",
                 "frequency": 1,
-                "name": "jump_moa/image/lr/learning_rate",
+                "name": "jump_moa/image/lr",
             }
 
             if isinstance(scheduler, WarmUpWrapper) and isinstance(scheduler.wrapped_scheduler, ReduceLROnPlateau):

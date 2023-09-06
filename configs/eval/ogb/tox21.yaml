@@ -17,6 +17,8 @@ tox21:
     example_input_path: ${model.example_input_path}
     # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
 
+    split_lr_in_groups: False
+
   datamodule:
     _target_: src.eval.ogb.datamodule.Tox21DataModule
 
@@ -26,8 +28,6 @@ tox21:
     num_workers: 16
     pin_memory: False
     prefetch_factor: 2
-
-    split_lr_in_groups: False
 
     compound_transform: ${data.compound_transform}
 
