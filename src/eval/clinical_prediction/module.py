@@ -272,7 +272,7 @@ class HintClinicalModule(LightningModule):
                 "monitor": f"{self.log_prefix}/val/loss",
                 "interval": "epoch",
                 "frequency": 1,
-                "name": f"{self.log_prefix}/lr",
+                "name": f"{self.log_prefix}/lr/learning_rate",
             }
 
             if isinstance(scheduler, WarmUpWrapper) and isinstance(scheduler.wrapped_scheduler, ReduceLROnPlateau):
