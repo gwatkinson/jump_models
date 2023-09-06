@@ -267,7 +267,7 @@ class BasicJUMPModule(LightningModule):
                 [
                     {
                         "params": filter(lambda p: p.requires_grad, self.parameters()),
-                        "name": "pretraining",
+                        # "name": "pretraining",
                         "lr": self.lr,
                     }
                 ]
@@ -282,7 +282,7 @@ class BasicJUMPModule(LightningModule):
                 "interval": self.interval,
                 "frequency": self.frequency,
                 "strict": True,
-                "name": "jump_cl/lr",
+                "name": "pretraining/lr",
             }
 
             if isinstance(scheduler, WarmUpWrapper) and isinstance(scheduler.wrapped_scheduler, ReduceLROnPlateau):

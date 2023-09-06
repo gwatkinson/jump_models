@@ -12,7 +12,7 @@ def cosine_similarity(p, z, average=True):
     return loss
 
 
-class VariationalAutoEncoder(torch.nn.Module):
+class VariationalAutoEncoderLoss(torch.nn.Module):
     def __init__(self, emb_dim, loss, detach_target, beta=1):
         super().__init__()
 
@@ -59,8 +59,12 @@ class VariationalAutoEncoder(torch.nn.Module):
         y_hat = self.decoder(z)
 
         reconstruction_loss = self.criterion(y_hat, y)
-        kl_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu**2 - log_var.exp(), dim=1), dim=0)
+        kl_loss = self.beta * torch.mean(-0.5 * torch.sum(1 + log_var - mu**2 - log_var.exp(), dim=1), dim=0)
 
-        loss = reconstruction_loss + self.beta * kl_loss
+        loss_dict = {
+            "reconstruction_loss": reconstruction_loss,
+            "kl_loss": kl_loss,
+            "loss": reconstruction_loss + kl_loss,
+        }
 
-        return loss
+        return loss_dict

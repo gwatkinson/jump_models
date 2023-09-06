@@ -3,27 +3,37 @@
 # flake8: noqa
 
 import torch
-from torch import nn
+from torch import Tensor, nn
 from torch.nn import functional as F
 from torch.nn.modules.loss import _Loss
 
 # TODO: Improve the fusion of the two embeddings (instead of simple concatenation)
 
 
+class CatFusion:
+    def __call__(self, graph_emb, img_emb):
+        return torch.cat([graph_emb, img_emb], dim=1)
+
+
 class GraphImageMatchingLoss(_Loss):
     def __init__(
+        self,
         norm: bool = True,
         name: str = "GraphImageMatchingLoss",
+        fusion_layer=None,
         **kwargs,
     ):
         super().__init__()
         self.norm = norm
         self.name = name
+        if fusion_layer is None:
+            self.fusion_layer = CatFusion()
 
     def forward(self, graph_emb, img_emb, **kwargs) -> Tensor:
         batch_size, metric_dim = graph_emb.size()
 
-        output_pos = torch.cat([graph_emb, img_emb], dim=1)  # [batch_size, 2 * metric_dim]
+        # Fusion the two embeddings
+        output_pos = self.fusion_layer(graph_emb=graph_emb, img_emb=img_emb)  # [batch_size, 2 * metric_dim]
 
         with torch.no_grad():
             weights_g2i = F.softmax(torch.cdist(graph_emb, img_emb, p=2))
@@ -43,20 +53,38 @@ class GraphImageMatchingLoss(_Loss):
         for b in range(batch_size):
             neg_idx = torch.multinomial(weights_i2g[b], 1).item()
             graph_embeds_neg.append(graph_emb[neg_idx])
-        graph_embeds_neg = torch.stack(graph_embeds_neg, dim=0)
+        graph_embeds_neg = torch.stack(graph_embeds_neg, dim=0)  # [batch_size, metric_dim]
 
-        graph_embeds_all = torch.cat([graph_emb, graph_embeds_neg], dim=0)
-        img_embeds_all = torch.cat([img_emb, img_embeds_neg], dim=0)
+        graph_pos_img_neg = self.fusion_layer(graph_emb=graph_emb, img_emb=img_embeds_neg)
+        graph_neg_img_pos = self.fusion_layer(graph_emb=graph_embeds_neg, img_emb=img_emb)
 
-        output_neg = torch.cat([graph_embeds_all, img_embeds_all], dim=1)
-
-        vl_embeddings = torch.cat([output_pos, output_neg], dim=0)
-        vl_output = self.gim_head(vl_embeddings)
+        gim_embeddings = torch.cat([output_pos, graph_pos_img_neg, graph_neg_img_pos], dim=0)
+        gim_preds = self.gim_head(gim_embeddings)
 
         gim_labels = torch.cat(
             [torch.ones(batch_size, dtype=torch.long), torch.zeros(2 * batch_size, dtype=torch.long)], dim=0
         ).to(graph_emb.device)
 
-        # GGIM_loss = GIM_loss + F.cross_entropy(vl_output, gim_labels)  # GIM loss is the Graph image generation loss with AE
+        # graph_pos_img_neg = torch.cat([graph_emb, img_embeds_neg], dim=1)
+        # graph_neg_img_pos = torch.cat([graph_embeds_neg, img_emb], dim=1)
 
-        return F.cross_entropy(vl_output, gim_labels)
+        # graph_embeds_all = torch.cat([graph_emb, graph_embeds_neg], dim=0)  # [2 * batch_size, metric_dim]
+        # img_embeds_all = torch.cat([img_embeds_neg, img_emb], dim=0)  # [2 * batch_size, metric_dim]
+
+        # output_neg = torch.cat([graph_embeds_all, img_embeds_all], dim=1)  # [2 * batch_size, 2 * metric_dim]
+
+        # vl_embeddings = torch.cat([output_pos, output_neg], dim=0)  # [3 * batch_size, 2 * metric_dim]
+        # vl_output = self.gim_head(vl_embeddings)
+
+        # gim_labels = torch.cat(
+        #     [torch.ones(batch_size, dtype=torch.long), torch.zeros(2 * batch_size, dtype=torch.long)], dim=0
+        # ).to(graph_emb.device)
+
+        # GGIM_loss = GIM_loss + F.cross_entropy(vl_output, gim_labels)
+        # GIM loss is the Graph image generation loss with AE
+
+        # TODO: add metrics to monitor (confusion matrix, ...)
+
+        loss_dict = {"loss": F.cross_entropy(gim_preds, gim_labels)}
+
+        return loss_dict

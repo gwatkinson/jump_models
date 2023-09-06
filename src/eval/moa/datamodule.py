@@ -19,6 +19,7 @@ class JumpMOADataset(Dataset):
     def __init__(
         self,
         moa_load_df: pd.DataFrame,
+        target_to_num: Optional[Dict[str, int]] = None,
         transform: Optional[Callable] = None,
         compound_transform: Optional[Callable] = None,
         return_image: bool = True,
@@ -73,7 +74,7 @@ class JumpMOADataset(Dataset):
 
         self.targets = self.moa_load_df[self.target_col].unique()
         self.targets.sort()
-        self.target_to_num = {target: i for i, target in enumerate(self.targets)}
+        self.target_to_num = target_to_num or {target: i for i, target in enumerate(self.targets)}
         self.n_targets = len(self.targets)
 
         self.transform = transform
@@ -92,13 +93,13 @@ class JumpMOADataset(Dataset):
         return f"{self.__class__.__name__}(n_compounds={self.n_compounds}, n_images={self.n_images})"
 
     def get_transformed_compound(self, compound):
-        if self.use_cache and compound in self.compound_cache:
-            return self.compound_cache[compound]
-        else:
-            transformed_compound = self.compound_transform(compound)
-            if self.use_cache:
-                self.compound_cache[compound] = transformed_compound
-            return transformed_compound
+        # if self.use_cache and compound in self.compound_cache:
+        #     return self.compound_cache[compound]
+        # else:
+        transformed_compound = self.compound_transform(compound)
+        # if self.use_cache:
+        # self.compound_cache[compound] = transformed_compound
+        return transformed_compound
 
     def get_default_collate_fn(self):
         """Return the default collate function that should be used for this
@@ -272,7 +273,11 @@ class JumpMOADataModule(LightningDataModule):
         if self.moa_load_df is None:
             logger.info(f"Loading MOA data from {self.moa_load_df_path}")
             self.moa_load_df = pd.read_csv(self.moa_load_df_path)
-            self.num_classes = self.moa_load_df[self.target_col].nunique()
+            self.labels = self.moa_load_df[self.target_col].unique()
+            self.labels.sort()
+            self.target_to_num = {target: i for i, target in enumerate(self.labels)}
+            self.num_to_labels = dict(enumerate(self.labels))
+            self.num_classes = len(self.labels)
 
         if stage == "test" and self.test_dataset is None:
             test_ids = pd.read_csv(self.test_path, header=None).values.flatten().tolist()
@@ -281,6 +286,7 @@ class JumpMOADataModule(LightningDataModule):
             logger.info(f"Creating test dataset ({len(test_df)} rows)")
             self.test_dataset = JumpMOADataset(
                 moa_load_df=test_df,
+                target_to_num=self.target_to_num,
                 transform=self.transform,
                 compound_transform=self.compound_transform,
                 return_image=self.return_image,
@@ -301,6 +307,7 @@ class JumpMOADataModule(LightningDataModule):
             logger.info(f"Creating train and val datasets ({len(train_df)} and {len(val_df)} rows)")
             self.train_dataset = JumpMOADataset(
                 moa_load_df=train_df,
+                target_to_num=self.target_to_num,
                 transform=self.transform,
                 compound_transform=self.compound_transform,
                 return_image=self.return_image,
@@ -314,6 +321,7 @@ class JumpMOADataModule(LightningDataModule):
 
             self.val_dataset = JumpMOADataset(
                 moa_load_df=val_df,
+                target_to_num=self.target_to_num,
                 transform=self.transform,
                 compound_transform=self.compound_transform,
                 return_image=self.return_image,
