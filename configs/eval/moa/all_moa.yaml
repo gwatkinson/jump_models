@@ -40,8 +40,8 @@ moa_image_task:
     splitter:
       _target_: src.splitters.StratifiedSplitter
       train: 0.75
-      val: 0.15
-      test: 0.1
+      val: 0.1
+      test: 0.15
 
 
     max_obs_per_class: 10000000

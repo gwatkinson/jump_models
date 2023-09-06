@@ -65,12 +65,15 @@ class WandbPlottingCallback(WandbTrainingCallback):
         log_graph: bool = True,
         plot_every_n_epoch: int = 2,
         prefix: Optional[str] = None,
+        fig_kws: Optional[dict] = None,
+        plot_kws: Optional[dict] = None,
         **kwargs,
     ):
         super().__init__(watch=watch, watch_log=watch_log, log_freq=log_freq, log_graph=log_graph)
         self.tables = None
         self.num_figs = None
-        self.kwargs = kwargs
+        self.fig_kws = fig_kws or {}
+        self.plot_kws = plot_kws or {}
         self.plot_every_n_epoch = plot_every_n_epoch
 
         if prefix is None:
@@ -120,12 +123,12 @@ class WandbPlottingCallback(WandbTrainingCallback):
                     df_cm.index.name = "Actual"
                     df_cm.columns.name = "Predicted"
 
-                    fig_, ax_ = plt.subplots(**self.kwargs)
-                    sns.heatmap(df_cm, cmap="Blues", annot=True, ax=ax_, cbar=False, **self.kwargs)
+                    fig_, ax_ = plt.subplots(**self.fig_kws)
+                    sns.heatmap(df_cm, cmap="Blues", annot=True, ax=ax_, cbar=False, **self.plot_kws)
 
                     # fig_, ax_ = pp_matrix(df_cm, **self.kwargs)
                 else:
-                    fig_, ax_ = metric.plot()
+                    fig_, ax_ = metric.plot(**self.plot_kws)
                 metric.reset()
                 data.append(wandb.Image(fig_))
                 plt.close(fig_)
