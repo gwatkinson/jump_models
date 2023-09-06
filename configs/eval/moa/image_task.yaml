@@ -21,8 +21,6 @@ moa_image_task:
   datamodule:
     _target_: src.eval.moa.datamodule.JumpMOADataModule
 
-    moa_load_df_path: ${paths.data_root_dir}/jump/models/eval/moa/image_task/moa_500_1024.csv
-    split_path: ${paths.data_root_dir}/jump/models/eval/moa/image_task/splits/moa_500_1024/
 
     batch_size: 256
     num_workers: 16
@@ -39,9 +37,12 @@ moa_image_task:
 
     splitter:
       _target_: src.splitters.StratifiedSplitter
-      train: 0.75
+      train: 0.7
       val: 0.15
-      test: 0.1
+      test: 0.15
+
+    split_path: ${paths.data_root_dir}/jump/models/eval/moa/image_task/splits/balanced/
+    moa_load_df_path: ${paths.data_root_dir}/jump/models/eval/moa/image_task/balanced.csv
 
     max_obs_per_class: 1024
     min_obs_per_class: 500

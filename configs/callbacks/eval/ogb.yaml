@@ -28,11 +28,11 @@ wandb_plotter:
   log_freq: 50
   plot_every_n_epoch: 1
   prefix: ???
-  cmap: Oranges_r
-  fmt: ".2f"
-  per_fmt: ".1%"
-  fz: 10
-  lw: 0.5
-  cbar: False
-  figsize: [16,16]
-
+  fig_kws:
+    figsize: [16, 16]
+  plot_kws:
+    cmap: Blues
+    cbar: False
+    square: True
+    robust: True
+    fmt: "g"

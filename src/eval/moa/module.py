@@ -76,7 +76,14 @@ class JumpMOAImageModule(LightningModule):
             self.model_name = self.image_encoder.__class__.__name__
 
         self.embedding_dim = self.image_encoder.out_dim
-        self.head = nn.Linear(self.embedding_dim, self.num_classes)
+        self.head = nn.Sequential(
+            nn.LayerNorm(self.embedding_dim),
+            nn.Linear(self.embedding_dim, self.embedding_dim),
+            nn.ReLU(),
+            nn.LayerNorm(self.embedding_dim),
+            nn.Dropout(0.2),
+            nn.Linear(self.embedding_dim, self.num_classes),
+        )
         self.lr = lr
         self.split_lr_in_groups = split_lr_in_groups
 
@@ -244,7 +251,7 @@ class JumpMOAImageModule(LightningModule):
                 "monitor": "jump_moa/image/val/loss",
                 "interval": "epoch",
                 "frequency": 1,
-                "name": "jump_moa/image/lr",
+                "name": "jump_moa/image/lr/learning_rate",
             }
 
             if isinstance(scheduler, WarmUpWrapper) and isinstance(scheduler.wrapped_scheduler, ReduceLROnPlateau):

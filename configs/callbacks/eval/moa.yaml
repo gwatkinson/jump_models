@@ -29,4 +29,9 @@ wandb_plotter:
   prefix: jump_moa/image/plots
   fig_kws:
     figsize: [16, 16]
-  # plot_kws: null
+  plot_kws:
+    cmap: Blues
+    cbar: False
+    square: True
+    robust: True
+    fmt: "g"

@@ -1,10 +1,10 @@
 defaults:
-  - /model/optimizer/adamw.yaml@moa_image_task.model.optimizer
-  - /model/scheduler/cosine_annealing_with_warmup.yaml@moa_image_task.model.scheduler
-  - /trainer/gpu.yaml@moa_image_task.trainer
-  - /callbacks/eval/moa.yaml@moa_image_task.callbacks  #! This adds the callbacks
+  - /model/optimizer/adamw.yaml@all_moa.model.optimizer
+  - /model/scheduler/cosine_annealing_with_warmup.yaml@all_moa.model.scheduler
+  - /trainer/gpu.yaml@all_moa.trainer
+  - /callbacks/eval/moa.yaml@all_moa.callbacks  #! This adds the callbacks
 
-moa_image_task:
+all_moa:
   model:
     _target_: src.eval.moa.module.JumpMOAImageModule
 
@@ -13,7 +13,7 @@ moa_image_task:
 
     scheduler:
       warmup_epochs: 10
-      max_epochs: ${eval.moa_image_task.trainer.max_epochs}
+      max_epochs: ${eval.all_moa.trainer.max_epochs}
 
     example_input_path: ${model.example_input_path}
 
@@ -21,8 +21,6 @@ moa_image_task:
   datamodule:
     _target_: src.eval.moa.datamodule.JumpMOADataModule
 
-    moa_load_df_path: ${paths.data_root_dir}/jump/models/eval/moa/image_task/all_moa.csv
-    split_path: ${paths.data_root_dir}/jump/models/eval/moa/image_task/splits/all_moa/
 
     batch_size: 256
     num_workers: 16
@@ -39,12 +37,15 @@ moa_image_task:
 
     splitter:
       _target_: src.splitters.StratifiedSplitter
-      train: 0.75
-      val: 0.1
+      train: 0.7
+      val: 0.15
       test: 0.15
 
+    split_path: ${paths.data_root_dir}/jump/models/eval/moa/image_task/splits/all_moa2/
+    moa_load_df_path: ${paths.data_root_dir}/jump/models/eval/moa/image_task/all_moa2.csv
 
-    max_obs_per_class: 10000000
+
+    max_obs_per_class: 1024
     min_obs_per_class: 0
     # max_obs_per_class: 1024
     # min_obs_per_class: 500
@@ -82,4 +83,4 @@ moa_image_task:
 
   callbacks:
     model_checkpoint:
-      dirpath: ${eval.moa_image_task.trainer.default_root_dir}/checkpoints
+      dirpath: ${eval.all_moa.trainer.default_root_dir}/checkpoints
