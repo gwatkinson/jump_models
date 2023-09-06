@@ -35,7 +35,6 @@ class StratifiedSplitter(BaseSplitter):
     def set_compound_list(self, compound_list: List[str]):
         """Set the compound list."""
         self.compound_list = compound_list
-        self.normalize_train_val_test()
 
     def __call__(
         self,
