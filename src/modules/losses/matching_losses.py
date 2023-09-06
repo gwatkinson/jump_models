@@ -7,12 +7,18 @@ from torch import Tensor, nn
 from torch.nn import functional as F
 from torch.nn.modules.loss import _Loss
 
+from src.modules.layers.fusion import DeepsetFusionWithTransformer
+
 # TODO: Improve the fusion of the two embeddings (instead of simple concatenation)
 
 
 class CatFusion:
     def __call__(self, graph_emb, img_emb):
         return torch.cat([graph_emb, img_emb], dim=1)
+
+
+class SimpleDeepsetFusionWithTransformer:
+    pass
 
 
 class GraphImageMatchingLoss(_Loss):
