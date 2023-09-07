@@ -239,7 +239,7 @@ class BatchEffectDataModule(LightningDataModule):
                 self.train_dataset = BatchEffectDataset(
                     target_load_df=self.target_load_df.iloc[train_df["index"].tolist()],
                     target_to_num=self.label_to_idx,
-                    label_col=self.label_col,
+                    target_col=self.label_col,
                     transform=self.transform,
                     channels=self.channels,
                     data_root_dir=self.data_root_dir,
@@ -251,7 +251,7 @@ class BatchEffectDataModule(LightningDataModule):
                 self.val_dataset = BatchEffectDataset(
                     target_load_df=self.target_load_df.iloc[val_df["index"].tolist()],
                     target_to_num=self.label_to_idx,
-                    label_col=self.label_col,
+                    target_col=self.label_col,
                     transform=self.transform,
                     channels=self.channels,
                     data_root_dir=self.data_root_dir,
@@ -262,7 +262,7 @@ class BatchEffectDataModule(LightningDataModule):
             self.test_dataset = BatchEffectDataset(
                 target_load_df=self.target_load_df.iloc[test_df["index"].tolist()],
                 target_to_num=self.label_to_idx,
-                label_col=self.label_col,
+                target_col=self.label_col,
                 transform=self.transform,
                 channels=self.channels,
                 data_root_dir=self.data_root_dir,
