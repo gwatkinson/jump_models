@@ -119,13 +119,12 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     if cfg.get("evaluate"):
         log.info("Starting evaluation!")
 
-        for evaluator_cfg in cfg.eval:
+        for key in cfg.eval:
             evaluator = utils.instantiate_evaluator(
-                evaluator_cfg,
+                cfg.eval[key],
                 model_cfg=cfg.model,
                 logger=logger,
                 ckpt_path=cfg.ckpt_path,
-                name=evaluator_cfg.name,
             )
 
             evaluator.run()
