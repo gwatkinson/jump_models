@@ -85,7 +85,8 @@ class MoleculeImageDataset(Dataset):
         bad_compounds = ["InChI=1S/Mo/q+6", "InChI=1S/3Na.V/q;;;+8"]
 
         for compound in bad_compounds:
-            del self.compound_dict[compound]  # remove bad compounds from the dict
+            if compound in self.compound_dict:
+                del self.compound_dict[compound]  # remove bad compounds from the dict
 
         self.compound_list = list(self.compound_dict.keys())
 

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import torch
 import torch.nn.functional as F
@@ -133,7 +133,7 @@ class RegularizationLoss(_Loss):
 class CombinationLoss(_Loss):
     def __init__(
         self,
-        losses: List[_Loss],
+        losses: Dict[_Loss],
         norm: bool = True,
         weights: Optional[List[float]] = None,
     ):
@@ -143,7 +143,7 @@ class CombinationLoss(_Loss):
         self.weights = weights or [1 / len(losses)] * len(losses)
 
         if self.norm:
-            for loss_fn in self.losses:
+            for loss_fn in self.losses.values():
                 if hasattr(loss_fn, "norm"):
                     loss_fn.norm = False  # To avoid double normalization
 
@@ -155,13 +155,17 @@ class CombinationLoss(_Loss):
         loss_dict = {}
         keys = []
         loss = 0
-        for loss_fn, weight in zip(self.losses, self.weights):
-            key = getattr(loss_fn, "name", loss_fn.__class__.__name__)
+        for loss_name, weight in zip(self.losses, self.weights):
+            if hasattr(self.losses[loss_name], "name"):
+                key = self.losses[loss_name].name
+            else:
+                key = loss_name
+
             if key in keys:
                 key += "_"  # Add underscore to avoid overwriting
             keys.append(key)
 
-            loss_results = loss_fn(z1, z2, **kwargs)
+            loss_results = self.losses[loss_name](z1, z2, **kwargs)
 
             if isinstance(loss_results, dict):
                 loss_value = loss_results["loss"]
@@ -194,16 +198,16 @@ class RegLoss(CombinationLoss):
     ):
         weights = [1 - alpha, alpha]
 
-        losses = [
-            loss_fn,
-            RegularizationLoss(
+        losses = {
+            "temp_loss": loss_fn,
+            "reg_loss": RegularizationLoss(
                 mse_reg=mse_reg,
                 l1_loss=l1_reg,
                 uniformity_reg=uniformity_reg,
                 variance_reg=variance_reg,
                 covariance_reg=covariance_reg,
             ),
-        ]
+        }
 
         super().__init__(losses=losses, weights=weights, norm=norm)
 

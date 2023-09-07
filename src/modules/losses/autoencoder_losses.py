@@ -59,12 +59,12 @@ class VariationalAutoEncoderLoss(torch.nn.Module):
         y_hat = self.decoder(z)
 
         reconstruction_loss = self.criterion(y_hat, y)
-        kl_loss = self.beta * torch.mean(-0.5 * torch.sum(1 + log_var - mu**2 - log_var.exp(), dim=1), dim=0)
+        kl_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu**2 - log_var.exp(), dim=1), dim=0)
 
         loss_dict = {
             "reconstruction_loss": reconstruction_loss,
             "kl_loss": kl_loss,
-            "loss": reconstruction_loss + kl_loss,
+            "loss": reconstruction_loss + self.beta * kl_loss,
         }
 
         return loss_dict
