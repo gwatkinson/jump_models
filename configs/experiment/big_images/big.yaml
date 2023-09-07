@@ -3,8 +3,9 @@
 defaults:
   - override /data: jump_cl.yaml
   - override /model: jump_cl.yaml
-  - override /model/image_encoder: efficientnet.yaml
-  - override /model/molecule_encoder: coati_tall.yaml
+  - override /model/image_encoder: resnet34.yaml
+  - override /model/molecule_encoder: pna_pretrained.yaml
+  - override /model/criterion: ntxent_reg.yaml
   - override /model/optimizer: adamw.yaml
   - override /model/scheduler: cosine_annealing_with_warmup.yaml
   - override /callbacks: default.yaml
@@ -19,10 +20,10 @@ defaults:
 tags:
   - big_images
   - big_jump_cl
-  - nlp_coati
+  - pretrained
   - clip_like
-  - ${model.molecule_encoder.pretrained_name}
-  - ${model.image_encoder.instance_model_name}
+  - pna
+  - resnet34
 
 seed: 12345
 
@@ -30,18 +31,32 @@ compile: False
 
 evaluate: True
 
-trainer:
-  min_epochs: 5
-  max_epochs: 50
-  log_every_n_steps: 1
-  # gradient_clip_val: 0.5
-  num_sanity_val_steps: 1
-  # reload_dataloaders_every_n_epochs: 1
 
-  devices: ???
+model:
+  embedding_dim: 512
+  lr: 3e-4
+
+  image_encoder:
+    pretrained: True
+
+  scheduler:
+    warmup_epochs: 10
+    max_epochs: ${trainer.max_epochs}
+
+  criterion:
+    temperature: 0.5
+    alpha: 0.05
+    mse_reg: 0.1
+    l1_reg: 0.1
+    uniformity_reg: 0
+    variance_reg: 1
+    covariance_reg: 0.25
+
+  example_input_path: null
+
 
 data:
-  batch_size: 1024
+  batch_size: 384
   num_workers: 24
   prefetch_factor: 2
   drop_last: True
@@ -65,17 +80,16 @@ data:
   train_ids_name: train_big
 
 
-model:
-  embedding_dim: 512
-  lr: 1e-4
+trainer:
+  min_epochs: 5
+  max_epochs: 100
+  log_every_n_steps: 1
+  # gradient_clip_val: 0.5
+  num_sanity_val_steps: 1
+  # reload_dataloaders_every_n_epochs: 1
 
-  scheduler:
-    warmup_epochs: 10
-    max_epochs: ${trainer.max_epochs}
+  devices: ???
 
-
-  example_input_path: null
-  # example_input_path: ${paths.data_root_dir}/jump/models/example_batch/simple_jump_cl/batch.pth
 
 callbacks:
   wandb_watcher:
@@ -88,14 +102,11 @@ callbacks:
     min_delta: 0
     mode: "min"
 
-  # image_backbone_freezer:
-  #   unfreeze_backbone_at_epoch: 4
-
 
 logger:
   wandb:
     tags: ${tags}
-    project: "coati_big"
+    project: "big_images"
     group: null
     job_type: ""
     log_model: True
