@@ -40,15 +40,6 @@ model:
     warmup_epochs: 10
     max_epochs: ${trainer.max_epochs}
 
-  criterion:
-    temperature: 0.5
-    alpha: 0.05
-    mse_reg: 0.1
-    l1_reg: 0.1
-    uniformity_reg: 0
-    variance_reg: 1
-    covariance_reg: 0.25
-
   example_input_path: null
 
 
