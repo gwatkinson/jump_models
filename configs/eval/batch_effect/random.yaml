@@ -32,7 +32,7 @@ batch_effect_random:
     val_size: 0.1
     test_size: 0.2
 
-    batch_size: 256
+    batch_size: 196
     num_workers: 16
     pin_memory: False
     prefetch_factor: 2
@@ -55,7 +55,7 @@ batch_effect_random:
     default_root_dir: ${paths.output_dir}/eval/batch_effect/random
     devices: ${trainer.devices}
     min_epochs: 0
-    max_epochs: 100
+    max_epochs: 25
     log_every_n_steps: 1
     # gradient_clip_val: 0.5
     num_sanity_val_steps: 1
