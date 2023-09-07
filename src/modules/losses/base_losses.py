@@ -133,7 +133,7 @@ class RegularizationLoss(_Loss):
 class CombinationLoss(_Loss):
     def __init__(
         self,
-        losses: Dict[_Loss],
+        losses: Dict[str, _Loss],
         norm: bool = True,
         weights: Optional[List[float]] = None,
     ):
