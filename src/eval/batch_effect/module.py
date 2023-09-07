@@ -24,11 +24,11 @@ logger = pylogger.get_pylogger(__name__)
 
 class BatchEffectModule(LightningModule):
     prefix = "batch_effect"
-    split_name = None  # random, plate_aware, source_aware
     default_criterion = nn.CrossEntropyLoss
 
     def __init__(
         self,
+        split_name=None,  # random, plate_aware, source_aware
         num_classes: int = 118,
         cross_modal_module: Optional[LightningModule] = None,
         optimizer: Optional[torch.optim.Optimizer] = None,
@@ -44,6 +44,7 @@ class BatchEffectModule(LightningModule):
     ):
         super().__init__()
 
+        self.split_name = split_name
         self.num_classes = num_classes
         self.additional_metrics = {
             "AUROC": MulticlassAUROC(num_classes=self.num_classes, average="weighted"),

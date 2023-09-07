@@ -10,7 +10,8 @@ from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
 
 from src import utils
-from src.eval import EvaluatorList
+
+# from src.eval import EvaluatorList
 
 pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 # ------------------------------------------------------------------------------------ #
@@ -118,20 +119,27 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     if cfg.get("evaluate"):
         log.info("Starting evaluation!")
 
-        log.info("Instantiating evaluators ...")
-        evaluator_list: Optional[EvaluatorList] = utils.instantiate_evaluator_list(
-            cfg.get("eval"),
-            model_cfg=cfg.model,
-            logger=logger,
-            ckpt_path=ckpt_path,
-        )
+        for evaluator_cfg in cfg.eval:
+            evaluator = utils.instantiate_evaluator(
+                evaluator_cfg,
+                model_cfg=cfg.model,
+                logger=logger,
+                ckpt_path=cfg.ckpt_path,
+                name=evaluator_cfg.name,
+            )
 
-        if logger:
-            log.info("Logging eval config!")
-            utils.log_evaluator_config(cfg, trainer)
+            evaluator.run()
 
-        if evaluator_list is not None:
-            evaluator_list.run()
+        # log.info("Instantiating evaluators ...")
+        # evaluator_list: Optional[EvaluatorList] = utils.instantiate_evaluator_list(
+        #     cfg.get("eval"),
+        #     model_cfg=cfg.model,
+        #     logger=logger,
+        #     ckpt_path=ckpt_path,
+        # )
+
+        # if evaluator_list is not None:
+        # evaluator_list.run()
 
     # merge train and test metrics
     metric_dict = {**train_metrics, **test_metrics}

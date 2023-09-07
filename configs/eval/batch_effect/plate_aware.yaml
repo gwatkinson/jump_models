@@ -8,11 +8,13 @@ batch_effect_plate_aware:
   model:
     _target_: src.eval.batch_effect.module.BatchEffectModule
 
+    split_name: plate_aware
+
     lr: 1e-4
     num_classes: 118
 
     scheduler:
-      warmup_epochs: 10
+      warmup_epochs: 3
       max_epochs: ${eval.batch_effect_plate_aware.trainer.max_epochs}
 
     example_input_path: ${model.example_input_path}
@@ -54,7 +56,7 @@ batch_effect_plate_aware:
     default_root_dir: ${paths.output_dir}/eval/batch_effect/plate_aware
     devices: ${trainer.devices}
     min_epochs: 0
-    max_epochs: 100
+    max_epochs: 25
     log_every_n_steps: 1
     # gradient_clip_val: 0.5
     num_sanity_val_steps: 1

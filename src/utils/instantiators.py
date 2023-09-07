@@ -55,6 +55,54 @@ def instantiate_loggers(logger_cfg: DictConfig, verbose=True) -> List[Logger]:
     return logger
 
 
+def instantiate_evaluator(
+    evaluator_cfg: DictConfig,
+    model_cfg: DictConfig,
+    logger: Optional[List[Logger]] = None,
+    ckpt_path: Optional[str] = None,
+    name: Optional[str] = None,
+):
+    model_cfg = deepcopy(model_cfg)
+
+    if ckpt_path is not None:
+        model_cfg["_target_"] += ".load_from_checkpoint"
+        with open_dict(model_cfg):
+            model_cfg["checkpoint_path"] = ckpt_path
+            model_cfg["map_location"] = "cpu"
+
+    if isinstance(evaluator_cfg, DictConfig):
+        if "model" in evaluator_cfg:
+            model = hydra.utils.instantiate(model_cfg)
+            module = hydra.utils.instantiate(evaluator_cfg.model, cross_modal_module=model)
+        else:
+            raise ValueError("Evaluator config must contain a model!")
+
+        if "datamodule" in evaluator_cfg:
+            datamodule = hydra.utils.instantiate(evaluator_cfg.datamodule)
+        else:
+            raise ValueError("Evaluator config must contain a datamodule!")
+
+        if "callbacks" in evaluator_cfg:
+            callbacks = instantiate_callbacks(evaluator_cfg.callbacks, verbose=False)
+        else:
+            callbacks = []
+
+        if "trainer" in evaluator_cfg:
+            trainer = hydra.utils.instantiate(evaluator_cfg.trainer, callbacks=callbacks, logger=logger)
+        else:
+            trainer = None
+
+        if evaluator_cfg.evaluator.name is None:
+            evaluator_cfg.evaluator.name = name
+
+        log.info(f"Instantiating evaluator <{evaluator_cfg.model._target_}>")
+        evaluator = hydra.utils.instantiate(
+            evaluator_cfg.evaluator, model=module, datamodule=datamodule, trainer=trainer
+        )
+
+        return evaluator
+
+
 def instantiate_evaluator_list(
     evaluator_list_cfg: DictConfig,
     model_cfg: DictConfig,

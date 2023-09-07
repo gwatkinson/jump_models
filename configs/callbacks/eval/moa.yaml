@@ -30,6 +30,7 @@ wandb_plotter:
   fig_kws:
     figsize: [16, 16]
   plot_kws:
+    annot: True
     cmap: Blues
     cbar: False
     square: True

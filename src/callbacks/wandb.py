@@ -125,7 +125,7 @@ class WandbPlottingCallback(WandbTrainingCallback):
                     # df_cm_normed = array / array.sum(axis=1, keepdims=True)
 
                     fig_, ax_ = plt.subplots(**self.fig_kws)
-                    sns.heatmap(df_cm, annot=True, ax=ax_, **self.plot_kws)
+                    sns.heatmap(df_cm, ax=ax_, **self.plot_kws)
 
                     # fig_, ax_ = pp_matrix(df_cm, **self.kwargs)
                 else:
@@ -145,8 +145,10 @@ class WandbPlottingCallback(WandbTrainingCallback):
             self.on_epoch_end_plotting(trainer, pl_module, phase="train")
 
     def on_validation_epoch_end(self, trainer, pl_module):
-        if not self.no_logger and (
-            trainer.current_epoch % self.plot_every_n_epoch == 0 or trainer.current_epoch == trainer.max_epochs
+        if (
+            not self.no_logger
+            and (trainer.current_epoch % self.plot_every_n_epoch == 0 or trainer.current_epoch == trainer.max_epochs)
+            and not trainer.sanity_checking
         ):
             self.on_epoch_end_plotting(trainer, pl_module, phase="val")
 

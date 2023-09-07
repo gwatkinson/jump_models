@@ -37,6 +37,8 @@ def log_hyperparameters(object_dict: dict) -> None:
     hparams["callbacks"] = cfg.get("callbacks")
     hparams["extras"] = cfg.get("extras")
 
+    hparams["eval"] = cfg.get("eval")
+
     hparams["task_name"] = cfg.get("task_name")
     hparams["tags"] = cfg.get("tags")
     hparams["ckpt_path"] = cfg.get("ckpt_path")
@@ -53,16 +55,4 @@ def log_ckpt_path(cfg_path: str, loggers) -> None:
 
     # send hparams to all loggers
     for logger in loggers:
-        logger.log_hyperparams(hparams)
-
-
-@rank_zero_only
-def log_evaluator_config(cfg, trainer):
-    hparams = {}
-
-    cfg = OmegaConf.to_container(cfg)
-
-    hparams["eval"] = cfg["eval"]
-
-    for logger in trainer.loggers:
         logger.log_hyperparams(hparams)

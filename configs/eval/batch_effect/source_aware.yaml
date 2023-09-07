@@ -8,6 +8,8 @@ batch_effect_source_aware:
   model:
     _target_: src.eval.batch_effect.module.BatchEffectModule
 
+    split_name: source_aware
+
     lr: 1e-4
     num_classes: 118
 

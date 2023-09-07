@@ -105,24 +105,24 @@ class RegularizationLoss(_Loss):
         loss = 0
         loss_dict = {}
         if self.mse_reg > 0:
-            mse_reg = self.mse_reg * self.mse_loss(z1, z2)
-            loss += mse_reg
+            mse_reg = self.mse_loss(z1, z2)
+            loss += self.mse_reg * mse_reg
             loss_dict["mse_loss"] = mse_reg
         if self.l1_reg > 0:
-            l1_loss = self.l1_reg * self.l1_loss(z1, z2)
-            loss += l1_loss
+            l1_loss = self.l1_loss(z1, z2)
+            loss += self.l1_reg * l1_loss
             loss_dict["l1_loss"] = l1_loss
         if self.variance_reg > 0:
-            std_loss = self.variance_reg * (std_loss_fn(z1) + std_loss_fn(z2))
-            loss += std_loss
+            std_loss = std_loss_fn(z1) + std_loss_fn(z2)
+            loss += self.variance_reg * std_loss
             loss_dict["std_loss"] = std_loss
         if self.covariance_reg > 0:
-            cov_loss = self.covariance_reg * (cov_loss_fn(z1) + cov_loss_fn(z2))
-            loss += cov_loss
+            cov_loss = cov_loss_fn(z1) + cov_loss_fn(z2)
+            loss += self.covariance_reg * cov_loss
             loss_dict["cov_loss"] = cov_loss
         if self.uniformity_reg > 0:
-            uniformity_loss = self.uniformity_reg * uniformity_loss_fn(z1, z2)
-            loss += uniformity_loss
+            uniformity_loss = uniformity_loss_fn(z1, z2)
+            loss += self.uniformity_reg * uniformity_loss
             loss_dict["uniformity_loss"] = uniformity_loss
 
         loss_dict["loss"] = loss

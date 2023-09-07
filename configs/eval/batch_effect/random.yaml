@@ -8,6 +8,7 @@ batch_effect_random:
   model:
     _target_: src.eval.batch_effect.module.BatchEffectModule
 
+    split_name: random
     lr: 1e-4
     num_classes: 118
 
