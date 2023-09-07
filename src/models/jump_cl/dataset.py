@@ -10,10 +10,12 @@ import pandas as pd
 import torch
 from PIL import UnidentifiedImageError
 from torch.utils.data import Dataset
-from tqdm.rich import tqdm
 
 from src.utils import pylogger
 from src.utils.io import load_image_paths_to_array
+
+# from tqdm.rich import tqdm
+
 
 py_logger = pylogger.get_pylogger(__name__)
 
@@ -70,18 +72,20 @@ class MoleculeImageDataset(Dataset):
         self.image_list = self.load_df.index.tolist()
 
         self.check_transform = check_transform
-        if check_transform:
-            py_logger.info("Checking compounds with transformation...")
-            bad_compounds = []
-            for compound in tqdm(self.compound_dict):
-                try:
-                    self.compound_transform(compound)
-                except Exception as e:
-                    bad_compounds.append(compound)
-                    py_logger.warning(f"Could not transform compound {compound}. Error: {e}")
+        # if check_transform:
+        #     py_logger.info("Checking compounds with transformation...")
+        #     bad_compounds = []
+        #     for compound in tqdm(self.compound_dict):
+        #         try:
+        #             self.compound_transform(compound)
+        #         except Exception as e:
+        #             bad_compounds.append(compound)
+        #             py_logger.warning(f"Could not transform compound {compound}. Error: {e}")
 
-            for compound in bad_compounds:
-                del self.compound_dict[compound]  # remove bad compounds from the dict
+        bad_compounds = ["InChI=1S/Mo/q+6", "InChI=1S/3Na.V/q;;;+8"]
+
+        for compound in bad_compounds:
+            del self.compound_dict[compound]  # remove bad compounds from the dict
 
         self.compound_list = list(self.compound_dict.keys())
 

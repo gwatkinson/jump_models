@@ -125,7 +125,10 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
                 ckpt_path=cfg.ckpt_path,
             )
 
-            evaluator.run()
+            try:
+                evaluator.run()
+            except Exception as e:
+                log.error(f"Error while running {evaluator}: {e}")
 
         # log.info("Instantiating evaluators ...")
         # evaluator_list: Optional[EvaluatorList] = utils.instantiate_evaluator_list(

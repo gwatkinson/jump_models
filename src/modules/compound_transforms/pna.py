@@ -9,6 +9,9 @@ from ogb.utils.features import atom_to_feature_vector, bond_to_feature_vector
 
 # from rdkit.Chem.rdmolops import GetAdjacencyMatrix
 from src.modules.compound_transforms.base_compound_transform import DefaultCompoundTransform
+from src.utils import pylogger
+
+py_logger = pylogger.get_pylogger(__name__)
 
 
 class PNATransform(DefaultCompoundTransform):
@@ -40,6 +43,13 @@ class PNATransform(DefaultCompoundTransform):
             edge_features_list.append(edge_feature)
             edges_list.append((j, i))
             edge_features_list.append(edge_feature)
+
+        if len(edges_list) == 0:
+            # if n_atoms == 2:
+            #     edges_list = [(0, 1), (1, 0)]
+            #     edge_features_list = [[0, 0, 0], [0, 0, 0]]
+            py_logger.warning(f"Empty edges for {smiles}")
+            return None
 
         # Graph connectivity in COO format with shape [2, num_edges]
         edge_index = torch.tensor(edges_list, dtype=torch.long).T

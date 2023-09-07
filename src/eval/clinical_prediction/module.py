@@ -151,29 +151,37 @@ class HintClinicalModule(LightningModule):
             "test": self.test_plot_metrics,
         }
 
-    def forward_smiles_lst_lst(self, smiles_lst_lst):
+    def get_batched_graphs(self, smiles_lst_lst):
         ids = []
         graphs = []
 
         for i, smiles_lst in enumerate(smiles_lst_lst):
-            ids.extend([i] * len(smiles_lst))
             for smiles in smiles_lst:
                 if self.compound_transform is not None:
                     smiles = self.compound_transform(smiles)
-                graphs.append(smiles)
+
+                if smiles is not None:
+                    graphs.append(smiles)
+                    ids.append(i)
 
         batched_graphs = default_collate(graphs).to(self.device)
+
+        return batched_graphs, ids
+
+    def forward_smiles_lst_lst(self, smiles_lst_lst):
+        batched_graphs, ids = self.get_batched_graphs(smiles_lst_lst)
 
         b_emb = self.molecule_encoder(batched_graphs)
         ids = torch.IntTensor(ids).to(self.device)
 
+        # Average the embeddings wrt the ids
         bincount = torch.bincount(ids, minlength=len(ids))
         numerator = torch.zeros_like(b_emb)
         numerator = numerator.index_add(0, ids, b_emb)
-        empty_ids = bincount != 0
-        div = bincount.float()[empty_ids]
+        non_empty_ids = bincount != 0
+        div = bincount.float()[non_empty_ids]
 
-        mean = torch.div(numerator[empty_ids].t(), div).t()
+        mean = torch.div(numerator[non_empty_ids].t(), div).t()
 
         return mean
 

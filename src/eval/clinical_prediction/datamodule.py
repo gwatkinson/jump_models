@@ -46,8 +46,11 @@ class HintClinicalDataset(Dataset):
         valid_smiles = []
         for smiles in smiles_list:
             mol = datamol.to_mol(smiles)
+            if smiles in ["[Cl-].[Na+]"]:
+                continue
             if mol is not None:
                 valid_smiles.append(datamol.to_smiles(mol))
+
         return valid_smiles
 
     def validate_df(self):
