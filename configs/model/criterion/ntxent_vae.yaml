@@ -26,5 +26,5 @@ losses:
     _target_: src.modules.losses.autoencoder_losses.VariationalAutoEncoderLoss
     emb_dim: 128
     loss: cosine
-    detach_target: True
+    detach_target: False
     beta: 1
