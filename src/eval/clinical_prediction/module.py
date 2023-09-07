@@ -261,9 +261,7 @@ class HintClinicalModule(LightningModule):
         if self.split_lr_in_groups:
             optimizer = self.split_groups()
         else:
-            optimizer = self.optimizer(
-                filter(lambda p: p.requires_grad, self.parameters()), lr=self.lr, name="learning_rate"
-            )
+            optimizer = self.optimizer(filter(lambda p: p.requires_grad, self.parameters()), lr=self.lr)
 
         # optimizer = self.optimizer(params=filter(lambda p: p.requires_grad, self.parameters()))
         if self.scheduler is not None:

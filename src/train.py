@@ -126,21 +126,15 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
             ckpt_path=ckpt_path,
         )
 
+        if logger:
+            log.info("Logging eval config!")
+            utils.log_evaluator_config(cfg, trainer)
+
         if evaluator_list is not None:
             evaluator_list.run()
 
     # merge train and test metrics
     metric_dict = {**train_metrics, **test_metrics}
-
-    if logger and evaluator_list:
-        eval_dict = {
-            "cfg": cfg,
-            "evaluators": evaluator_list,
-            "trainer": trainer,
-        }
-
-        log.info("Logging hyperparameters!")
-        utils.log_hyperparameters(eval_dict)
 
     return metric_dict, object_dict
 

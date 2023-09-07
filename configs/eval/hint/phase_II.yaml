@@ -25,7 +25,7 @@ phase_II:
   datamodule:
     _target_: src.eval.clinical_prediction.datamodule.HintClinicalDataModulePhaseII
 
-    hint_dir: ${paths.data_root_dir}/hint
+    hint_dir: ${paths.data_root_dir}/hint-clinical-trial-outcome-prediction/data
 
     smiless_col: smiless
     label_col: label

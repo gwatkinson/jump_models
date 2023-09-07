@@ -10,6 +10,7 @@ import pandas as pd
 import torch
 from PIL import UnidentifiedImageError
 from torch.utils.data import Dataset
+from tqdm.rich import tqdm
 
 from src.utils import pylogger
 from src.utils.io import load_image_paths_to_array
@@ -72,7 +73,7 @@ class MoleculeImageDataset(Dataset):
         if check_transform:
             py_logger.info("Checking compounds with transformation...")
             bad_compounds = []
-            for compound in self.compound_dict:
+            for compound in tqdm(self.compound_dict):
                 try:
                     self.compound_transform(compound)
                 except Exception as e:

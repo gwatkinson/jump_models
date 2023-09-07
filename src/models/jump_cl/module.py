@@ -128,10 +128,12 @@ class BasicJUMPModule(LightningModule):
     def model_step(self, batch: Any, batch_idx: int, stage: str, **kwargs):
         image_emb = self.image_encoder(batch["image"])
         compound_emb = self.molecule_encoder(batch["compound"])
-        batch_size = image_emb.shape[0]
+        batch_size, metric_dim = image_emb.shape
 
         total_image_emb = self.all_gather(image_emb, sync_grads=True)
+        total_image_emb = total_image_emb.view(-1, metric_dim)
         total_compound_emb = self.all_gather(compound_emb, sync_grads=True)
+        total_compound_emb = total_compound_emb.view(-1, metric_dim)
 
         losses = self.criterion(total_image_emb, total_compound_emb)
 

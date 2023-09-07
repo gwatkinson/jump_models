@@ -17,7 +17,8 @@ def instantiate_callbacks(callbacks_cfg: DictConfig, verbose=True) -> List[Callb
     callbacks: List[Callback] = []
 
     if not callbacks_cfg:
-        log.warning("No callback configs found! Skipping..")
+        if verbose:
+            log.warning("No callback configs found! Skipping..")
         return callbacks
 
     if not isinstance(callbacks_cfg, DictConfig):
@@ -38,7 +39,8 @@ def instantiate_loggers(logger_cfg: DictConfig, verbose=True) -> List[Logger]:
     logger: List[Logger] = []
 
     if not logger_cfg:
-        log.warning("No logger configs found! Skipping...")
+        if verbose:
+            log.warning("No logger configs found! Skipping...")
         return logger
 
     if not isinstance(logger_cfg, DictConfig):

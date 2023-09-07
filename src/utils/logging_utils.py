@@ -54,3 +54,15 @@ def log_ckpt_path(cfg_path: str, loggers) -> None:
     # send hparams to all loggers
     for logger in loggers:
         logger.log_hyperparams(hparams)
+
+
+@rank_zero_only
+def log_evaluator_config(cfg, trainer):
+    hparams = {}
+
+    cfg = OmegaConf.to_container(cfg)
+
+    hparams["eval"] = cfg["eval"]
+
+    for logger in trainer.loggers:
+        logger.log_hyperparams(hparams)
