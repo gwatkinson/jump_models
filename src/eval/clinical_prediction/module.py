@@ -88,6 +88,8 @@ class HintClinicalModule(LightningModule):
 
         # compound transform
         self.compound_transform = compound_transform
+        if self.compound_transform is not None:
+            self.compound_transform.compound_str_type = "smiles"
 
         # head
         self.embedding_dim = self.molecule_encoder.out_dim
