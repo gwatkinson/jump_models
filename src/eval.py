@@ -150,7 +150,8 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
 @click.argument("ckpt_path", type=click.Path(exists=True))
 @click.option("--eval_cfg", "-e", type=str, help="Evaluator config to run", default="evaluators")
 @click.option("--devices", "-d", help="List of devices to use", multiple=True, type=int, default=None)
-def main(ckpt_path: str, eval_cfg, devices) -> None:
+@click.option("--test", "-t", help="Test", default=False)
+def main(ckpt_path: str, eval_cfg, devices, test) -> None:
     """Main entrypoint for evaluation.
 
     Loads the config from the relative position of the checkpoint path.
@@ -164,6 +165,7 @@ def main(ckpt_path: str, eval_cfg, devices) -> None:
     cfg.paths.work_dir = os.getcwd()
 
     cfg.ckpt_path = ckpt_path
+    cfg.test = test
 
     eval_cfg_path = Path(cfg.paths.root_dir) / "configs" / "eval" / f"{eval_cfg}.yaml"
     if not eval_cfg_path.exists():
