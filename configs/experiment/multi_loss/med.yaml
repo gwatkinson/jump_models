@@ -5,7 +5,7 @@ defaults:
   - override /model: jump_cl.yaml
   - override /model/image_encoder: resnet34.yaml
   - override /model/molecule_encoder: pna_pretrained.yaml
-  - override /model/criterion: ntxent_reg.yaml
+  - override /model/criterion: ntxent_vae.yaml
   - override /model/optimizer: adamw.yaml
   - override /model/scheduler: cosine_annealing_with_warmup.yaml
   - override /callbacks: default.yaml
@@ -34,7 +34,7 @@ evaluate: True
 
 model:
   embedding_dim: 512
-  lr: 1e-4
+  lr: 3e-4
 
   scheduler:
     warmup_epochs: 10
@@ -53,7 +53,7 @@ model:
 
 
 data:
-  batch_size: 128
+  batch_size: 196
   num_workers: 24
   prefetch_factor: 2
   drop_last: True
