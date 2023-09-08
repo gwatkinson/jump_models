@@ -151,7 +151,7 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
 
 @click.command()
 @click.argument("ckpt_path", type=click.Path(exists=True))
-@click.option("--eval_cfg", "-e", type=str, help="Evaluator config to run", default="evaluators")
+@click.option("--eval_cfg", "-e", type=str, help="Evaluator config to run", default="evaluators")  # , multiple=True
 @click.option("--devices", "-d", help="List of devices to use", multiple=True, type=int, default=None)
 @click.option("--test", "-t", help="Test", default=False)
 def main(ckpt_path: str, eval_cfg, devices, test) -> None:
@@ -169,6 +169,23 @@ def main(ckpt_path: str, eval_cfg, devices, test) -> None:
 
     cfg.ckpt_path = ckpt_path
     cfg.test = test
+
+    # if isinstance(eval_cfg, str):
+    #     eval_cfg = [eval_cfg]
+
+    # eval_dict = {}
+
+    # for eval_cfg_ in eval_cfg:
+    #     eval_cfg_path = Path(cfg.paths.root_dir) / "configs" / "eval" / f"{eval_cfg_}.yaml"
+    #     if not eval_cfg_path.exists():
+    #         raise ValueError(f"Config for {eval_cfg_} not found!")
+
+    #     abs_config_dir = str(eval_cfg_path.parent.parent.resolve())
+
+    #     with initialize_config_dir(version_base=None, config_dir=abs_config_dir):
+    #         eval_cfg_ = compose(config_name=f"eval/{eval_cfg_}")
+
+    #     eval_dict = OmegaConf.merge(eval_dict, eval_cfg_)
 
     eval_cfg_path = Path(cfg.paths.root_dir) / "configs" / "eval" / f"{eval_cfg}.yaml"
     if not eval_cfg_path.exists():
