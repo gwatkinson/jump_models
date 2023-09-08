@@ -125,7 +125,7 @@ class MoleculeImageDataset(Dataset):
         #     self.cached_compounds[compound] = tr_compound
         return tr_compound
 
-    def __getitem__(self, idx):
+    def get_item(self, idx):
         # start = time.time()
         compound = self.compound_list[idx]  # An inchi or smiles string
         corresponding_images = self.compound_dict[compound]  # A list of indices into the load_df
@@ -172,3 +172,14 @@ class MoleculeImageDataset(Dataset):
                 corresponding_images = [i for i in corresponding_images if i != image_id]
 
         raise RuntimeError(f"Could not find an image for compound {compound} after {self.max_tries} tries.")
+
+    def __getitem__(self, idx):
+        tries = 0
+        while tries < self.max_tries:
+            try:
+                out = self.get_item(idx)
+                return out
+            except Exception as e:
+                idx = random.randint(0, self.n_compounds - 1)
+                tries += 1
+                py_logger.warning(f"Could not get item {idx}. Try: {tries}/{self.max_tries}. Error: {e}")

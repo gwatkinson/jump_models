@@ -135,6 +135,8 @@ class BasicJUMPModule(LightningModule):
         total_compound_emb = self.all_gather(compound_emb, sync_grads=True)
         total_compound_emb = total_compound_emb.view(-1, metric_dim)
 
+        batch_size, metric_dim = total_image_emb.shape
+
         losses = self.criterion(total_image_emb, total_compound_emb)
 
         if isinstance(losses, dict):
