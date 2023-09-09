@@ -407,6 +407,34 @@ class BasicJUMPDataModule(LightningDataModule):
                 compression="snappy",
                 index=True,
             )
+            
+        retrieval_compound_path = Path(self.split_path) / "retrieval_compound_dict.json"
+        retrieval_load_df_path = Path(self.split_path) / "retrieval_load_df.parquet"
+        if not retrieval_compound_path.exists() or not retrieval_load_df_path.exists():
+            if "load_df_with_meta" not in locals():
+                py_logger.debug(f"Loading local load data df from {img_path} ...")
+                load_df_with_meta = load_load_df_from_parquet(img_path)
+
+            if "compound_dict" not in locals():
+                py_logger.debug(f"Loading compound dictionary from {comp_path} ...")
+                with open(comp_path) as handle:
+                    compound_dict = json.load(handle)
+
+            retrieval_cpds = pd.read_csv(retrieval_ids_path).iloc[:, 0].tolist()
+
+            retrieval_compound_dict = {k: v for k, v in compound_dict.items() if k in retrieval_cpds}
+            retrieval_ids = [item for sublist in retrieval_compound_dict.values() for item in sublist]
+            retrieval_load_df = load_df_with_meta.loc[retrieval_ids]
+
+            with open(retrieval_compound_path, "w") as handle:
+                json.dump(retrieval_compound_dict, handle)
+
+            retrieval_load_df.to_parquet(
+                path=str(retrieval_load_df_path),
+                engine="pyarrow",
+                compression="snappy",
+                index=True,
+            )
 
     def replace_root_dir(self, df: pd.DataFrame) -> pd.DataFrame:
         if self.data_root_dir is not None:
