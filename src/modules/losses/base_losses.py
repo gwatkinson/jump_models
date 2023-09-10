@@ -3,7 +3,6 @@ from typing import Dict, List, Optional
 import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
-from torch.nn.modules.loss import _Loss
 
 
 def uniformity_loss_fn(x1: Tensor, x2: Tensor, t=2) -> Tensor:
@@ -57,7 +56,7 @@ class ClampedParameter:
         return f"{name}: {self.value.item()}"
 
 
-class LossWithTemperature(_Loss):
+class LossWithTemperature(nn.Module):
     def __init__(
         self,
         temperature: float = 0.5,
@@ -78,7 +77,7 @@ class LossWithTemperature(_Loss):
         raise NotImplementedError
 
 
-class RegularizationLoss(_Loss):
+class RegularizationLoss(nn.Module):
     def __init__(
         self,
         mse_reg: float = 1,
@@ -130,10 +129,10 @@ class RegularizationLoss(_Loss):
         return loss_dict
 
 
-class CombinationLoss(_Loss):
+class CombinationLoss(nn.Module):
     def __init__(
         self,
-        losses: Dict[str, _Loss],
+        losses: Dict[str, nn.Module],
         norm: bool = True,
         weights: Optional[List[float]] = None,
     ):
@@ -186,7 +185,7 @@ class CombinationLoss(_Loss):
 class RegLoss(CombinationLoss):
     def __init__(
         self,
-        loss_fn: _Loss,
+        loss_fn: nn.Module,
         alpha: float = 0.05,
         norm: bool = True,
         mse_reg: float = 1.0,
