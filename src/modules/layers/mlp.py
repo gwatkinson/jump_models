@@ -18,7 +18,7 @@ class LinearWithActivation(nn.Sequential):
         self.out_dim = out_dim
         self.dropout = dropout
 
-        layers = [nn.Linear(in_dim, out_dim)]
+        layers = [nn.Linear(in_features=int(in_dim), out_features=int(out_dim))]
 
         if norm_layer is not None:
             layers.append(norm_layer(out_dim))
