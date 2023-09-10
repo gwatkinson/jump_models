@@ -17,7 +17,7 @@ class FingerprintsWithMLP(nn.Module):
         self,
         input_dim: int,
         out_dim: int = 512,
-        embedding_dim: Union[int, List[int]] = [512, 512, 512, 512],
+        embedding_dim: Union[int, List[int]] = [512, 512, 512],
         activation_layer: Optional[Callable[..., nn.Module]] = nn.ReLU,
         norm_layer: Optional[Callable[..., nn.Module]] = None,
         dropout: float = 0.0,
@@ -28,14 +28,18 @@ class FingerprintsWithMLP(nn.Module):
 
         self.backbone = MLP(
             input_dim,
-            out_dim,
+            embedding_dim,
             embedding_dim=embedding_dim,
             activation_layer=activation_layer,
             norm_layer=norm_layer,
             dropout=dropout,
         )
 
+        self.projection_head = nn.Linear(embedding_dim, out_dim)
+
         logger.info(f"Using Fingerprint MLP")
 
     def forward(self, x):
-        return self.backbone(x)
+        z = self.backbone(x)
+        z = self.projection_head(z)
+        return z
