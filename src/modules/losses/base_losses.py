@@ -146,6 +146,8 @@ class CombinationLoss(nn.Module):
                 if hasattr(loss_fn, "norm"):
                     loss_fn.norm = False  # To avoid double normalization
 
+        self.losses = nn.ModuleDict(self.losses)
+
     def forward(self, z1, z2, **kwargs) -> Tensor:
         if self.norm:
             z1 = F.normalize(z1, dim=-1, p=2)

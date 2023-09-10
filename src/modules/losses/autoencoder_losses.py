@@ -12,7 +12,7 @@ def cosine_similarity(p, z, average=True):
     return loss
 
 
-class VariationalAutoEncoderLoss(torch.nn.Module):
+class VariationalAutoEncoderLoss(nn.Module):
     def __init__(self, emb_dim, loss, detach_target, beta=1):
         super().__init__()
 

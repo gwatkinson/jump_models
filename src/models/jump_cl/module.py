@@ -145,18 +145,13 @@ class BasicJUMPModule(LightningModule):
                 prog_bar=False,
                 on_step=(stage == "train"),
                 on_epoch=True,
+                sync_dist=True,
             )
         else:
             loss = losses
 
         self.loss_dict[stage](loss)
-        self.log(f"{stage}/loss", self.loss_dict[stage], batch_size=batch_size, **kwargs)
-
-        # if self.trainer.num_devices > 1:
-        #     devices_loss = self.all_gather(loss)  # Need to gather losses when using DDP to not fall out of sync
-        #     condition = all(torch.isfinite(loss) for loss in devices_loss)
-        # else:
-        #     condition = torch.isfinite(loss)
+        self.log(f"{stage}/loss", self.loss_dict[stage], batch_size=batch_size, sync_dist=True, **kwargs)
 
         if not torch.isfinite(loss):
             logger.info(f"Loss of batch {batch_idx} is {loss}. Returning None.")
