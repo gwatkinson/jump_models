@@ -58,6 +58,8 @@ class BasicJUMPModule(LightningModule):
         self.image_encoder = image_encoder
         self.molecule_encoder = molecule_encoder
         self.criterion = criterion
+
+        # self.criterion.to(self.device)
         self.split_lr_in_groups = split_lr_in_groups
 
         if image_backbone is not None:
@@ -83,12 +85,6 @@ class BasicJUMPModule(LightningModule):
         self.batch_size = batch_size
         self.lr = lr
 
-        # self.steps = {
-        #     "train": 0.0,
-        #     "val": 0.0,
-        #     "test": 0.0,
-        # }
-
         # training
         self.optimizer = optimizer
         self.scheduler = scheduler
@@ -113,11 +109,13 @@ class BasicJUMPModule(LightningModule):
             logger.debug(f"Loading example input from: {example_input_path}")
             self.example_input_array = torch.load(example_input_path)
 
-    def forward(self, image, compound):
+    def forward(self, image, compound, **kwargs):
         image_emb = self.image_encoder(image)  # BxE
         compound_emb = self.molecule_encoder(compound)  # BxE
 
-        return {"image_emb": image_emb, "compound_emb": compound_emb}
+        loss = self.criterion(image_emb, compound_emb)
+
+        return {"loss": loss, "image_emb": image_emb, "compound_emb": compound_emb}
 
     def on_train_start(self):
         # by default lightning executes validation step sanity checks before training starts,
