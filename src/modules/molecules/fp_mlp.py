@@ -22,13 +22,14 @@ class FingerprintsWithMLP(nn.Module):
         norm_layer: Optional[Callable[..., nn.Module]] = None,
         dropout: float = 0.0,
     ):
+        logger.info(f"Using Fingerprint MLP")
         super().__init__()
         self.input_dim = input_dim
         self.out_dim = out_dim
 
         self.backbone = MLP(
-            input_dim,
-            embedding_dim,
+            input_dim=input_dim,
+            out_dim=embedding_dim,
             embedding_dim=embedding_dim,
             activation_layer=activation_layer,
             norm_layer=norm_layer,
@@ -37,9 +38,8 @@ class FingerprintsWithMLP(nn.Module):
 
         self.projection_head = nn.Linear(in_features=embedding_dim, out_features=out_dim)
 
-        logger.info(f"Using Fingerprint MLP")
-
     def forward(self, x):
+        x = x.squeeze().float()
         z = self.backbone(x)
         z = self.projection_head(z)
         return z
