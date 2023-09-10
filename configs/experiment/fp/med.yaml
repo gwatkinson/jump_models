@@ -47,8 +47,8 @@ model:
 
 
 data:
-  batch_size: 196
-  num_workers: 24
+  batch_size: 128
+  num_workers: 8
   prefetch_factor: 2
   drop_last: True
 
