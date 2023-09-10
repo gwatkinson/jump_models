@@ -76,6 +76,7 @@ model:
 
       gim:
         _target_: src.modules.losses.matching_losses.GraphImageMatchingLoss
+        embedding_dim: ${model.embedding_dim}
         norm: False
 
 
