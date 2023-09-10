@@ -29,14 +29,14 @@ class FingerprintsWithMLP(nn.Module):
 
         self.backbone = MLP(
             input_dim=input_dim,
-            out_dim=embedding_dim,
+            out_dim=out_dim,
             embedding_dim=embedding_dim,
             activation_layer=activation_layer,
             norm_layer=norm_layer,
             dropout=dropout,
         )
 
-        self.projection_head = nn.Linear(in_features=embedding_dim, out_features=out_dim)
+        self.projection_head = nn.Linear(in_features=out_dim, out_features=out_dim)
 
     def forward(self, x):
         x = x.squeeze().float()
