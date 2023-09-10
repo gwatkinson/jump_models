@@ -35,7 +35,7 @@ class FingerprintsWithMLP(nn.Module):
             dropout=dropout,
         )
 
-        self.projection_head = nn.Linear(embedding_dim, out_dim)
+        self.projection_head = nn.Linear(in_features=embedding_dim, out_features=out_dim)
 
         logger.info(f"Using Fingerprint MLP")
 
