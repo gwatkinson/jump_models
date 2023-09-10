@@ -41,6 +41,7 @@ class CatFusion:
 class GraphImageMatchingLoss(_Loss):
     def __init__(
         self,
+        embedding_dim: int,
         norm: bool = True,
         name: str = "GraphImageMatchingLoss",
         fusion_layer=None,
@@ -51,6 +52,15 @@ class GraphImageMatchingLoss(_Loss):
         self.name = name
         if fusion_layer is None:
             self.fusion_layer = CatFusion()
+
+        self.gim_head = nn.Sequential(
+            nn.ReLU(),
+            nn.LayerNorm(2 * embedding_dim),
+            nn.Linear(2 * embedding_dim, 2 * embedding_dim),
+            nn.ReLU(),
+            nn.LayerNorm(2 * embedding_dim),
+            nn.Linear(2 * embedding_dim, 2),
+        )
 
     def forward(self, graph_emb, img_emb, **kwargs) -> Tensor:
         batch_size, metric_dim = graph_emb.size()
