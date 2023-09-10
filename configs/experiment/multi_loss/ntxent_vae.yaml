@@ -69,7 +69,7 @@ model:
 
       autoencoder:
         _target_: src.modules.losses.autoencoder_losses.VariationalAutoEncoderLoss
-        emb_dim: ${model.model.embedding_dim}
+        emb_dim: ${model.embedding_dim}
         loss: cosine
         detach_target: False
         beta: 1
