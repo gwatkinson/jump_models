@@ -1,0 +1,128 @@
+# @package _global_
+
+defaults:
+  - override /data: jump_cl.yaml
+  - override /model: jump_cl.yaml
+  - override /model/image_encoder: resnet34.yaml
+  - override /model/molecule_encoder: pna_pretrained.yaml
+  - override /model/criterion: ntxent_vae.yaml
+  - override /model/optimizer: adamw.yaml
+  - override /model/scheduler: cosine_annealing_with_warmup.yaml
+  - override /callbacks: default.yaml
+  - override /trainer: gpu.yaml
+  - override /logger: many_loggers.yaml
+  - override /eval: evaluators.yaml
+
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags:
+  - big_images
+  - big_jump_cl
+  - pretrained
+  - clip_like
+  - pna
+  - resnet34
+
+seed: 12345
+
+compile: False
+
+evaluate: True
+
+
+model:
+  embedding_dim: 512
+  lr: 3e-4
+
+  scheduler:
+    warmup_epochs: 10
+    max_epochs: ${trainer.max_epochs}
+
+  example_input_path: null
+
+  criterion:
+    _target_: src.modules.losses.base_losses.CombinationLoss
+    norm: True
+    weights: [1, 1]
+
+    losses:
+      NTXent:
+        _target_: src.modules.losses.contrastive_losses.NTXent
+        norm: True
+        temperature: 15
+        return_rank: True
+
+        temperature_requires_grad: False  # If True, temperature is learned
+
+        temperature_min: 0      # Not used if requires_grad is False
+        temperature_max: 100
+
+      # regularization:
+      #   _target_: src.modules.losses.base_losses.RegularizationLoss
+      #   mse_reg: 1            # MSE loss between normalized embeddings
+      #   l1_reg: 0.15            # L1 loss between the embeddings
+      #   uniformity_reg: 0       # Usually leads to inf loss
+      #   variance_reg: 1         # Similar to simreg
+      #   covariance_reg: 0.5
+
+      autoencoder:
+        _target_: src.modules.losses.autoencoder_losses.VariationalAutoEncoderLoss
+        emb_dim: 128
+        loss: cosine
+        detach_target: False
+        beta: 1
+
+
+
+data:
+  batch_size: 196
+  num_workers: 24
+  prefetch_factor: 2
+  drop_last: True
+
+  transform:
+    size: 512
+
+  splitter:
+    train: 32_768
+    test: 8192
+    val: 4096
+    retrieval: 4096
+
+  split_path: ${paths.split_path}/scaffold_split/
+  train_ids_name: train_med
+
+
+trainer:
+  min_epochs: 5
+  max_epochs: 100
+  log_every_n_steps: 1
+  # gradient_clip_val: 0.5
+  num_sanity_val_steps: 1
+  # reload_dataloaders_every_n_epochs: 1
+
+  devices: ???
+
+
+callbacks:
+  wandb_watcher:
+    log_freq: 100
+    watch_log: all
+
+  early_stopping:
+    monitor: "val/loss"
+    patience: 25
+    min_delta: 0
+    mode: "min"
+
+
+
+logger:
+  wandb:
+    tags: ${tags}
+    project: "big_images"
+    group: null
+    job_type: ""
+    log_model: True

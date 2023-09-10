@@ -12,7 +12,7 @@ moa_image_task:
     num_classes: 9  # when min is set to 500, else 26
 
     scheduler:
-      warmup_epochs: 10
+      warmup_epochs: 5
       max_epochs: ${eval.moa_image_task.trainer.max_epochs}
 
     example_input_path: ${model.example_input_path}
@@ -54,7 +54,7 @@ moa_image_task:
 
     # collate_fn: null
 
-    use_cache: True
+    use_cache: False
     force_split: False
     # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
 
@@ -63,7 +63,7 @@ moa_image_task:
     default_root_dir: ${paths.output_dir}/eval/moa
     devices: ${trainer.devices}
     min_epochs: 0
-    max_epochs: 100
+    max_epochs: 50
     log_every_n_steps: 1
     # gradient_clip_val: 0.5
     num_sanity_val_steps: 1

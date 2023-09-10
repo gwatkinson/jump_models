@@ -45,7 +45,7 @@ hiv:
     default_root_dir: ${paths.output_dir}/eval/ogb/hiv/
     devices: ${trainer.devices}
     min_epochs: 0
-    max_epochs: 100
+    max_epochs: 50
     log_every_n_steps: 1
     # gradient_clip_val: 0.5
     num_sanity_val_steps: 1

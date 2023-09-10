@@ -14,13 +14,13 @@ losses:
     temperature_min: 0      # Not used if requires_grad is False
     temperature_max: 100
 
-  regularization:
-    _target_: src.modules.losses.base_losses.RegularizationLoss
-    mse_reg: 1            # MSE loss between normalized embeddings
-    l1_reg: 0.15            # L1 loss between the embeddings
-    uniformity_reg: 0       # Usually leads to inf loss
-    variance_reg: 1         # Similar to simreg
-    covariance_reg: 0.5
+  # regularization:
+  #   _target_: src.modules.losses.base_losses.RegularizationLoss
+  #   mse_reg: 1            # MSE loss between normalized embeddings
+  #   l1_reg: 0.15            # L1 loss between the embeddings
+  #   uniformity_reg: 0       # Usually leads to inf loss
+  #   variance_reg: 1         # Similar to simreg
+  #   covariance_reg: 0.5
 
   autoencoder:
     _target_: src.modules.losses.autoencoder_losses.VariationalAutoEncoderLoss

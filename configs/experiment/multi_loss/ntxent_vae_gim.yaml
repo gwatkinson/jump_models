@@ -42,6 +42,42 @@ model:
 
   example_input_path: null
 
+  criterion:
+    _target_: src.modules.losses.base_losses.CombinationLoss
+    norm: True
+    weights: [1, 1]
+
+    losses:
+      NTXent:
+        _target_: src.modules.losses.contrastive_losses.NTXent
+        norm: False
+        temperature: 15
+        return_rank: True
+
+        temperature_requires_grad: False  # If True, temperature is learned
+
+        temperature_min: 0      # Not used if requires_grad is False
+        temperature_max: 100
+
+      # regularization:
+      #   _target_: src.modules.losses.base_losses.RegularizationLoss
+      #   mse_reg: 1            # MSE loss between normalized embeddings
+      #   l1_reg: 0.15            # L1 loss between the embeddings
+      #   uniformity_reg: 0       # Usually leads to inf loss
+      #   variance_reg: 1         # Similar to simreg
+      #   covariance_reg: 0.5
+
+      autoencoder:
+        _target_: src.modules.losses.autoencoder_losses.VariationalAutoEncoderLoss
+        emb_dim: 128
+        loss: cosine
+        detach_target: False
+        beta: 1
+
+      gim:
+        _target_: src.modules.losses.matching_losses.GraphImageMatchingLoss
+        norm: False
+
 
 data:
   batch_size: 196
