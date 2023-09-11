@@ -9,7 +9,7 @@ defaults:
   - override /model/optimizer: adamw.yaml
   - override /model/scheduler: cosine_annealing_with_warmup.yaml
   - override /callbacks: default.yaml
-  - override /trainer: gpu.yaml  # TODO -> change to ddp ??
+  - override /trainer: ddp.yaml  # TODO -> change to ddp ??
   - override /logger: many_loggers.yaml
   - override /eval: fast.yaml
 
@@ -42,7 +42,7 @@ model:
 
 
 data:
-  batch_size: 1024
+  batch_size: 384
   num_workers: 8
   prefetch_factor: 2
   drop_last: True
@@ -88,7 +88,7 @@ logger:
   wandb:
     tags: ${tags}
     project: "final_experiments"
-    name: "med_batch_size_1024"
+    name: "med_batch_size_768"
     group: batch_size_experiment
     job_type: ""
     log_model: True
