@@ -1,6 +1,7 @@
 from typing import List, Literal, Union
 
 from lightning.pytorch.callbacks import Callback
+from torch.nn import Parameter
 
 from src.modules.layers.utils import _get_layer
 from src.modules.losses import ClampedParameter
@@ -39,6 +40,8 @@ class TemperatureLoggingCallback(Callback):
         temperature = _get_layer(pl_module, self.attribute_name)
         if isinstance(temperature, ClampedParameter):
             temperature = temperature.value.item()
+        elif isinstance(temperature, Parameter):
+            temperature = temperature.item()
         return temperature
 
     def log_temperature(self, trainer, pl_module):
