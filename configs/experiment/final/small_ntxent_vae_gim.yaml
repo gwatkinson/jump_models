@@ -41,7 +41,7 @@ model:
 
 
 data:
-  batch_size: 196
+  batch_size: 128
   num_workers: 16
   prefetch_factor: 2
   drop_last: True
@@ -80,7 +80,6 @@ callbacks:
     patience: 25
     min_delta: 0
     mode: "min"
-
 
 
 logger:

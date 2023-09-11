@@ -81,8 +81,6 @@ callbacks:
     min_delta: 0
     mode: "min"
 
-
-
 logger:
   wandb:
     tags: ${tags}

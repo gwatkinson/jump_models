@@ -153,6 +153,10 @@ class CombinationLoss(nn.Module):
 
         self.losses = nn.ModuleDict(self.losses)
 
+        for loss_fn in self.losses.values():
+            if hasattr(loss_fn, "temperature"):
+                self.temperature = loss_fn.temperature
+
     def forward(self, z1, z2, **kwargs) -> Tensor:
         if self.norm:
             z1 = F.normalize(z1, dim=-1, p=2)
