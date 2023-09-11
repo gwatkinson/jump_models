@@ -18,7 +18,7 @@ tags:
   - final_experiments
   - pretrained
   - ntxent
-  - embedding_dim_experiment
+  - temperature_experiment
   - single_view
   - med_data
   - resnet34
@@ -31,8 +31,12 @@ compile: False
 evaluate: False
 
 model:
-  embedding_dim: 512
+  embedding_dim: 256 # TODO: check if default should be 128 or 256 or 512
   lr: 3e-4
+
+  criterion:
+    temperature: 5
+    temperature_requires_grad: True
 
   scheduler:
     warmup_epochs: 10
@@ -88,7 +92,7 @@ logger:
   wandb:
     tags: ${tags}
     project: "final_experiments"
-    name: "med_emb_512"
-    group: embedding_dim_experiment
+    name: "med_ntxent_temp_grad5"
+    group: temperature_experiment
     job_type: ""
     log_model: True

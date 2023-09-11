@@ -87,8 +87,8 @@ callbacks:
 logger:
   wandb:
     tags: ${tags}
-    project: "final_experiments"
-    name: "med_batch_size_256"
-    group: null
+    project: final_experiments
+    name: med_batch_size_256
+    group: batch_size_experiment
     job_type: ""
     log_model: True

@@ -92,6 +92,6 @@ logger:
     tags: ${tags}
     project: "final_experiments"
     name: "med_ntxent_temp01"
-    group: null
+    group: temperature_experiment
     job_type: ""
     log_model: True

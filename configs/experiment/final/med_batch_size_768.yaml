@@ -89,6 +89,6 @@ logger:
     tags: ${tags}
     project: "final_experiments"
     name: "med_batch_size_1024"
-    group: null
+    group: batch_size_experiment
     job_type: ""
     log_model: True

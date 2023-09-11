@@ -86,8 +86,8 @@ callbacks:
 logger:
   wandb:
     tags: ${tags}
-    project: "final_experiments"
-    name: "big_ntxent"
-    group: null
+    project: final_experiments
+    name: big_ntxent
+    group: dataset_experiment
     job_type: ""
     log_model: True

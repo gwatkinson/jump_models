@@ -89,6 +89,6 @@ logger:
     tags: ${tags}
     project: "final_experiments"
     name: "med_resnet18"
-    group: null
+    group: image_encoder_experiment
     job_type: ""
     log_model: True

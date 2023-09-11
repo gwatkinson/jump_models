@@ -89,6 +89,6 @@ logger:
     tags: ${tags}
     project: "final_experiments"
     name: "med_img_size_128"
-    group: null
+    group: image_size_experiment
     job_type: ""
     log_model: True

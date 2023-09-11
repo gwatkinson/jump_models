@@ -88,6 +88,6 @@ logger:
     tags: ${tags}
     project: "final_experiments"
     name: "small_ntxent"
-    group: null
+    group: dataset_experiment
     job_type: ""
     log_model: True

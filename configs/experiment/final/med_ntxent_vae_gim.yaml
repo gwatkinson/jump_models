@@ -88,6 +88,6 @@ logger:
     tags: ${tags}
     project: "final_experiments"
     name: "med_ntxent_vae_gim"
-    group: null
+    group: loss_experiment
     job_type: ""
     log_model: True

@@ -89,6 +89,6 @@ logger:
     tags: ${tags}
     project: "final_experiments"
     name: "med_fp_encoder"
-    group: null
+    group: molecule_encoder_experiment
     job_type: ""
     log_model: True
