@@ -4,7 +4,7 @@ defaults:
   - override /data: jump_cl.yaml
   - override /model: jump_cl.yaml
   - override /model/image_encoder: resnet34.yaml
-  - override /model/molecule_encoder: pna_pretrained.yaml
+  - override /model/molecule_encoder: gin_contextpred.yaml
   - override /model/criterion: ntxent.yaml
   - override /model/optimizer: adamw.yaml
   - override /model/scheduler: cosine_annealing_with_warmup.yaml
@@ -18,11 +18,11 @@ tags:
   - final_experiments
   - pretrained
   - ntxent
-  - temperature_experiment
+  - molecule_encoder_experiment
   - single_view
   - med_data
   - resnet34
-  - pna
+  - gin
 
 seed: 12345
 
@@ -31,11 +31,8 @@ compile: False
 evaluate: False
 
 model:
-  embedding_dim: 128 # TODO: check if default should be 128 or 256 or 512
+  embedding_dim: 256 # TODO: check if default should be 128 or 256 or 512
   lr: 3e-4
-
-  criterion:
-    temperature: 0.1
 
   scheduler:
     warmup_epochs: 10
@@ -91,7 +88,7 @@ logger:
   wandb:
     tags: ${tags}
     project: "final_experiments"
-    name: "med_ntxent_temp01"
+    name: "med_gin_contextpred"
     group: null
     job_type: ""
     log_model: True
