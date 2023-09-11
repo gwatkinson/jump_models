@@ -197,6 +197,7 @@ def main(ckpt_path: str, eval_cfg, devices, test) -> None:
         eval_cfg = compose(config_name=f"eval/{eval_cfg}")
 
     cfg.eval = eval_cfg.eval
+    cfg.evaluate = True
 
     if devices is not None:
         cfg.trainer.devices = list(devices)

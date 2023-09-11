@@ -6,7 +6,6 @@ from typing import Any, Optional
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from lightning import LightningModule
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MeanMetric, MetricCollection
@@ -33,8 +32,8 @@ class OGBClassificationModule(LightningModule):
 
     prefix = "ogb"
     dataset_name = None
-    out_dim = 1
-    default_criterion = nn.BCEWithLogitsLoss
+    out_dim = 2
+    default_criterion = nn.CrossEntropyLoss
     additional_metrics = [
         BinaryAUROC,
         BinaryAccuracy,
@@ -158,12 +157,11 @@ class OGBClassificationModule(LightningModule):
         logits = self.model(compound)
 
         loss = self.criterion(logits, targets)
-        preds = F.sigmoid(logits)
 
         # update metrics
         self.loss_dict[stage](loss)
-        self.plot_metrics_dict[stage](preds, targets)
-        other_metrics = self.other_metrics_dict[stage](preds, targets)
+        self.plot_metrics_dict[stage](logits[:, -1], targets)
+        other_metrics = self.other_metrics_dict[stage](logits[:, -1], targets)
 
         # log metrics
         self.log(

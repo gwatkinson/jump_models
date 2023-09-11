@@ -49,7 +49,7 @@ class InfoNCE(LossWithTemperature):
         name: str = "InfoNCE",
         **kwargs,
     ):
-        # Access temperature as self.temperature.value
+        # Access temperature as self.temperature
         super().__init__(temperature=temperature, **kwargs)
         self.norm = norm
         self.eps = eps
@@ -65,7 +65,7 @@ class InfoNCE(LossWithTemperature):
             z2_abs = z2.norm(dim=1)
             sim_matrix = sim_matrix / (torch.einsum("i,j->ij", z1_abs, z2_abs) + self.eps)
 
-        sim_matrix = torch.exp(sim_matrix / self.temperature.value)
+        sim_matrix = torch.exp(sim_matrix / self.temperature)
         pos_sim = torch.diagonal(sim_matrix)
         loss = pos_sim / sim_matrix.sum(dim=1)
         loss = -torch.log(loss).mean()
@@ -107,7 +107,7 @@ class NTXent(LossWithTemperature):
             z2_abs = z2.norm(dim=1)
             sim_matrix = sim_matrix / (torch.einsum("i,j->ij", z1_abs, z2_abs) + self.eps)
 
-        sim_matrix = torch.exp(sim_matrix / self.temperature.value)
+        sim_matrix = torch.exp(sim_matrix / self.temperature)
         pos_sim = torch.diagonal(sim_matrix)
         loss = pos_sim / (sim_matrix.sum(dim=1) - pos_sim)  # This is the difference from InfoNCE
         loss = -torch.log(loss).mean()

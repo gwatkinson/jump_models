@@ -3,42 +3,43 @@ import torch.nn.functional as F
 from torch import nn
 
 
-def cosine_similarity(p, z, average=True):
-    p = F.normalize(p, p=2, dim=1)
-    z = F.normalize(z, p=2, dim=1)
-    loss = -(p * z).sum(dim=1)
-    if average:
-        loss = loss.mean()
-    return loss
-
-
 class VariationalAutoEncoderLoss(nn.Module):
-    def __init__(self, emb_dim, loss, detach_target, beta=1):
+    def __init__(
+        self,
+        emb_dim,
+        similarity,
+        beta: float = 1,
+        norm: bool = True,
+        detach_target: bool = False,
+        latent_dim=None,
+    ):
         super().__init__()
 
         self.emb_dim = emb_dim
-        self.loss = loss
+        self.similarity = similarity
         self.detach_target = detach_target
         self.beta = beta
+        self.norm = norm
+
+        self.latent_dim = latent_dim or emb_dim // 4
 
         self.criterion = None
-        if loss == "l1":
+        if similarity == "l1":
             self.criterion = nn.L1Loss()
-        elif loss == "l2":
+        elif similarity == "l2":
             self.criterion = nn.MSELoss()
-        elif loss == "cosine":
-            self.criterion = cosine_similarity
+        elif similarity == "cosine":
+            self.criterion = nn.CosineSimilarity(dim=-1)
 
-        self.fc_mu = nn.Linear(self.emb_dim, self.emb_dim)
-        self.fc_var = nn.Linear(self.emb_dim, self.emb_dim)
+        self.fc_mu = nn.Linear(self.emb_dim, self.latent_dim)
+        self.fc_var = nn.Linear(self.emb_dim, self.latent_dim)
 
         self.decoder = nn.Sequential(
-            nn.Linear(self.emb_dim, self.emb_dim),
-            nn.BatchNorm1d(self.emb_dim),
+            nn.Linear(self.latent_dim, self.latent_dim),
+            nn.BatchNorm1d(self.latent_dim),
             nn.ReLU(),
-            nn.Linear(self.emb_dim, self.emb_dim),
+            nn.Linear(self.latent_dim, self.emb_dim),
         )
-        return
 
     def encode(self, x):
         mu = self.fc_mu(x)
@@ -51,6 +52,10 @@ class VariationalAutoEncoderLoss(nn.Module):
         return mu + eps * std
 
     def forward(self, x, y):
+        if self.norm:
+            x = F.normalize(x, dim=-1, p=2)
+            y = F.normalize(y, dim=-1, p=2)
+
         if self.detach_target:
             y = y.detach()
 
@@ -58,7 +63,7 @@ class VariationalAutoEncoderLoss(nn.Module):
         z = self.reparameterize(mu, log_var)
         y_hat = self.decoder(z)
 
-        reconstruction_loss = self.criterion(y_hat, y)
+        reconstruction_loss = self.criterion(y_hat, y).mean()
         kl_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu**2 - log_var.exp(), dim=1), dim=0)
 
         loss_dict = {
@@ -68,3 +73,13 @@ class VariationalAutoEncoderLoss(nn.Module):
         }
 
         return loss_dict
+
+
+class GraphImageVariatonalEncoderLoss(VariationalAutoEncoderLoss):
+    def forward(self, image, compound, **kwargs):
+        return super().forward(compound, image)
+
+
+class ImageGraphVariatonalEncoderLoss(VariationalAutoEncoderLoss):
+    def forward(self, image, compound, **kwargs):
+        return super().forward(image, compound)

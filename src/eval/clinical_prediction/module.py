@@ -10,7 +10,6 @@ from typing import Any, Callable, Literal, Optional
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from lightning import LightningModule
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MeanMetric, MetricCollection
@@ -34,7 +33,7 @@ class HintClinicalModule(LightningModule):
     prefix: str = "hint"
     phase: Optional[Literal["I", "II", "III"]] = None
 
-    default_criterion = nn.BCEWithLogitsLoss
+    default_criterion = nn.CrossEntropyLoss
 
     additional_metrics = [
         BinaryAUROC(),
@@ -96,7 +95,7 @@ class HintClinicalModule(LightningModule):
         self.head = nn.Sequential(
             nn.Linear(self.embedding_dim, self.embedding_dim),
             nn.ReLU(),
-            nn.Linear(self.embedding_dim, 1),
+            nn.Linear(self.embedding_dim, 2),
         )
 
         # loss function
@@ -196,18 +195,17 @@ class HintClinicalModule(LightningModule):
         logits = self.head(compound_embeddings)
 
         loss = self.criterion(logits, targets)
-        preds = F.sigmoid(logits)
 
         # update metrics
         self.loss_dict[stage](loss)
-        self.plot_metrics_dict[stage](preds, targets)
-        self.other_metrics_dict[stage](preds, targets)
+        self.plot_metrics_dict[stage](logits[:, -1], targets)
+        self.other_metrics_dict[stage](logits[:, -1], targets)
 
         # log metrics
         self.log(
             f"{self.log_prefix}/{stage}/loss", self.loss_dict[stage], on_step=on_step_loss, on_epoch=True, prog_bar=True
         )
-        self.log_dict(self.other_metrics_dict[stage](preds, targets), on_step=False, on_epoch=True, prog_bar=False)
+        self.log_dict(self.other_metrics_dict[stage], on_step=False, on_epoch=True, prog_bar=False)
 
         return {"loss": loss}
 

@@ -66,12 +66,17 @@ class LossWithTemperature(nn.Module):
         **kwargs,
     ):
         super().__init__()
-        self.temperature = ClampedParameter(
+
+        # self.temperature = nn.Parameter(temperature * torch.ones([]), requires_grad=temperature_requires_grad)
+
+        self.temperature_param = ClampedParameter(
             value=temperature,
             min_value=temperature_min,
             max_value=temperature_max,
             requires_grad=temperature_requires_grad,
         )
+
+        self.register_parameter("temperature", self.temperature_param.value)
 
     def forward(z1, z2, **kwargs):
         raise NotImplementedError
@@ -157,11 +162,7 @@ class CombinationLoss(nn.Module):
         keys = []
         loss = 0
         for loss_name, weight in zip(self.losses, self.weights):
-            if hasattr(self.losses[loss_name], "name"):
-                key = self.losses[loss_name].name
-            else:
-                key = loss_name
-
+            key = loss_name
             if key in keys:
                 key += "_"  # Add underscore to avoid overwriting
             keys.append(key)
@@ -242,8 +243,6 @@ class RegWithTemperatureLoss(RegLoss):
             **kwargs,
         )
 
-        self.temperature = loss_fn.temperature
-
         super().__init__(
             loss_fn=loss_fn,
             alpha=alpha,
@@ -254,3 +253,7 @@ class RegWithTemperatureLoss(RegLoss):
             variance_reg=variance_reg,
             covariance_reg=covariance_reg,
         )
+
+    @property
+    def temperature(self):
+        return self.losses["temp_loss"].temperature
