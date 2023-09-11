@@ -31,7 +31,7 @@ compile: False
 evaluate: False
 
 model:
-  embedding_dim: 128 # TODO: check if default should be 128 or 256 or 512
+  embedding_dim: 256 # TODO: check if default should be 128 or 256 or 512
   lr: 3e-4
 
   criterion:
