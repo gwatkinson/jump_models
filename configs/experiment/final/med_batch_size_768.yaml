@@ -68,7 +68,7 @@ trainer:
   # gradient_clip_val: 0.5
   # reload_dataloaders_every_n_epochs: 1
 
-  devices: ???
+  devices: 2
 
 
 callbacks:
