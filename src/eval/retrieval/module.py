@@ -1,7 +1,7 @@
 """LightningModule for Jump MOA datasets evalulation."""
-# flake8: noqa
 
-from typing import Any, Callable, Dict, List, Optional, Union
+import contextlib
+from typing import Any, Callable, Dict, Optional
 
 import torch
 import torch.nn as nn
@@ -47,8 +47,6 @@ class IDRRetrievalModule(LightningModule):
     def __init__(
         self,
         cross_modal_module: Optional[LightningModule] = None,
-        image_encoder_attribute_name: str = "image_encoder",
-        molecule_encoder_attribute_name: str = "molecule_encoder",
         image_encoder: Optional[nn.Module] = None,
         molecule_encoder: Optional[nn.Module] = None,
         distance_metric: Optional[Callable] = None,
@@ -59,32 +57,30 @@ class IDRRetrievalModule(LightningModule):
 
         self.save_hyperparameters(logger=False, ignore=["cross_modal_module", "image_encoder", "molecule_encoder"])
 
-        if not (image_encoder or (cross_modal_module and image_encoder_attribute_name)):
+        if not (image_encoder or cross_modal_module):
             raise ValueError("Either image_encoder or cross_modal_module must be provided.")
+
+        if not (molecule_encoder or cross_modal_module):
+            raise ValueError("Either molecule_encoder or cross_modal_module must be provided.")
 
         if image_encoder is not None:
             self.image_encoder = image_encoder
-            self.model_name = image_encoder.__class__.__name__
         else:
-            self.image_encoder = getattr(cross_modal_module, image_encoder_attribute_name)
-            self.model_name = self.image_encoder.__class__.__name__
-
-        if not (molecule_encoder or (cross_modal_module and molecule_encoder_attribute_name)):
-            raise ValueError("Either molecule_encoder or cross_modal_module must be provided.")
+            self.image_encoder = cross_modal_module.image_encoder
+            self.image_projection_head = cross_modal_module.image_projection_head
 
         if molecule_encoder is not None:
             self.molecule_encoder = molecule_encoder
-            self.model_name = molecule_encoder.__class__.__name__
         else:
-            self.molecule_encoder = getattr(cross_modal_module, molecule_encoder_attribute_name)
-            self.model_name = self.molecule_encoder.__class__.__name__
+            self.molecule_encoder = cross_modal_module.molecule_encoder
+            self.molecule_projection_head = cross_modal_module.molecule_projection_head
 
-        if not self.image_encoder.out_dim == self.molecule_encoder.out_dim:
+        if not self.image_projection_head.out_features == self.molecule_projection_head.out_features:
             raise ValueError(
-                f"Image and molecule encoders must have the same output dimension. Got {self.image_encoder.out_dim} and {self.molecule_encoder.out_dim}."
+                f"Image and molecule encoders must have the same output dimension. Got {self.image_projection_head.out_features} and {self.molecule_projection_head.out_features}."
             )
 
-        self.embedding_dim = self.image_encoder.out_dim
+        self.embedding_dim = self.image_projection_head.out_features
 
         if distance_metric is None:
             self.distance_metric = pairwise_cosine_similarity
@@ -107,20 +103,25 @@ class IDRRetrievalModule(LightningModule):
         output = {"dataloader_idx": dataloader_idx, "batch_idx": batch_idx}
 
         if "compound" in batch:
-            output["compound"] = self.molecule_encoder(batch["compound"])
-            output["activity_flag"] = batch["activity_flag"]
+            compound = batch["compound"]
+            with contextlib.suppress(Exception):
+                compound = compound.squeeze()
+
+            output["compound"] = self.molecule_encoder(compound)
+            output["activity_flag"] = batch["activity_flag"].squeeze()
+
         if "image" in batch:
             output["image"] = self.image_encoder(batch["image"])
 
         return output
 
     def retrieval(self, image_embeddings: torch.Tensor, compound_embeddings: torch.Tensor, activities: torch.Tensor):
-        dist = self.distance_metric(compound_embeddings, image_embeddings)
-        indexes = torch.arange(dist.shape[1])
-        gene_metrics = self.retrieval_metrics(
-            preds=dist, target=activities.expand(dist.T.shape).T, indexes=indexes.expand(dist.shape)
-        )
+        dist = self.distance_metric(compound_embeddings, image_embeddings)  # I x C
+        indexes = torch.arange(dist.shape[1]).expand(dist.shape)  # I x C
+        target = activities.expand(dist.T.shape).T  # I x C
 
-        self.retrieval_metrics.reset()
+        gene_metrics = self.retrieval_metrics(preds=dist, target=target, indexes=indexes)
+
+        # self.retrieval_metrics.reset()
 
         return gene_metrics

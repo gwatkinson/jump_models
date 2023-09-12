@@ -3,12 +3,12 @@ defaults:
 
 _target_: src.modules.molecules.fp_mlp.FingerprintsWithMLP
 input_dim: 2167  # This depends on the number of features in the concatenated fingerprint
-out_dim: ${model.embedding_dim}
-embedding_dim: [1024,768,512]
+out_dim: 128
+embedding_dim: [512,256]
 activation_layer:
   _target_: torch.nn.ReLU
   _partial_: true
 norm_layer:
   _target_: torch.nn.LayerNorm
   _partial_: true
-dropout: 0.2
+dropout: 0.1

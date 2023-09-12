@@ -1,6 +1,6 @@
 _target_: src.modules.losses.base_losses.CombinationLoss
-norm: True
-weights: [1, 1, 1, 1]
+norm: False
+weights: [1, 0.05, 0.025, 0.025]
 
 losses:
   NTXent:
@@ -16,7 +16,7 @@ losses:
     _target_: src.modules.losses.matching_losses.GraphImageMatchingLoss
     norm: False
     embedding_dim: ${model.embedding_dim}
-    fusion_layer: deepset
+    fusion_layer: concat
 
   ve_i2g:
     _target_: src.modules.losses.autoencoder_losses.ImageGraphVariatonalEncoderLoss
@@ -32,4 +32,4 @@ losses:
     similarity: cosine
     detach_target: False
     beta: 1
-    norm:
+    norm: False

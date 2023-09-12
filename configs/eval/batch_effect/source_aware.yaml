@@ -14,7 +14,7 @@ batch_effect_source_aware:
     num_classes: 118
 
     scheduler:
-      warmup_epochs: 10
+      warmup_epochs: 3
       max_epochs: ${eval.batch_effect_source_aware.trainer.max_epochs}
 
     example_input_path: ${model.example_input_path}
@@ -33,7 +33,7 @@ batch_effect_source_aware:
     val_size: 0.1
     test_size: 0.2
 
-    batch_size: 196
+    batch_size: 128
     num_workers: 16
     pin_memory: False
     prefetch_factor: 2

@@ -10,4 +10,4 @@ num_timesteps: 2
 graph_feat_size: 256
 n_tasks: 256
 dropout: 0.2
-out_dim: 512
+# out_dim: 512

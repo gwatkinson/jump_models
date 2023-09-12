@@ -1,7 +1,9 @@
 from typing import Any, Optional
 
 import torch
+import torch.nn.functional as F
 from lightning import LightningModule
+from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MeanMetric
 
@@ -59,26 +61,37 @@ class BasicJUMPModule(LightningModule):
         self.molecule_encoder = molecule_encoder
         self.criterion = criterion
 
+        # projection heads
+        self.image_dim = self.image_encoder.out_dim
+        self.molecule_dim = self.molecule_encoder.out_dim
+
+        self.image_projection_head = nn.Sequential(
+            nn.ReLU(), nn.Dropout(kwargs.get("dropout", 0.1)), nn.Linear(self.image_dim, embedding_dim)
+        )
+        self.molecule_projection_head = nn.Sequential(
+            nn.ReLU(), nn.Dropout(kwargs.get("dropout", 0.1)), nn.Linear(self.molecule_dim, embedding_dim)
+        )
+
         # self.criterion.to(self.device)
         self.split_lr_in_groups = split_lr_in_groups
 
-        if image_backbone is not None:
-            self.image_backbone = getattr(self.image_encoder, image_backbone)
-        else:
-            self.image_backbone = None
-        if molecule_backbone is not None:
-            self.molecule_backbone = getattr(self.molecule_encoder, molecule_backbone)
-        else:
-            self.molecule_backbone = None
+        # if image_backbone is not None:
+        #     self.image_backbone = getattr(self.image_encoder, image_backbone)
+        # else:
+        #     self.image_backbone = None
+        # if molecule_backbone is not None:
+        #     self.molecule_backbone = getattr(self.molecule_encoder, molecule_backbone)
+        # else:
+        #     self.molecule_backbone = None
 
-        if image_head is not None:
-            self.image_head = getattr(self.image_encoder, image_head)
-        else:
-            self.image_head = None
-        if molecule_head is not None:
-            self.molecule_head = getattr(self.molecule_encoder, molecule_head)
-        else:
-            self.molecule_head = None
+        # if image_head is not None:
+        #     self.image_head = getattr(self.image_encoder, image_head)
+        # else:
+        #     self.image_head = None
+        # if molecule_head is not None:
+        #     self.molecule_head = getattr(self.molecule_encoder, molecule_head)
+        # else:
+        #     self.molecule_head = None
 
         # embedding dim
         self.embedding_dim = embedding_dim
@@ -110,8 +123,11 @@ class BasicJUMPModule(LightningModule):
             self.example_input_array = torch.load(example_input_path)
 
     def forward(self, image, compound, **kwargs):
-        image_emb = self.image_encoder(image)  # BxE
-        compound_emb = self.molecule_encoder(compound)  # BxE
+        image_emb = self.image_encoder(image)  # BxI
+        image_emb = self.image_projection_head(image_emb)  # BxE
+
+        compound_emb = self.molecule_encoder(compound)  # BxC
+        compound_emb = self.molecule_projection_head(compound_emb)  # BxE
 
         loss = self.criterion(image_emb, compound_emb)
 
@@ -125,7 +141,13 @@ class BasicJUMPModule(LightningModule):
 
     def model_step(self, batch: Any, batch_idx: int, stage: str, **kwargs):
         image_emb = self.image_encoder(batch["image"])
+        image_emb = self.image_projection_head(image_emb)
+        image_emb = F.normalize(image_emb, dim=-1)
+
         compound_emb = self.molecule_encoder(batch["compound"])
+        compound_emb = self.molecule_projection_head(compound_emb)
+        compound_emb = F.normalize(compound_emb, dim=-1)
+
         batch_size, metric_dim = image_emb.shape
 
         total_image_emb = self.all_gather(image_emb, sync_grads=True)

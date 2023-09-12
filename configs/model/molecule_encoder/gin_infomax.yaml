@@ -6,6 +6,6 @@ defaults:
 
 _target_: src.modules.molecules.dgllife_gin.GINPretrainedWithLinearHead
 pretrained_name: "gin_supervised_infomax"
-out_dim: ${model.embedding_dim}
+# out_dim: ${model.embedding_dim}
 pooling: mean
 preload: True

@@ -8,14 +8,13 @@ bbbp:
   model:
     _target_: src.eval.ogb.module.BBBPModule
 
-    lr: 5e-4
+    lr: 1e-4
 
     scheduler:
       warmup_epochs: 3
       max_epochs: ${eval.bbbp.trainer.max_epochs}
 
     example_input_path: ${model.example_input_path}
-    # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
 
     split_lr_in_groups: False
 
@@ -45,9 +44,8 @@ bbbp:
     default_root_dir: ${paths.output_dir}/eval/ogb/bbbp/
     devices: ${trainer.devices}
     min_epochs: 0
-    max_epochs: 50
+    max_epochs: 25
     log_every_n_steps: 1
-    # gradient_clip_val: 0.5
     num_sanity_val_steps: 1
     check_val_every_n_epoch: 1
 

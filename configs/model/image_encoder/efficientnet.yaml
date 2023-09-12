@@ -2,6 +2,7 @@
 
 _target_: src.modules.images.timm_pretrained.CNNEncoder
 instance_model_name: tf_efficientnetv2_s.in21k_ft_in1k
-target_num: ${model.embedding_dim}
+# target_num: ${model.embedding_dim}  # TODO: not use target dim in encoder (but in module)
 n_channels: 5
 pretrained: True
+# out_dim: 128  #

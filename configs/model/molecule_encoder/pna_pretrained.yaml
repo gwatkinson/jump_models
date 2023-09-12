@@ -4,7 +4,7 @@ defaults:
 _target_: src.modules.molecules.pna.PNA
 
 ckpt_path: ${paths.projects_dir}/cpjump1/jump/s3_cache/best_checkpoint_35epochs.pt
-out_dim: ${model.embedding_dim}
+# out_dim: ${model.embedding_dim}
 target_dim: 256
 hidden_dim: 200
 mid_batch_norm: True

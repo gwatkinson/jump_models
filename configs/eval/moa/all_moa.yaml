@@ -23,7 +23,7 @@ all_moa:
     _target_: src.eval.moa.datamodule.JumpMOADataModule
 
 
-    batch_size: 256
+    batch_size: 128
     num_workers: 16
     pin_memory: False
     prefetch_factor: 2

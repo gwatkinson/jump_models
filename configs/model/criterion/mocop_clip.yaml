@@ -1,0 +1,10 @@
+_target_: src.modules.losses.contrastive_losses.MOCOPLoss
+norm: False
+temperature: 10
+return_rank: True
+only_average: False
+
+temperature_requires_grad: False  # If True, temperature is learned
+
+temperature_min: 0      # Not used if requires_grad is False
+temperature_max: 100

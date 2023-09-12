@@ -15,7 +15,7 @@ class COATI(nn.Module):
     def __init__(
         self,
         pretrained_name: COATI_MODELS = "grande_closed",
-        out_dim: int = 512,
+        # out_dim: int = 512,
         padding_length: Optional[int] = None,
         model_dir: str = "./models",
     ):
@@ -36,16 +36,16 @@ class COATI(nn.Module):
 
         self.backbone = encoder.xformer
 
-        self.out_dim = out_dim
-        self.pretrained_dim = encoder.xformer_config.n_embd
+        # self.out_dim = out_dim
+        self.out_dim = encoder.xformer_config.n_embd
 
-        self.projection_head = nn.Sequential(
-            nn.Linear(self.pretrained_dim, self.out_dim),
-            nn.LayerNorm(self.out_dim),
-            nn.ReLU(),
-            nn.Dropout(0.1),
-            nn.Linear(self.out_dim, self.out_dim),
-        )
+        # self.projection_head = nn.Sequential(
+        #     nn.Linear(self.pretrained_dim, self.out_dim),
+        #     nn.LayerNorm(self.out_dim),
+        #     nn.ReLU(),
+        #     nn.Dropout(0.1),
+        #     nn.Linear(self.out_dim, self.out_dim),
+        # )
 
         logger.info(f"Using pretrained model: {self.pretrained_name}")
 
@@ -54,5 +54,5 @@ class COATI(nn.Module):
 
     def forward(self, tokens, **kwargs):
         z = self.extract(tokens)
-        z = self.projection_head(z)
+        # z = self.projection_head(z)
         return z

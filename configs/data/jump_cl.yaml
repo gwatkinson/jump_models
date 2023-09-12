@@ -50,7 +50,7 @@ dataloader_config:
     drop_last: False
     shuffle: False
   test:
-    batch_size: ${data.batch_size}
+    batch_size: 100  # Always use 100 for test (for retrieval metrics)
     num_workers: ${data.num_workers}
     pin_memory: ${data.pin_memory}
     prefetch_factor: ${data.prefetch_factor}

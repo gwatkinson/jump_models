@@ -1,0 +1,17 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/dataset_experiments/default.yaml@_global_
+
+data:
+  splitter:
+    train: 4096
+
+  train_ids_name: train_small
+
+trainer:
+  devices: ???
+
+logger:
+  wandb:
+    name: small_dataset

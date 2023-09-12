@@ -21,7 +21,7 @@ class AttentiveFPWithLinearHead(nn.Module):
         graph_feat_size: int = 256,
         n_tasks: int = 256,
         dropout: float = 0.2,
-        out_dim: int = 512,
+        # out_dim: int = 512,
         **kwargs,
     ):
         super().__init__()
@@ -31,7 +31,7 @@ class AttentiveFPWithLinearHead(nn.Module):
         self.num_timesteps = num_timesteps
         self.graph_feat_size = graph_feat_size
         self.dropout = dropout
-        self.out_dim = out_dim
+        self.out_dim = n_tasks
 
         self.backbone = AttentiveFPPredictor(
             node_feat_size=node_feat_size,
@@ -43,8 +43,8 @@ class AttentiveFPWithLinearHead(nn.Module):
             dropout=dropout,
         )
 
-        self.pretrained_dim = n_tasks
-        self.projection_head = nn.Linear(self.pretrained_dim, self.out_dim)
+        # self.pretrained_dim = n_tasks
+        # self.projection_head = nn.Linear(self.pretrained_dim, self.out_dim)
 
         logger.info("Using model: AttentiveFPWithLinearHead")
 
@@ -56,11 +56,11 @@ class AttentiveFPWithLinearHead(nn.Module):
         # x is a batch of DGLGraphs created in the custom collate_fn of the dataloader
         if get_node_weight:
             z, node_weight = self.extract(x, get_node_weight=get_node_weight)
-            z = self.projection_head(z)
+            # z = self.projection_head(z)
             return z, node_weight
         else:
             z = self.extract(x, get_node_weight=get_node_weight)
-            z = self.projection_head(z)
+            # z = self.projection_head(z)
             return z
 
     @staticmethod

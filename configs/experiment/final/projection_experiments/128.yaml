@@ -1,0 +1,14 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/projection_experiments/default.yaml@_global_
+
+model:
+  embedding_dim: 128
+
+trainer:
+  devices: ???
+
+logger:
+  wandb:
+    name: med_projection_dim_128

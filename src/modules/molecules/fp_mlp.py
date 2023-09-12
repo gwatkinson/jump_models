@@ -36,10 +36,10 @@ class FingerprintsWithMLP(nn.Module):
             dropout=dropout,
         )
 
-        self.projection_head = nn.Linear(in_features=out_dim, out_features=out_dim)
+        # self.projection_head = nn.Linear(in_features=out_dim, out_features=out_dim)
 
     def forward(self, x):
         x = x.squeeze().float()
         z = self.backbone(x)
-        z = self.projection_head(z)
+        # z = self.projection_head(z)
         return z

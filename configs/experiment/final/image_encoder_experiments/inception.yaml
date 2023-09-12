@@ -1,0 +1,12 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/image_encoder_experiments/default.yaml@_global_
+  - override /model/image_encoder: inception.yaml
+
+trainer:
+  devices: ???
+
+logger:
+  wandb:
+    name: med_inception

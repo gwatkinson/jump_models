@@ -6,6 +6,6 @@ defaults:
 _target_: src.modules.molecules.coati.COATI
 
 pretrained_name: grande_closed   # see https://github.com/terraytherapeutics/COATI/tree/main
-out_dim: ${model.embedding_dim}
+# out_dim: ${model.embedding_dim}
 padding_length: null
 model_dir: ${paths.model_dir}

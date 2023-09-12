@@ -45,26 +45,39 @@ class IDRRetrievalEvaluator(Evaluator):
 
         predict_loaders = self.datamodule.predict_dataloader()
 
-        out_metrics = {}
+        out_metrics = defaultdict(lambda: defaultdict(lambda: 0))
         for gene in predict_loaders:
-            compound_emb = self.trainer.predict(self.model, predict_loaders[gene]["molecule"])
-            activities = concat_from_list_of_dict(compound_emb, "activity_flag")
-            compound_emb = concat_from_list_of_dict(compound_emb, "compound")
+            # List of the embeddings of each group -> Ng x 120 x E
+            compound_embs = self.trainer.predict(self.model, predict_loaders[gene]["molecule"])
+
+            # activities = concat_from_list_of_dict(compound_emb, "activity_flag")
+            # compound_emb = concat_from_list_of_dict(compound_emb, "compound")
 
             image_emb = self.trainer.predict(self.model, predict_loaders[gene]["image"])
+            # Only needed if more images than batch size (rare) -> Ni x E
             image_emb = concat_from_list_of_dict(image_emb, "image")
 
-            gene_metrics = self.model.retrieval(
-                image_embeddings=image_emb, compound_embeddings=compound_emb, activities=activities
-            )
+            num_groups = len(compound_embs)
+            for group in compound_embs:
+                activities = group["activity_flag"]
+                compound_emb = group["compound"]
 
-            out_metrics[gene] = gene_metrics
+                gene_group_metrics = self.model.retrieval(
+                    image_embeddings=image_emb, compound_embeddings=compound_emb, activities=activities
+                )
+
+                for metric in gene_group_metrics:
+                    out_metrics[gene][metric] += gene_group_metrics[metric] / num_groups
+
+        out_metrics = dict(out_metrics)
 
         mean_metrics = defaultdict(lambda: 0)
+        num_genes = len(out_metrics)
         for gene in out_metrics:
             for metric in out_metrics[gene]:
-                mean_metrics[metric] += out_metrics[gene][metric] / len(out_metrics)
+                mean_metrics[metric] += out_metrics[gene][metric] / num_genes
         mean_metrics = dict(mean_metrics)
+
         out_metrics["Average"] = mean_metrics
 
         unfold_metrics = {}
@@ -75,8 +88,6 @@ class IDRRetrievalEvaluator(Evaluator):
         for logger in self.trainer.loggers:
             logger.log_metrics(unfold_metrics)
             logger.save()
-
-        # py_logger.info(f"{self.prefix}Retrieval metrics: {out_metrics}")
 
         return unfold_metrics
 

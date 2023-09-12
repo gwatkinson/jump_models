@@ -163,7 +163,7 @@ class PNA(nn.Module):
         self,
         hidden_dim,
         target_dim,
-        out_dim,
+        # out_dim,
         aggregators: List[str],
         scalers: List[str],
         readout_aggregators: List[str],
@@ -212,7 +212,7 @@ class PNA(nn.Module):
             layers=readout_layers,
             batch_norm_momentum=batch_norm_momentum,
         )
-        self.out_dim = out_dim
+        self.out_dim = target_dim
 
         if ckpt_path is not None:
             ckpt = torch.load(ckpt_path, map_location=torch.device("cpu"))
@@ -232,20 +232,20 @@ class PNA(nn.Module):
 
         self.backbone = self.node_gnn
 
-        self.projection_head = nn.Sequential(
-            nn.Linear(target_dim, out_dim),
-            nn.ReLU(),
-            nn.LayerNorm(out_dim),
-            nn.Dropout(0.1),
-            nn.Linear(out_dim, out_dim),
-        )
+        # self.projection_head = nn.Sequential(
+        #     nn.Linear(target_dim, out_dim),
+        #     nn.ReLU(),
+        #     nn.LayerNorm(out_dim),
+        #     nn.Dropout(0.1),
+        #     nn.Linear(out_dim, out_dim),
+        # )
 
     def forward(self, graph: dgl.DGLGraph):
         self.node_gnn(graph)
         readouts_to_cat = [dgl.readout_nodes(graph, "feat", op=aggr) for aggr in self.readout_aggregators]
         readout = torch.cat(readouts_to_cat, dim=-1)
         emb = self.output(readout)
-        return self.projection_head(emb)
+        return emb
 
 
 class PNAGNN(nn.Module):

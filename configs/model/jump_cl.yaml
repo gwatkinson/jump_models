@@ -19,17 +19,11 @@ scheduler:
     warmup_epochs: 10
     max_epochs: ${trainer.max_epochs}
 
-# /projects/cpjump1/jump/models/example_batch/simple_jump_cl/batch.pth
 example_input_path: ???
 
 # args for the lr scheduler in pytorch lightning
 monitor: val/loss  # metric to monitor for some schedulers
 interval: epoch    # epoch or step
 frequency: 1       # how often to call the scheduler
-
-image_backbone: backbone
-image_head: projection_head
-molecule_backbone: backbone
-molecule_head: projection_head
 
 split_lr_in_groups: False

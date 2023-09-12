@@ -15,20 +15,20 @@ class GATPretrainedWithLinearHead(nn.Module):
     def __init__(
         self,
         pretrained_name: str = "GAT_canonical_PCBA",
-        out_dim: int = 512,
+        # out_dim: int = 512,
         **kwargs,
     ):
         super().__init__()
         self.pretrained_name = pretrained_name
-        self.out_dim = out_dim
+        # self.out_dim = out_dim
 
         self.backbone = dgllife.model.load_pretrained(self.pretrained_name)
-        self.pretrained_dim = self.backbone.gnn.gnn_layers[0].gat_conv.fc.in_features
-        self.projection_head = nn.Sequential(
-            nn.Linear(self.pretrained_dim, self.out_dim),
-            nn.ReLU(),
-            nn.Linear(self.out_dim, self.out_dim),
-        )
+        self.out_dim = self.backbone.gnn.gnn_layers[0].gat_conv.fc.in_features
+        # self.projection_head = nn.Sequential(
+        #     nn.Linear(self.pretrained_dim, self.out_dim),
+        #     nn.ReLU(),
+        #     nn.Linear(self.out_dim, self.out_dim),
+        # )
 
         logger.info(f"Using pretrained model: {self.pretrained_name}")
 
@@ -39,5 +39,5 @@ class GATPretrainedWithLinearHead(nn.Module):
     def forward(self, x):
         # x is a batch of DGLGraphs created in the custom collate_fn of the dataloader
         z = self.extract(x)
-        z = self.projection_head(z)
+        # z = self.projection_head(z)
         return z

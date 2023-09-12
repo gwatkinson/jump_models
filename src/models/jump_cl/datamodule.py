@@ -94,6 +94,7 @@ class BasicJUMPDataModule(LightningDataModule):
         self.train_dataset: Optional[Dataset] = None
         self.val_dataset: Optional[Dataset] = None
         self.test_dataset: Optional[Dataset] = None
+        self.retrieval_dataset: Optional[Dataset] = None
 
         # data loaders
         self.dataloader_config = dataloader_config
@@ -407,7 +408,7 @@ class BasicJUMPDataModule(LightningDataModule):
                 compression="snappy",
                 index=True,
             )
-            
+
         retrieval_compound_path = Path(self.split_path) / "retrieval_compound_dict.json"
         retrieval_load_df_path = Path(self.split_path) / "retrieval_load_df.parquet"
         if not retrieval_compound_path.exists() or not retrieval_load_df_path.exists():
@@ -512,6 +513,26 @@ class BasicJUMPDataModule(LightningDataModule):
                 use_compond_cache=self.use_compond_cache,
             )
 
+        if stage == "retrieval" and self.retrieval_dataset is None:
+            py_logger.info("Preparing retrieval dataset")
+
+            retrieval_load_df = pd.read_parquet(Path(self.split_path) / "retrieval_load_df.parquet")
+            retrieval_load_df = self.replace_root_dir(retrieval_load_df)
+
+            with open(Path(self.split_path) / "retrieval_compound_dict.json") as handle:
+                retrieval_compound_dict = json.load(handle)
+
+            self.retrieval_dataset = self.dataset_cls(
+                load_df=retrieval_load_df,
+                compound_dict=retrieval_compound_dict,
+                transform=self.transform,
+                compound_transform=self.compound_transform,
+                sampler=self.image_sampler,
+                channels=self.channels,
+                col_fstring=self.col_fstring,
+                use_compond_cache=self.use_compond_cache,
+            )
+
     def train_dataloader(self, **kwargs) -> DataLoader:
         train_kwargs = OmegaConf.to_container(self.dataloader_config.train, resolve=True)
         train_kwargs.update(kwargs)
@@ -537,6 +558,16 @@ class BasicJUMPDataModule(LightningDataModule):
             dataset=self.test_dataset,
             collate_fn=self.collate_fn,
             **test_kwargs,
+        )
+
+    def retrieval_dataloader(self, **kwargs) -> DataLoader:
+        retrieval_kwargs = OmegaConf.to_container(self.dataloader_config.test, resolve=True)
+        retrieval_kwargs["batch_size"] = 100  # For 1/100 retrieval
+        retrieval_kwargs.update(kwargs)
+        return DataLoader(
+            dataset=self.retrieval_dataset,
+            collate_fn=self.collate_fn,
+            **retrieval_kwargs,
         )
 
     def teardown(self, stage: Optional[str] = None):

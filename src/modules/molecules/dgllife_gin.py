@@ -16,23 +16,23 @@ class GINPretrainedWithLinearHead(nn.Module):
     def __init__(
         self,
         pretrained_name: str = "gin_supervised_masking",
-        out_dim: int = 512,
+        # out_dim: int = 512,
         pooling: str = "mean",
         **kwargs,
     ):
         super().__init__()
         self.pretrained_name = pretrained_name
-        self.out_dim = out_dim
+        # self.out_dim = out_dim
         self.pooling = pooling
 
         self.backbone = dgllife.model.load_pretrained(self.pretrained_name)
-        self.pretrained_dim = self.backbone.node_embeddings[0].embedding_dim
+        self.out_dim = self.backbone.node_embeddings[0].embedding_dim
         self.pooler = self.get_pooling(pooling)
-        self.projection_head = nn.Sequential(
-            nn.Linear(self.pretrained_dim, self.out_dim),
-            nn.ReLU(),
-            nn.Linear(self.out_dim, self.out_dim),
-        )
+        # self.projection_head = nn.Sequential(
+        #     nn.Linear(self.pretrained_dim, self.out_dim),
+        #     nn.ReLU(),
+        #     nn.Linear(self.out_dim, self.out_dim),
+        # )
 
         logger.info(f"Using pretrained model: {self.pretrained_name}")
 
@@ -45,7 +45,7 @@ class GINPretrainedWithLinearHead(nn.Module):
     def forward(self, x):
         # x is a batch of DGLGraphs created in the custom collate_fn of the dataloader
         z = self.extract(x)
-        z = self.projection_head(z)
+        # z = self.projection_head(z)
         return z
 
     @staticmethod
