@@ -3,7 +3,7 @@ defaults:
   - batch_effect/random@_here_
   - batch_effect/plate_aware@_here_
   - batch_effect/source_aware@_here_
-  - moa/image_task@_here_
+  # - moa/image_task@_here_
   - ogb/tox21@_here_
   - ogb/lipo@_here_
   - ogb/esol@_here_

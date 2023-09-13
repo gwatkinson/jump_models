@@ -78,6 +78,7 @@ class LossWithTemperature(nn.Module):
 
         # self.register_parameter("temperature", self.temperature_param.value)
         self.temperature = nn.Parameter(temperature * torch.ones([]), requires_grad=temperature_requires_grad)
+        self.register_parameter("temperature", self.temperature)
 
     def forward(z1, z2, **kwargs):
         raise NotImplementedError
