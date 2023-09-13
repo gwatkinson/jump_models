@@ -4,7 +4,8 @@ from lightning.pytorch.callbacks import Callback
 from torch.nn import Parameter
 
 from src.modules.layers.utils import _get_layer
-from src.modules.losses import ClampedParameter
+
+# from src.modules.losses import ClampedParameter
 from src.utils import pylogger
 
 log = pylogger.get_pylogger(__name__)
@@ -38,9 +39,9 @@ class TemperatureLoggingCallback(Callback):
 
     def get_temperature(self, pl_module):
         temperature = _get_layer(pl_module, self.attribute_name)
-        if isinstance(temperature, ClampedParameter):
-            temperature = temperature.value.item()
-        elif isinstance(temperature, Parameter):
+        # if isinstance(temperature, ClampedParameter):
+        #     temperature = temperature.value.item()
+        if isinstance(temperature, Parameter):
             temperature = temperature.item()
         return temperature
 

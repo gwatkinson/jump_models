@@ -26,34 +26,34 @@ def std_loss_fn(x):
     return torch.mean(torch.relu(1 - std))
 
 
-class ClampedParameter:
-    def __init__(
-        self, value: float, min_value: float, max_value: float, requires_grad: bool = False, name: Optional[str] = None
-    ):
-        self.min_value = min_value
-        self.max_value = max_value
-        self.requires_grad = requires_grad
-        self.name = name
+# class ClampedParameter:
+#     def __init__(
+#         self, value: float, min_value: float, max_value: float, requires_grad: bool = False, name: Optional[str] = None
+#     ):
+#         self.min_value = min_value
+#         self.max_value = max_value
+#         self.requires_grad = requires_grad
+#         self.name = name
 
-        self._value = nn.Parameter(value * torch.ones([]), requires_grad=requires_grad)
+#         self._value = nn.Parameter(value * torch.ones([]), requires_grad=requires_grad)
 
-    @property
-    def value(self):
-        self.clamp()
-        return self._value
+#     @property
+#     def value(self):
+#         self.clamp()
+#         return self._value
 
-    @value.setter
-    def value(self, value):
-        self._value = nn.Parameter(value * torch.ones([]), requires_grad=self.requires_grad)
-        self.clamp()
+#     @value.setter
+#     def value(self, value):
+#         self._value = nn.Parameter(value * torch.ones([]), requires_grad=self.requires_grad)
+#         self.clamp()
 
-    def clamp(self):
-        if self.requires_grad:
-            self._value.data.clamp_(self.min_value, self.max_value)
+#     def clamp(self):
+#         if self.requires_grad:
+#             self._value.data.clamp_(self.min_value, self.max_value)
 
-    def __repr__(self):
-        name = f"<ClampedParameter> {self.name}" if self.name else "<ClampedParameter>"
-        return f"{name}: {self.value.item()}"
+#     def __repr__(self):
+#         name = f"<ClampedParameter> {self.name}" if self.name else "<ClampedParameter>"
+#         return f"{name}: {self.value.item()}"
 
 
 class LossWithTemperature(nn.Module):
@@ -69,14 +69,15 @@ class LossWithTemperature(nn.Module):
 
         # self.temperature = nn.Parameter(temperature * torch.ones([]), requires_grad=temperature_requires_grad)
 
-        self.temperature_param = ClampedParameter(
-            value=temperature,
-            min_value=temperature_min,
-            max_value=temperature_max,
-            requires_grad=temperature_requires_grad,
-        )
+        # self.temperature_param = ClampedParameter(
+        #     value=temperature,
+        #     min_value=temperature_min,
+        #     max_value=temperature_max,
+        #     requires_grad=temperature_requires_grad,
+        # )
 
-        self.register_parameter("temperature", self.temperature_param.value)
+        # self.register_parameter("temperature", self.temperature_param.value)
+        self.temperature = nn.Parameter(temperature * torch.ones([]), requires_grad=temperature_requires_grad)
 
     def forward(z1, z2, **kwargs):
         raise NotImplementedError
@@ -258,6 +259,4 @@ class RegWithTemperatureLoss(RegLoss):
             covariance_reg=covariance_reg,
         )
 
-    @property
-    def temperature(self):
-        return self.losses["temp_loss"].temperature
+        self.temperature = loss_fn.temperature
