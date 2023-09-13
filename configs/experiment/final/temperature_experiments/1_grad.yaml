@@ -1,0 +1,16 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/temperature_experiments/default.yaml@_global_
+
+model:
+  criterion:
+    temperature: 1
+    temperature_requires_grad: True
+
+trainer:
+  devices: ???
+
+logger:
+  wandb:
+    name: med_temperature_1_grad
