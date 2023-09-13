@@ -79,7 +79,7 @@ callbacks:
 
   early_stopping:
     monitor: "val/loss"
-    patience: 25
+    patience: 10
     min_delta: 0
     mode: "min"
 
