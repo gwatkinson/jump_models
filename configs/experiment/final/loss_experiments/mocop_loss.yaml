@@ -17,6 +17,10 @@ tags:
 trainer:
   devices: ???
 
+model:
+  criterion:
+    temperature: 0.5
+
 logger:
   wandb:
     name: med_mocop_clip_loss
