@@ -19,7 +19,9 @@ trainer:
 
 model:
   criterion:
-    temperature: 0.5
+    losses:
+      InfoNCE:
+        temperature: 0.5
 
 logger:
   wandb:
