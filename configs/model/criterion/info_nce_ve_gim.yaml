@@ -3,7 +3,7 @@ norm: True
 weights: [1, 0.05, 0.025, 0.025]
 
 losses:
-  NTXent:
+  InfoNCE:
     _target_: src.modules.losses.contrastive_losses.InfoNCE
     norm: False
     temperature: 0.5

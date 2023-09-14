@@ -2,7 +2,7 @@
 
 defaults:
   - /experiment/final/loss_experiments/default.yaml@_global_
-  - override /model/criterion: info_nce.yaml
+  - override /model/criterion: info_nce_reg.yaml
 
 tags:
   - final_experiments
@@ -23,4 +23,4 @@ model:
 
 logger:
   wandb:
-    name: med_info_nce_loss
+    name: med_info_nce_reg_loss

@@ -2,6 +2,7 @@
 
 from typing import Optional
 
+import numpy as np
 import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
@@ -119,33 +120,36 @@ class GraphImageMatchingLoss(_Loss):
 
     def sample_negatives(self, x_emb, y_emb):
         batch_size = x_emb.size(0)
+        # ids = np.random.choice(batch_size, batch_size // 2, replace=False)
+        ids = np.arange(batch_size)
 
         with torch.no_grad():
             weights_x2y = F.softmax(pairwise_cosine_similarity(x_emb, y_emb), dim=-1)
             weights_x2y.fill_diagonal_(0)
 
         neg_y = []
-        for b in range(batch_size):
+        for b in ids:
             neg_idx = torch.multinomial(weights_x2y[b], 1).item()
             neg_y.append(y_emb[neg_idx])
         neg_y = torch.stack(neg_y, dim=0)
+        pos_x = x_emb[ids]
 
-        return neg_y
+        return pos_x, neg_y
 
     def stack_embeddings(self, graph_emb, img_emb):
         batch_size = graph_emb.size(0)
 
-        neg_images = self.sample_negatives(graph_emb, img_emb)  # [batch_size, metric_dim]
-        neg_graphs = self.sample_negatives(img_emb, graph_emb)
+        pos_graphs, neg_images = self.sample_negatives(graph_emb, img_emb)  # [batch_size, metric_dim]
+        pos_images, neg_graphs = self.sample_negatives(img_emb, graph_emb)
 
-        graphs = torch.cat([graph_emb, neg_graphs, graph_emb], dim=0)
-        images = torch.cat([img_emb, img_emb, neg_images], dim=0)
+        stacked_graphs = torch.cat([graph_emb, pos_graphs, neg_graphs], dim=0)
+        stacked_images = torch.cat([img_emb, neg_images, pos_images], dim=0)
 
         labels = torch.cat(
             [torch.ones(batch_size, dtype=torch.long), torch.zeros(2 * batch_size, dtype=torch.long)], dim=0
         ).to(graph_emb.device)
 
-        features = self.fusion_layer(graphs, images)
+        features = self.fusion_layer(stacked_graphs, stacked_images)
 
         return features, labels
 
@@ -161,7 +165,7 @@ class GraphImageMatchingLoss(_Loss):
 
         gim_preds = self.head(gim_features)  # [3*batch_size, 2]
 
-        gim_cross_entropy = F.cross_entropy(gim_preds, gim_labels)
+        gim_cross_entropy = F.cross_entropy(gim_preds, gim_labels, weight=torch.tensor([2.0, 1.0]))
 
         auroc = self.auroc(gim_preds[:, 1], gim_labels)
         accuracy = self.accuracy(gim_preds[:, 1], gim_labels)
