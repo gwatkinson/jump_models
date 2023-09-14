@@ -1,6 +1,6 @@
 _target_: src.modules.losses.contrastive_losses.MOCOPLoss
 norm: False
-temperature: 10
+temperature: 1
 return_rank: True
 only_average: False
 
