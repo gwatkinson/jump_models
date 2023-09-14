@@ -553,6 +553,7 @@ class BasicJUMPDataModule(LightningDataModule):
 
     def test_dataloader(self, **kwargs) -> DataLoader:
         test_kwargs = OmegaConf.to_container(self.dataloader_config.test, resolve=True)
+        test_kwargs["batch_size"] = 100  # For 1/100 retrieval
         test_kwargs.update(kwargs)
         return DataLoader(
             dataset=self.test_dataset,
@@ -569,6 +570,9 @@ class BasicJUMPDataModule(LightningDataModule):
             collate_fn=self.collate_fn,
             **retrieval_kwargs,
         )
+
+    def predict_dataloader(self, **kwargs) -> DataLoader:
+        return self.retrieval_dataloader(**kwargs)
 
     def teardown(self, stage: Optional[str] = None):
         """Clean up after fit or test."""
