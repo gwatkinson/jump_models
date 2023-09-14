@@ -2,13 +2,14 @@
 image."""
 
 import random
+from collections import defaultdict
 
 # import time
-from typing import Callable, List, Optional
+from typing import Callable, Dict, List, Optional
 
+import numpy as np
 import pandas as pd
 import torch
-from PIL import UnidentifiedImageError
 from torch.utils.data import Dataset
 
 from src.utils import pylogger
@@ -24,37 +25,47 @@ class MultiviewDataset(Dataset):
     def __init__(
         self,
         load_df: pd.DataFrame,
+        compound_dict: Dict[str, List[str]],
+        n_views: int = 3,
         transform: Optional[Callable] = None,
         compound_transform: Optional[Callable] = None,
-        sampler: Optional[Callable[[List[str]], str]] = None,
         channels: List[str] = ("DNA", "AGP", "ER", "Mito", "RNA"),
         col_fstring: str = "FileName_Orig{channel}",
-        max_tries: int = 10,
-        use_compond_cache: bool = False,
+        # max_tries: int = 10,
+        **kwargs,
     ):
         super().__init__()
 
         # data
         self.load_df = load_df
+        self.compound_dict = compound_dict
+
+        bad_compounds = ["InChI=1S/Mo/q+6", "InChI=1S/3Na.V/q;;;+8"]
+
+        for compound in bad_compounds:
+            if compound in self.compound_dict:
+                del self.compound_dict[compound]  # remove bad compounds from the dict
+
+        self.compound_list = list(self.compound_dict.keys())
+
+        self.n_compounds = len(self.compound_list)
+        self.n_images = len(load_df)
+        self.n_views = n_views
 
         # transforms
         self.transform = transform
         self.compound_transform = compound_transform
 
-        # sampler
-        self.max_tries = max_tries
-        if sampler is None:
-            self.sampler = random.choice
-        else:
-            self.sampler = sampler
+        # self.max_tries = max_tries
 
         # string properties
         self.channels = channels
         self.col_fstring = col_fstring
 
-        # caching
-        self.use_compond_cache = use_compond_cache
-        self.cached_compounds = {}
+    def replace_root_dir(self, new_root_dir: str, old_root_dir: str = "/projects/"):
+        for channel in self.channels:
+            col = self.col_fstring.format(channel=channel)
+            self.load_df[col] = self.load_df[col].str.replace(old_root_dir, new_root_dir)
 
     def __len__(self):
         return self.n_compounds
@@ -62,60 +73,72 @@ class MultiviewDataset(Dataset):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(n_compounds={self.n_compounds}, n_images={self.n_images})"
 
-    def transform_compound(self, compound):
-        if self.cached_compounds and compound in self.cached_compounds:
-            return self.cached_compounds[compound]
-        else:
-            tr_compound = self.compound_transform(compound)
-
-            if self.use_compond_cache:
-                self.cached_compounds[compound] = tr_compound
-            return tr_compound
-
     def __getitem__(self, idx):
-        # start = time.time()
+        # Get the compound
         compound = self.compound_list[idx]  # An inchi or smiles string
-        corresponding_images = self.compound_dict[compound]  # A list of indices into the load_df
-
-        tries = 0
-        fetched = False
-        images_tried = []
 
         if self.compound_transform:
-            tr_compound = self.transform_compound(compound)
+            tr_compound = self.compound_transform(compound)
         else:
             tr_compound = compound
-        # ct_time = time.time()
 
-        while not fetched and tries < self.max_tries and len(corresponding_images) > 0:
-            try:
-                # Random choice in the list of images
-                image_id = self.sampler(corresponding_images)
-                images_tried.append(image_id)
+        # Get the images
+        corresponding_images = self.compound_dict[compound]  # A list of indices into the load_df
+        corresponding_batches = ["__".join(img.split("__")[:2]) for img in corresponding_images]
+        unique_batches = list(set(corresponding_batches))
+        batch_to_num = {batch: i for i, batch in enumerate(unique_batches)}
+        num_batches = len(unique_batches)
 
-                image_paths = [
-                    str(self.load_df.loc[image_id, self.col_fstring.format(channel=channel)])
-                    for channel in self.channels
+        batch_to_images = defaultdict(list)
+        for img, batch in zip(corresponding_images, corresponding_batches):
+            batch_to_images[batch].append(img)
+
+        if num_batches >= self.n_views:  # We have enough batches to sample from
+            batch_to_try = np.random.choice(unique_batches, size=self.n_views, replace=False)
+        else:  # We need to sample with replacement
+            batch_to_try = np.concatenate(
+                [
+                    np.random.permutation(unique_batches),
+                    np.random.choice(unique_batches, size=self.n_views - num_batches, replace=True),
                 ]
-                # path_time = time.time()
+            )
 
-                img_array = load_image_paths_to_array(image_paths)  # A numpy array: (5, 768, 768)
-                img_array = torch.from_numpy(img_array)
-                # img_time = time.time()
+        images = []  # n_views * (5, 768, 768)
+        loaded_images = []
 
-                if self.transform:
-                    img_array = self.transform(img_array, image_id=image_id)
-                # it_time = time.time()
+        for batch in batch_to_try:
+            # print(batch)
+            batch_images = [imgs for imgs in batch_to_images[batch] if imgs not in loaded_images]
+            # tries = 0
+            # fetched = False
 
-                # py_logger.debug(
-                #     f"Timing: compound_transform: {ct_time - start:.2f}s, path: {path_time - ct_time:.2f}s, img: {img_time - path_time:.2f}s, it: {it_time - img_time:.2f}s total: {it_time - start:.2f}s"
-                # )
+            # while not fetched and tries < self.max_tries and len(batch_images) > 0:
+            # try:
 
-                return {"image": img_array, "compound": tr_compound}
+            # Random choice in the list of images
+            image_id = random.choice(batch_images)
+            loaded_images.append(image_id)
 
-            except UnidentifiedImageError:
-                tries += 1
-                py_logger.warning(f"Could not load image {image_id}. Try: {tries}/{self.max_tries}")
-                corresponding_images = [i for i in corresponding_images if i != image_id]
+            image_paths = [
+                str(self.load_df.loc[image_id, self.col_fstring.format(channel=channel)]) for channel in self.channels
+            ]
 
-        raise RuntimeError(f"Could not find an image for compound {compound} after {self.max_tries} tries.")
+            img_array = load_image_paths_to_array(image_paths)  # A numpy array: (5, 768, 768)
+            img_array = torch.from_numpy(img_array)
+
+            if self.transform:
+                img_array = self.transform(img_array)
+
+            images.append(img_array)
+
+            #     except UnidentifiedImageError:
+            #         tries += 1
+            #         py_logger.warning(f"Could not load image {image_id}. Try: {tries}/{self.max_tries}")
+            #         batch_images = [i for i in batch_images if i != image_id]
+
+            # raise RuntimeError(f"Could not find an image for compound {compound} after {self.max_tries} tries.")
+
+        images = torch.stack(images, dim=0)  # (n_views, 5, 768, 768)
+        batches = [batch_to_num[batch] for batch in batch_to_try]
+
+        return {"compound": tr_compound, "image": images, "batch": batches, "compound_name": compound}
