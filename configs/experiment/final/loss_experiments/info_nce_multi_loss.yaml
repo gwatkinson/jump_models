@@ -19,6 +19,6 @@ trainer:
 
 logger:
   wandb:
-    name: med_multi_loss
+    name: med_info_nce_multi_loss
 
 
