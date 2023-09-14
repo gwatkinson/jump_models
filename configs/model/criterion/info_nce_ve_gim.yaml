@@ -21,7 +21,7 @@ losses:
   ve_i2g:
     _target_: src.modules.losses.autoencoder_losses.ImageGraphVariatonalEncoderLoss
     emb_dim: ${model.embedding_dim}
-    similarity: cosine
+    similarity: l2
     detach_target: False
     beta: 1
     norm: False
@@ -29,7 +29,7 @@ losses:
   ve_g2i:
     _target_: src.modules.losses.autoencoder_losses.GraphImageVariatonalEncoderLoss
     emb_dim: ${model.embedding_dim}
-    similarity: cosine
+    similarity: l2
     detach_target: False
     beta: 1
     norm: False

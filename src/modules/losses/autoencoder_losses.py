@@ -29,7 +29,7 @@ class VariationalAutoEncoderLoss(nn.Module):
         elif similarity == "l2":
             self.criterion = nn.MSELoss()
         elif similarity == "cosine":
-            self.criterion = nn.CosineSimilarity(dim=-1)
+            self.criterion = nn.CosineEmbeddingLoss(dim=-1)
 
         self.fc_mu = nn.Linear(self.emb_dim, self.latent_dim)
         self.fc_var = nn.Linear(self.emb_dim, self.latent_dim)
