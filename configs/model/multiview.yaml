@@ -1,0 +1,28 @@
+_target_: src.models.multiview_cl.module.MutliviewModule
+
+defaults:
+  - image_encoder: ???
+  - molecule_encoder: ???
+  - criterion: multiview_ntxent.yaml
+  - optimizer: adamw.yaml
+  - scheduler: cosine_annealing_with_warmup.yaml
+  - _self_
+
+embedding_dim: ???
+lr: ???
+batch_size: ${data.batch_size}
+dropout: 0.1
+
+optimizer:
+  lr: ${model.lr}
+
+scheduler:
+    warmup_epochs: 10
+    max_epochs: ${trainer.max_epochs}
+
+example_input_path: ???
+
+# args for the lr scheduler in pytorch lightning
+monitor: val/loss  # metric to monitor for some schedulers
+interval: epoch    # epoch or step
+frequency: 1       # how often to call the scheduler
