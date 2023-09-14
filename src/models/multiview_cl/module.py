@@ -106,11 +106,17 @@ class MutliviewModule(LightningModule):
         super().on_train_start()
 
     def model_step(self, batch: Any, batch_idx: int, stage: str, **kwargs):
-        image_emb = self.image_encoder(batch["image"])  # BatchSize x Views x ImagesDim
-        image_emb = self.image_projection_head(image_emb)  # B x V x EmbeddingDim
-        image_emb = F.normalize(image_emb, dim=-1)
+        image, compound = batch["image"], batch["compound"]
 
-        compound_emb = self.molecule_encoder(batch["compound"])  # B x CompoundDim
+        batch_size, n_views, *image_shape = image.shape
+        image = image.view(-1, *image_shape)
+        image_emb = self.image_encoder(image)  # (BatchSize * Views) x ImagesDim
+
+        image_emb = self.image_projection_head(image_emb)  # (B * V) x EmbeddingDim
+        image_emb = F.normalize(image_emb, dim=-1)
+        image_emb = image_emb.view(batch_size, n_views, -1)  # B x V x EmbeddingDim
+
+        compound_emb = self.molecule_encoder(compound)  # B x CompoundDim
         compound_emb = self.molecule_projection_head(compound_emb)  # B x E
         compound_emb = F.normalize(compound_emb, dim=-1)
 

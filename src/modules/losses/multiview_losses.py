@@ -85,7 +85,7 @@ class NTXentMultiplePositives(LossWithTemperature):
         self.name = name
         self.return_rank = return_rank  # TODO for multiview
 
-    def forward(self, z2, z1, **kwargs) -> Tensor:
+    def forward(self, image_emb, compound_emb, **kwargs) -> Tensor:
         """
         :param z1: batchsize, metric dim
         :param z2: batchsize, num_conformers, metric dim
@@ -93,6 +93,8 @@ class NTXentMultiplePositives(LossWithTemperature):
         always the same number of conformers are required
         # TODO: make it work with different number of conformers with padding and masking ???
         """
+        z1, z2 = compound_emb, image_emb
+
         batch_size, metric_dim = z1.size()
         z2 = z2.view(batch_size, -1, metric_dim)  # [batch_size, num_conformers, metric_dim]
 
@@ -129,13 +131,15 @@ class KLDivergenceMultiplePositives(LossWithTemperature):
         self.name = name
         self.return_rank = return_rank
 
-    def forward(self, z1, z2, **kwargs) -> Tensor:
+    def forward(self, image_emb, compound_emb, **kwargs) -> Tensor:
         """
         :param z1: batchsize, 2, metric dim
         :param z2: batchsize, num_conformers, metric dim
 
         z1 contains the mean and std with a reparameterization trick ???
         """
+        z1, z2 = compound_emb, image_emb
+
         batch_size, num_conformers, metric_dim = z2.size()
 
         z1_means = z1[:, 0, :]  # [batch_size, metric_dim]
