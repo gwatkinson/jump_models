@@ -165,7 +165,7 @@ class GraphImageMatchingLoss(_Loss):
 
         gim_preds = self.head(gim_features)  # [3*batch_size, 2]
 
-        gim_cross_entropy = F.cross_entropy(gim_preds, gim_labels, weight=torch.tensor([2.0, 1.0]))
+        gim_cross_entropy = F.cross_entropy(gim_preds, gim_labels, weight=torch.tensor([2.0, 1.0]).to(gim_preds.device))
 
         auroc = self.auroc(gim_preds[:, 1], gim_labels)
         accuracy = self.accuracy(gim_preds[:, 1], gim_labels)
