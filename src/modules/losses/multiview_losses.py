@@ -85,7 +85,7 @@ class NTXentMultiplePositives(LossWithTemperature):
         self.name = name
         self.return_rank = return_rank  # TODO for multiview
 
-    def forward(self, z1, z2, **kwargs) -> Tensor:
+    def forward(self, z2, z1, **kwargs) -> Tensor:
         """
         :param z1: batchsize, metric dim
         :param z2: batchsize, num_conformers, metric dim
