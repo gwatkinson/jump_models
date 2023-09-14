@@ -2,7 +2,7 @@
 
 defaults:
   - /experiment/final/loss_experiments/default.yaml@_global_
-  - override /model/criterion: info_nce_ve_gim.yaml
+  - override /model/criterion: info_nce.yaml
 
 tags:
   - final_experiments
@@ -12,13 +12,15 @@ tags:
   - med_data
   - resnet34
   - pna
-  - multi_loss
+  - info_nce
 
 trainer:
   devices: ???
 
+model:
+  criterion:
+    temperature: 0.5
+
 logger:
   wandb:
-    name: med_multi_loss
-
-
+    name: med_info_nce_loss

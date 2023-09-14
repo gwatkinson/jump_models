@@ -1,15 +1,19 @@
-_target_: src.modules.losses.contrastive_losses.RegInfoNCE
+_target_: src.modules.losses.base_losses.CombinationLoss
 norm: True
-temperature: 1
-return_rank: True
+weights: [1, 0.05]
 
-temperature_requires_grad: False  # If True, temperature is learned
+losses:
+  NTXent:
+    _target_: src.modules.losses.contrastive_losses.InfoNCE
+    norm: False
+    temperature: 0.5
+    return_rank: True
+    temperature_requires_grad: False
 
-alpha: 0.05             # Factor for the regularization losses (which is a combination of regularization losses)
-mse_reg: 0.5            # L1 loss between normalized embeddings
-uniformity_reg: 0       # Usually leads to inf loss
-variance_reg: 1         # Similar to simreg
-covariance_reg: 0.25
-
-temperature_min: 0      # Not used if requires_grad is False
-temperature_max: 100
+  regularization:
+    _target_: src.modules.losses.base_losses.RegularizationLoss
+    mse_reg: 0.5
+    l1_reg: 0
+    uniformity_reg: 0
+    variance_reg: 1
+    covariance_reg: 0.5
