@@ -24,6 +24,8 @@ hydra-optuna-sweeper = "^1.2.0"
 tables = "^3.8.0"
 # omero-upload = "^0.4.0"
 colorlog = "^6.7.0"
+kneed = "^0.8.5"
+imblearn = "^0.0"
 
 
 [tool.poetry.group.torch.dependencies]
@@ -33,7 +35,7 @@ torchvision = { url = "https://download.pytorch.org/whl/cu118/torchvision-0.15.0
 torchaudio = { url = "https://download.pytorch.org/whl/cu118/torchaudio-2.0.0%2Bcu118-cp310-cp310-linux_x86_64.whl" }  # version = "2.0.0",
 dgl = { url = "https://data.dgl.ai/wheels/cu118/dgl-1.1.1%2Bcu118-cp310-cp310-manylinux1_x86_64.whl" }  # version = "1.1.1",
 dgllife = "^0.3.2"
-torch_geometric = "2.3.0"
+torch_geometric = "2.3.1"
 torchview = "^0.2.6"
 lightning = "^2.0.4"
 pytorch-lightning = "^2.0.4"
