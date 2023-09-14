@@ -1,4 +1,4 @@
-_target_: src.modules.losses.multiview_losses.NTXent
+_target_: src.modules.losses.multiview_losses.NTXentMultiplePositives
 norm: True
 temperature: 0.5
 return_rank: True
