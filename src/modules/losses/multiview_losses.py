@@ -103,7 +103,7 @@ class NTXentMultiplePositives(LossWithTemperature):
             z2_abs = z2.norm(dim=2)
             sim_matrix = sim_matrix / torch.einsum("i,ju->iju", z1_abs, z2_abs)
 
-        sim_matrix = torch.exp(sim_matrix / self.temperature.value)  # [batch_size, batch_size, num_conformers]
+        sim_matrix = torch.exp(sim_matrix / self.temperature)  # [batch_size, batch_size, num_conformers]
 
         pos_sim = sim_matrix[range(batch_size), range(batch_size), :]  # [batch_size, num_conformers]
         loss = pos_sim / (sim_matrix.sum(dim=1) - pos_sim)  # [batch_size, num_conformers]
@@ -131,35 +131,34 @@ class KLDivergenceMultiplePositives(LossWithTemperature):
 
     def forward(self, z1, z2, **kwargs) -> Tensor:
         """
-        :param z1: batchsize, metric dim*2
-        :param z2: batchsize*num_conformers, metric dim
+        :param z1: batchsize, 2, metric dim
+        :param z2: batchsize, num_conformers, metric dim
 
         z1 contains the mean and std with a reparameterization trick ???
         """
-        batch_size, _ = z1.size()
-        _, num_conformers, metric_dim = z2.size()
+        batch_size, num_conformers, metric_dim = z2.size()
 
-        z1 = z1.view(batch_size, 2, metric_dim)
         z1_means = z1[:, 0, :]  # [batch_size, metric_dim]
-        z1_stds = torch.exp(z1[:, 1, :] / 2)  # [batch_size, metric_dim]
+        z1_stds = torch.exp(z1[:, 1, :])  # [batch_size, metric_dim]
 
-        z2 = z2.view(batch_size, -1, metric_dim)  # [batch_size, num_conformers, metric_dim]
+        # z2 = z2.view(batch_size, -1, metric_dim)  # [batch_size, num_conformers, metric_dim]
         z2_means = z2.mean(1)  # [batch_size, metric_dim]
         z2_stds = z2.std(1)  # [batch_size, metric_dim]
 
         kl_div_kernel = []
-        for i, z1_mean in enumerate(z1_means):
-            for j, z2_mean in enumerate(z2_means):
+        for i, z1_mean in enumerate(z1_means):  # batch_size
+            for j, z2_mean in enumerate(z2_means):  # batch_size
                 z1_std = z1_stds[i]  # [metric_dim]
                 z2_std = z2_stds[j] + 1e-5  # [metric_dim]
                 p = torch.distributions.Normal(z1_mean, z1_std)
                 q = torch.distributions.Normal(z2_mean, z2_std)
                 kl_divergence = torch.distributions.kl.kl_divergence(p, q)
                 kl_div_kernel.append(kl_divergence)
+
         kl_div_kernel = torch.stack(kl_div_kernel)
         kl_div_kernel = kl_div_kernel.view(batch_size, batch_size)
 
-        sim_matrix = torch.exp(kl_div_kernel / self.temperature.value)  # [batch_size, batch_size]
+        sim_matrix = torch.exp(kl_div_kernel / self.temperature)  # [batch_size, batch_size]
         pos_sim = torch.diagonal(sim_matrix)
         loss = pos_sim / (sim_matrix.sum(dim=1) - pos_sim)
         loss = -torch.log(loss).mean()
