@@ -89,11 +89,11 @@ class ComplexTransform(T.Compose):
 
         sub_transforms = []
         if use_blur:
-            sub_transforms.append(T.RandomApply(T.GaussianBlur(kernel_size=kernel_size, sigma=sigma), p=gaussian_p))
+            sub_transforms.append(T.RandomApply([T.GaussianBlur(kernel_size=kernel_size, sigma=sigma)], p=gaussian_p))
 
         if use_color_jitter:
             sub_transforms.append(
-                T.RandomApply(ColorJitterPerChannel(intensity=intensity, brightness=brightness), p=color_p)
+                T.RandomApply([ColorJitterPerChannel(intensity=intensity, brightness=brightness)], p=color_p)
             )
 
         if len(sub_transforms) > 0:
