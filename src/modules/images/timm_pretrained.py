@@ -45,9 +45,10 @@ class CNNEncoder(nn.Module):
             self.backbone.fc = nn.Identity()
 
             if dropout > 0.0:
-                for mod in self.backbone.named_modules():
-                    if "drop_block" in mod[0]:
-                        parent = ".".join(mod[0].split(".")[:-1])
+                named_module = [mod[0] for mod in self.backbone.named_modules()]
+                for mod in named_module:
+                    if "drop_block" in mod:
+                        parent = ".".join(mod.split(".")[:-1])
                         setattr(self.backbone, parent, nn.Dropout2d(dropout))
 
         elif "rexnet" in model_name or "regnety" in model_name or "nf_regnet" in model_name:
