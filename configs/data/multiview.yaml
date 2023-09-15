@@ -2,6 +2,7 @@ _target_: src.models.multiview_cl.datamodule.MultiviewDataModule
 
 defaults:
   - compound_transform: ???
+  - transform: transform/simple.yaml
   - _self_
 
 
@@ -20,10 +21,10 @@ drop_last: null
 collate_fn: null
 
 
-transform:
-  _target_: src.modules.transforms.SimpleTransform
-  _convert_: object
-  size: ???
+# transform:
+#   _target_: src.modules.transforms.SimpleTransform
+#   _convert_: object
+#   size: ???
   # dim: [-2, -1] # for normalizing
 
 

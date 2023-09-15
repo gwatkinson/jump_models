@@ -14,7 +14,7 @@ readout_batchnorm: True
 batch_norm_momentum: 0.93
 readout_hidden_dim: 200
 readout_layers: 2
-dropout: 0.05  # was 0.0
+dropout: 0.1  # was 0.0
 propagation_depth: 7
 aggregators:
   - mean

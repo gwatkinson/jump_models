@@ -2,6 +2,7 @@ _target_: src.models.jump_cl.datamodule.BasicJUMPDataModule
 
 defaults:
   - compound_transform: ???
+  - transform: transform/simple.yaml
   # - collate_fn: default.yaml
   - _self_
 
@@ -12,10 +13,10 @@ prefetch_factor: null
 drop_last: null
 
 
-transform:
-  _target_: src.modules.transforms.SimpleTransform
-  _convert_: object
-  size: ???
+# transform:
+#   _target_: src.modules.transforms.SimpleTransform
+#   _convert_: object
+#   size: ???
   # dim: [-2, -1] # for normalizing
 
 force_split: False

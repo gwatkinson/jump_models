@@ -5,3 +5,4 @@ instance_model_name: resnet50
 # target_num: ${model.embedding_dim}
 n_channels: 5
 pretrained: True
+dropout: 0.2

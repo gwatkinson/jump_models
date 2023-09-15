@@ -10,9 +10,9 @@ class CNNEncoder(nn.Module):
     def __init__(
         self,
         instance_model_name: str,
-        # target_num: int,
         n_channels: int = 5,
         pretrained: bool = True,
+        dropout: float = 0.0,
     ):
         super().__init__()
 
@@ -26,12 +26,6 @@ class CNNEncoder(nn.Module):
             self.backbone.conv_stem.weight = nn.Parameter(
                 self.backbone.conv_stem.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
-            # self.entry = self.backbone.conv_stem
-            # self.projection_head = nn.Sequential(
-            #     nn.Linear(self.backbone.classifier.in_features, out_dim),
-            #     nn.ReLU(),
-            #     nn.Linear(out_dim, out_dim),
-            # )
 
             self.out_dim = self.backbone.classifier.in_features
             self.backbone.classifier = nn.Identity()
@@ -40,12 +34,6 @@ class CNNEncoder(nn.Module):
             self.backbone.conv1[0].weight = nn.Parameter(
                 self.backbone.conv1[0].weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
-            # self.entry = self.backbone.conv1[0]
-            # self.projection_head = nn.Sequential(
-            #     nn.Linear(self.backbone.fc.in_features, out_dim),
-            #     nn.ReLU(),
-            #     nn.Linear(out_dim, out_dim),
-            # )
             self.out_dim = self.backbone.fc.in_features
             self.backbone.fc = nn.Identity()
 
@@ -53,14 +41,14 @@ class CNNEncoder(nn.Module):
             self.backbone.conv1.weight = nn.Parameter(
                 self.backbone.conv1.weight.repeat(1, n_ch // 3 + 1, 1, 1)[:, :n_ch]
             )
-            # self.entry = self.backbone.conv1
-            # self.projection_head = nn.Sequential(
-            #     nn.Linear(self.backbone.fc.in_features, out_dim),
-            #     nn.ReLU(),
-            #     nn.Linear(out_dim, out_dim),
-            # )
             self.out_dim = self.backbone.fc.in_features
             self.backbone.fc = nn.Identity()
+
+            if dropout > 0.0:
+                for mod in self.backbone.named_modules():
+                    if "drop_block" in mod[0]:
+                        parent = ".".join(mod[0].split(".")[:-1])
+                        setattr(self.backbone, parent, nn.Dropout2d(dropout))
 
         elif "rexnet" in model_name or "regnety" in model_name or "nf_regnet" in model_name:
             self.backbone.stem.conv.weight = nn.Parameter(

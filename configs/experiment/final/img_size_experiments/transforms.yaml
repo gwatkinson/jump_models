@@ -1,1 +1,37 @@
-# TODO
+# @package _global_
+
+defaults:
+  - /experiment/final/img_size_experiments/default.yaml@_global_
+
+data:
+  transform:
+    _target_: src.modules.transforms.ComplexTransform
+    _convert_: object
+    size: 512
+    flip_p: 0.3
+    drop_p: 0.3
+    gaussian_p: 0.8
+    color_p: 0.8
+    kernel_size: 23
+    sigma: [1,3]
+    intensity: 0.3
+    brightness: 0.5
+    use_flip: True
+    use_blur: True
+    use_color_jitter: True
+    use_drop: True
+    use_resized_crop: True
+
+model:
+  molecule_encoder:
+    dropout: 0.3
+
+  image_encoder:
+    dropout: 0.3
+
+trainer:
+  devices: ???
+
+logger:
+  wandb:
+    name: med_complex_transforms

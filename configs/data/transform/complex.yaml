@@ -1,0 +1,16 @@
+_target_: src.modules.transforms.ComplexTransform
+_convert_: object
+size: ???
+flip_p: 0.3
+drop_p: 0.3
+gaussian_p: 0.8
+color_p: 0.8
+kernel_size: 23
+sigma: [1,3]
+intensity: 0.3
+brightness: 0.5
+use_flip: True
+use_blur: True
+use_color_jitter: True
+use_drop: True
+use_resized_crop: True
