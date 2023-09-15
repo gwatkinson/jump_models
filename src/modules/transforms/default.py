@@ -81,6 +81,7 @@ class ComplexTransform(T.Compose):
             T.ToImageTensor(),
             T.ConvertImageDtype(),
         ]
+        sigma = (float(sigma[0]), float(sigma[1]))
 
         if use_flip:
             transforms.append(T.RandomHorizontalFlip(p=flip_p))
