@@ -68,7 +68,7 @@ class ComplexTransform(T.Compose):
         gaussian_p=0.8,
         color_p=0.8,
         kernel_size=23,
-        sigma=(1, 3),
+        sigma=(1.0, 3.0),
         intensity=0.3,
         brightness=0.5,
         use_flip=True,
