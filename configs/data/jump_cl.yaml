@@ -2,7 +2,7 @@ _target_: src.models.jump_cl.datamodule.BasicJUMPDataModule
 
 defaults:
   - compound_transform: ???
-  - transform: transform/simple.yaml
+  - transform: simple
   # - collate_fn: default.yaml
   - _self_
 

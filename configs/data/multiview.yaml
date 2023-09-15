@@ -2,7 +2,7 @@ _target_: src.models.multiview_cl.datamodule.MultiviewDataModule
 
 defaults:
   - compound_transform: ???
-  - transform: transform/simple.yaml
+  - transform: simple.yaml
   - _self_
 
 
