@@ -76,6 +76,7 @@ class ComplexTransform(T.Compose):
         use_color_jitter=True,
         use_drop=True,
         use_resized_crop=True,
+        fill_nan=True,
     ):
         transforms = [
             T.ToImageTensor(),
@@ -89,7 +90,12 @@ class ComplexTransform(T.Compose):
 
         sub_transforms = []
         if use_blur:
-            sub_transforms.append(T.RandomApply([T.GaussianBlur(kernel_size=kernel_size, sigma=sigma)], p=gaussian_p))
+            sub_transforms.append(
+                T.RandomApply(
+                    [T.GaussianBlur(kernel_size=kernel_size, sigma=sigma), FillNaNs(nan=0.0, posinf=None, neginf=None)],
+                    p=gaussian_p,
+                )
+            )
 
         if use_color_jitter:
             sub_transforms.append(
@@ -99,9 +105,6 @@ class ComplexTransform(T.Compose):
         if len(sub_transforms) > 0:
             transforms.append(T.RandomOrder(sub_transforms))
 
-        if use_drop:
-            transforms.append(DropTransform(p=drop_p))
-
         if use_resized_crop:
             transforms.append(
                 T.RandomResizedCrop(size=size, scale=(size / 768, 1.0), ratio=(1.0, 1.0), interpolation=2)
@@ -109,6 +112,10 @@ class ComplexTransform(T.Compose):
         else:
             transforms.append(T.RandomCrop(size, pad_if_needed=True))
 
-        transforms.append(FillNaNs(nan=0.0, posinf=None, neginf=None))
+        if use_drop:
+            transforms.append(DropTransform(p=drop_p))
+
+        if fill_nan:
+            transforms.append(FillNaNs(nan=0.0, posinf=None, neginf=None))
 
         super().__init__(transforms)

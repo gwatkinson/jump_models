@@ -17,3 +17,6 @@ class DropTransform:
                 img[:, channel_to_drop] = 0.0
 
         return img
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(p={self.p})"

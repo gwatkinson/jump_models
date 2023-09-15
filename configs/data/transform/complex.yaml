@@ -14,3 +14,4 @@ use_blur: True
 use_color_jitter: True
 use_drop: True
 use_resized_crop: True
+fill_nan: True

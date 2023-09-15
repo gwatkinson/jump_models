@@ -27,3 +27,6 @@ class ColorJitterPerChannel:
         img = adjust_brightness(img, self.brightness)
 
         return img
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(intensity={self.intensity}, brightness={self.brightness})"
