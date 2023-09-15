@@ -85,7 +85,7 @@ callbacks:
 
 logger:
   wandb:
-    name: ???
+    name: random_split
     tags: ${tags}
     project: final_experiments
     group: split_experiment
