@@ -5,6 +5,8 @@ flip_p: 0.3
 drop_p: 0.3
 gaussian_p: 0.8
 color_p: 0.8
+resize_p: 0.3
+resize_min_ratio: 0.8
 kernel_size: 23
 sigma: [1.,3.]
 intensity: 0.3

@@ -45,6 +45,7 @@ class CNNEncoder(nn.Module):
             self.backbone.fc = nn.Identity()
 
             if dropout > 0.0:
+                logger.info(f"Setting dropout rate to {dropout}")
                 named_module = [mod[0] for mod in self.backbone.named_modules()]
                 for mod in named_module:
                     if "drop_block" in mod:

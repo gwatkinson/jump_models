@@ -1,4 +1,4 @@
-_target_: src.models.multiview_cl.module.MutliviewModule
+_target_: src.models.multiview_cl.module.MultiviewModule
 
 defaults:
   - image_encoder: ???

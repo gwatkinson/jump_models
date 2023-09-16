@@ -13,7 +13,7 @@ from src.utils import pylogger
 logger = pylogger.get_pylogger(__name__)
 
 
-class MutliviewModule(LightningModule):
+class MultiviewModule(LightningModule):
     def __init__(
         self,
         image_encoder: torch.nn.Module,

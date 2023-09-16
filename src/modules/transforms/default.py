@@ -65,8 +65,10 @@ class ComplexTransform(T.Compose):
         size=256,
         flip_p=0.3,
         drop_p=0.3,
+        resize_p=0.3,
         gaussian_p=0.8,
         color_p=0.8,
+        resize_min_ratio=0.9,
         kernel_size=23,
         sigma=(1.0, 3.0),
         intensity=0.3,
@@ -107,7 +109,19 @@ class ComplexTransform(T.Compose):
 
         if use_resized_crop:
             transforms.append(
-                T.RandomResizedCrop(size=size, scale=(size / 768, 1.0), ratio=(1.0, 1.0), interpolation=2)
+                T.RandomChoice(
+                    [
+                        T.RandomResizedCrop(
+                            size=size,
+                            scale=(resize_min_ratio * size / 768, 1.0),
+                            ratio=(1.0, 1.0),
+                            interpolation=2,
+                            antialias=True,
+                        ),
+                        T.RandomCrop(size, pad_if_needed=True),
+                    ],
+                    p=[resize_p, 1.0 - resize_p],
+                )
             )
         else:
             transforms.append(T.RandomCrop(size, pad_if_needed=True))
