@@ -25,6 +25,8 @@ data:
     use_resized_crop: True
 
 model:
+  embedding_dim: 1024
+
   molecule_encoder:
     dropout: 0.3
 
