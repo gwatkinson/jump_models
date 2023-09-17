@@ -66,7 +66,7 @@ class TotalBatchEffectModule(LightningModule):
     def forward(self, image):
         return self.image_encoder(image)
 
-    def predict_step(self, batch: Any):
+    def predict_step(self, batch: Any, batch_idx: int):
         labels = batch["label"]
         batches = batch["batch"]
         wells = batch["well"]
