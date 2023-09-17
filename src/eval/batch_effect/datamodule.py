@@ -63,7 +63,7 @@ class BatchEffectDataset(Dataset):
     def __getitem__(self, idx: int):
         row = self.target_load_df.iloc[idx]
 
-        labels = self.target_to_num[row[self.target_col]]
+        labels = self.target_to_num[row[self.label_col]]
         sources = row[self.source_col]
         batches = row[self.batch_col]
         plates = row[self.plate_col]
