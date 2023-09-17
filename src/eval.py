@@ -112,7 +112,10 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
 
     log.info("Starting testing!")
     if cfg.get("test"):
-        trainer.test(model=model, datamodule=datamodule, ckpt_path=cfg.ckpt_path)
+        try:
+            trainer.test(model=model, datamodule=datamodule, ckpt_path=cfg.ckpt_path)
+        except Exception as e:
+            log.error(f"Error while testing: {e}")
 
     if cfg.get("evaluate"):
         log.info("Starting evaluation!")
