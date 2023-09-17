@@ -7,6 +7,7 @@ from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MeanMetric
 
+from src.modules.losses import NTXent
 from src.modules.lr_schedulers.warmup_wrapper import WarmUpWrapper
 from src.utils import pylogger
 
@@ -41,6 +42,11 @@ class MutliviewModule(LightningModule):
         self.image_encoder = image_encoder
         self.molecule_encoder = molecule_encoder
         self.criterion = criterion
+
+        self.single_view_criterion = NTXent(
+            norm=True,
+            return_rank=True,
+        )
 
         # projection heads
         self.image_dim = self.image_encoder.out_dim
@@ -162,7 +168,45 @@ class MutliviewModule(LightningModule):
         return loss
 
     def test_step(self, batch: Any, batch_idx: int):
-        loss = self.model_step(batch, batch_idx, stage="test", on_step=False, on_epoch=True, prog_bar=True)
+        image_emb = self.image_encoder(batch["image"])
+        image_emb = self.image_projection_head(image_emb)
+        image_emb = F.normalize(image_emb, dim=-1)
+
+        compound_emb = self.molecule_encoder(batch["compound"])
+        compound_emb = self.molecule_projection_head(compound_emb)
+        compound_emb = F.normalize(compound_emb, dim=-1)
+
+        batch_size, metric_dim = image_emb.shape
+
+        total_image_emb = self.all_gather(image_emb, sync_grads=True)
+        total_image_emb = total_image_emb.view(-1, metric_dim)
+        total_compound_emb = self.all_gather(compound_emb, sync_grads=True)
+        total_compound_emb = total_compound_emb.view(-1, metric_dim)
+
+        batch_size, metric_dim = total_image_emb.shape
+
+        losses = self.single_view_criterion(total_image_emb, total_compound_emb)
+
+        if isinstance(losses, dict):
+            loss = losses.pop("loss")
+            self.log_dict(
+                {f"test/{k}": v for k, v in losses.items()},
+                batch_size=batch_size,
+                prog_bar=False,
+                on_step=False,
+                on_epoch=True,
+                sync_dist=True,
+            )
+        else:
+            loss = losses
+
+        self.loss_dict["test"](loss)
+        self.log("test/loss", self.loss_dict["test"], batch_size=batch_size, sync_dist=True)
+
+        if not torch.isfinite(loss):
+            logger.info(f"Loss of batch {batch_idx} is {loss}. Returning None.")
+            return None
+
         return loss
 
     def on_train_epoch_end(self):
