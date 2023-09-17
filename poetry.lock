@@ -6270,6 +6270,26 @@ examples = ["matplotlib (>=3.1.3)", "pandas (>=1.0.5)", "plotly (>=5.14.0)", "po
 tests = ["black (>=23.3.0)", "matplotlib (>=3.1.3)", "mypy (>=1.3)", "numpydoc (>=1.2.0)", "pandas (>=1.0.5)", "pooch (>=1.6.0)", "pyamg (>=4.0.0)", "pytest (>=7.1.2)", "pytest-cov (>=2.9.0)", "ruff (>=0.0.272)", "scikit-image (>=0.16.2)"]
 
 [[package]]
+name = "scikit-plot"
+version = "0.3.7"
+description = "An intuitive library to add plotting functionality to scikit-learn objects."
+optional = false
+python-versions = "*"
+files = [
+    {file = "scikit-plot-0.3.7.tar.gz", hash = "sha256:2c7948817fd2dc06879cfe3c1fdde56a8e71fa5ac626ffbe79f043650baa6242"},
+    {file = "scikit_plot-0.3.7-py3-none-any.whl", hash = "sha256:6b3d529800b32a899c54dc5761a93c63cbff482b1889a4afee57dd219f3ef0c3"},
+]
+
+[package.dependencies]
+joblib = ">=0.10"
+matplotlib = ">=1.4.0"
+scikit-learn = ">=0.18"
+scipy = ">=0.9"
+
+[package.extras]
+testing = ["pytest"]
+
+[[package]]
 name = "scipy"
 version = "1.11.2"
 description = "Fundamental algorithms for scientific computing in Python"
@@ -7894,4 +7914,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "3.10.10"
-content-hash = "0f423a77a027de1c185d5acca6f299edaad4d5835ecaa11d4de1b93f24217710"
+content-hash = "4a529d6fda71becd222b111509b7a4ee45101bb23b700d9c6efa2006fd4e7f5e"

@@ -22,6 +22,80 @@ from src.utils import pylogger
 logger = pylogger.get_pylogger(__name__)
 
 
+class TotalBatchEffectModule(LightningModule):
+    def __init__(
+        self,
+        cross_modal_module: Optional[LightningModule] = None,
+        image_encoder: Optional[nn.Module] = None,
+        image_encoder_attribute_name: str = "image_encoder",
+        example_input: Optional[torch.Tensor] = None,
+        example_input_path: Optional[str] = None,
+        **kwargs,
+    ):
+        super().__init__()
+
+        # this line allows to access init params with 'self.hparams' attribute
+        # also ensures init params will be stored in ckpt
+        # self.save_hyperparameters(
+        #     logger=False,
+        #     ignore=["cross_modal_module", "optimizer", "criterion", "image_encoder", "image_encoder_attribute_name"],
+        # )
+
+        # encoder
+        if not (image_encoder or (cross_modal_module and image_encoder_attribute_name)):
+            raise ValueError("Either image_encoder or cross_modal_module with attribute name must be provided.")
+
+        if image_encoder is not None:
+            self.image_encoder = copy.deepcopy(image_encoder)
+            self.model_name = image_encoder.__class__.__name__
+        else:
+            self.image_encoder = copy.deepcopy(getattr(cross_modal_module, image_encoder_attribute_name))
+            self.model_name = self.image_encoder.__class__.__name__
+
+        self.embedding_dim = self.image_encoder.out_dim
+
+        # example input
+        if example_input is not None:
+            self.example_input_array = example_input
+        elif example_input_path is not None:
+            self.example_input_array = torch.load(example_input_path)
+
+    def __repr__(self):
+        return f"""{self.__class__.__name__}({self.model_name}({self.embedding_dim}), num_classes={self.num_classes})"""
+
+    def forward(self, image):
+        return self.image_encoder(image)
+
+    def predict_step(self, batch: Any):
+        labels = batch["label"]
+        batches = batch["batch"]
+        wells = batch["well"]
+        plates = batch["plate"]
+        images = batch["image"]
+
+        logits = self.forward(image=images)
+
+        return {
+            "label": labels,
+            "batch": batches,
+            "well": wells,
+            "plate": plates,
+            "embedding": logits,
+        }
+
+    def training_step(self, batch: Any, batch_idx: int):
+        raise NotImplementedError
+
+    def validation_step(self, batch: Any, batch_idx: int):
+        raise NotImplementedError
+
+    def test_step(self, batch: Any, batch_idx: int):
+        raise NotImplementedError
+
+    def configure_optimizers(self):
+        raise NotImplementedError
+
+
 class BatchEffectModule(LightningModule):
     prefix = "batch_effect"
     default_criterion = nn.CrossEntropyLoss

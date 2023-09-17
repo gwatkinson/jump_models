@@ -26,6 +26,7 @@ tables = "^3.8.0"
 colorlog = "^6.7.0"
 kneed = "^0.8.5"
 imblearn = "^0.0"
+scikit-plot = "^0.3.7"
 
 
 [tool.poetry.group.torch.dependencies]

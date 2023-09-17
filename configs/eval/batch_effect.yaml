@@ -1,4 +1,2 @@
 defaults:
-  - batch_effect/random@_here_
-  - batch_effect/plate_aware@_here_
-  - batch_effect/source_aware@_here_
+  - batch_effect/new@_here_
