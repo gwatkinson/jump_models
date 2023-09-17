@@ -110,8 +110,8 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
         log.info("Logging hyperparameters!")
         utils.log_hyperparameters(object_dict)
 
-    log.info("Starting testing!")
     if cfg.get("test"):
+        log.info("Starting testing!")
         try:
             trainer.test(model=model, datamodule=datamodule, ckpt_path=cfg.ckpt_path)
         except Exception as e:

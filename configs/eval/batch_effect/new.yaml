@@ -1,6 +1,5 @@
 defaults:
   - /trainer/gpu.yaml@batch_effect.trainer
-  - /data/transform/simple.yaml@batch_effect.data.transform
 
 batch_effect:
 
@@ -42,6 +41,8 @@ batch_effect:
     drop_last: False
 
     transform:
+      _target_: src.modules.transforms.SimpleTransform
+      _convert_: object
       size: ${data.transform.size}
 
     metadata_path: ${paths.raw_metadata_path}
