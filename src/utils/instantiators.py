@@ -60,6 +60,7 @@ def instantiate_evaluator(
     model_cfg: DictConfig,
     logger: Optional[List[Logger]] = None,
     ckpt_path: Optional[str] = None,
+    strict: bool = True,
     name: Optional[str] = None,
 ):
     model_cfg = deepcopy(model_cfg)
@@ -69,6 +70,7 @@ def instantiate_evaluator(
         with open_dict(model_cfg):
             model_cfg["checkpoint_path"] = ckpt_path
             model_cfg["map_location"] = "cpu"
+            model_cfg["strict"] = strict
 
     if isinstance(evaluator_cfg, DictConfig):
         if "model" in evaluator_cfg:

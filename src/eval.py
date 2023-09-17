@@ -126,6 +126,7 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
                 model_cfg=cfg.model,
                 logger=logger,
                 ckpt_path=cfg.ckpt_path,
+                strict=cfg.strict,
             )
 
             try:
@@ -157,7 +158,8 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
 @click.option("--eval_cfg", "-e", type=str, help="Evaluator config to run", default="evaluators")  # , multiple=True
 @click.option("--devices", "-d", help="List of devices to use", multiple=True, type=int, default=None)
 @click.option("--test", "-t", help="Test", default=False)
-def main(ckpt_path: str, eval_cfg, devices, test) -> None:
+@click.option("--strict", "-s", help="Strict", default=True)
+def main(ckpt_path: str, eval_cfg, devices, test, strict) -> None:
     """Main entrypoint for evaluation.
 
     Loads the config from the relative position of the checkpoint path.
@@ -172,6 +174,9 @@ def main(ckpt_path: str, eval_cfg, devices, test) -> None:
 
     cfg.ckpt_path = ckpt_path
     cfg.test = test
+
+    cfg.strict = strict
+    cfg.task = "eval"
 
     # if isinstance(eval_cfg, str):
     #     eval_cfg = [eval_cfg]
