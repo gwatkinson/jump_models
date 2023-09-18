@@ -144,6 +144,7 @@ class BatchEffectEvaluator(Evaluator):
         try:
             fig, ax = plt.subplots(figsize=(14, 14))
             sns.scatterplot(x=embeddings[:, 0], y=embeddings[:, 1], hue=self.embeddings_df[col], ax=ax)
+            ax.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
             fig.suptitle(title)
 
             if self.out_dir:
