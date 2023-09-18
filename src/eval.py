@@ -121,6 +121,7 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
         log.info("Starting evaluation!")
 
         for key in cfg.eval:
+            log.info(f"Instantiating evaluator {key}")
             evaluator = utils.instantiate_evaluator(
                 cfg.eval[key],
                 model_cfg=cfg.model,

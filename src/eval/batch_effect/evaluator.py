@@ -60,7 +60,7 @@ class BatchEffectEvaluator(Evaluator):
         source_split: bool = True,
         well_split: bool = True,
         fully_random_split: bool = True,
-        embedding_path: Optional[str] = None,
+        out_dir: Optional[str] = None,
         name: Optional[str] = None,
         visualize_kwargs: Optional[dict] = None,
     ):
@@ -93,7 +93,7 @@ class BatchEffectEvaluator(Evaluator):
             "top_10": make_scorer(top_k_accuracy_score, k=10),
         }
 
-        self.embedding_path = embedding_path
+        self.out_dir = out_dir
         self.name = name or self.model.__class__.__name__
         self.prefix = f"({self.name}) " if self.name else ""
 
@@ -115,8 +115,9 @@ class BatchEffectEvaluator(Evaluator):
         pass
 
     def get_embeddings(self):
-        if self.embedding_path and Path(self.embedding_path).exists():
-            self.embeddings_df = pd.read_parquet(self.embedding_path)
+        embedding_path = f"{self.out_dir}/embeddings.parquet" if self.out_dir is not None else None
+        if embedding_path and Path(embedding_path).exists():
+            self.embeddings_df = pd.read_parquet(embedding_path)
             return
 
         predictions = self.trainer.predict(self.model, self.datamodule)
@@ -128,14 +129,16 @@ class BatchEffectEvaluator(Evaluator):
         self.label_encoder = LabelEncoder()
         self.label_encoder.fit(self.embeddings_df["label"])
 
-        if self.embedding_path:
-            Path(self.embedding_path).parent.mkdir(parents=True, exist_ok=True)
-            self.embeddings_df.to_parquet(self.embedding_path, index=False)
+        if embedding_path:
+            Path(embedding_path).parent.mkdir(parents=True, exist_ok=True)
+            self.embeddings_df.to_parquet(embedding_path, index=False)
 
     def plot_tsne(self, embeddings, col, title="t-SNE"):
         fig, ax = plt.subplots(figsize=(14, 14))
         sns.scatterplot(x=embeddings[:, 0], y=embeddings[:, 1], hue=self.embeddings_df[col], ax=ax)
         fig.suptitle(title)
+
+        fig.savefig(f"{self.out_dir}/{title.replace(' ', '_')}.png")
         # emb_buf = io.BytesIO()
         # fig.savefig(emb_buf)
         # plt.close(fig)
