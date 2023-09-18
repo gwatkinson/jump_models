@@ -92,7 +92,7 @@ class BatchEffectEvaluator(Evaluator):
         self.train_ratio = 1 - self.test_size
 
         self.out_dir = out_dir
-        if self.out_dir is not None:
+        if self.out_dir is not None and not Path(self.out_dir).exists():
             print(f"Creating output directory {self.out_dir}...")
             Path(self.out_dir).mkdir(parents=True, exist_ok=True)
 
@@ -202,10 +202,11 @@ class BatchEffectEvaluator(Evaluator):
             fig, ax = plt.subplots(figsize=(14, 14))
             sns.scatterplot(x=embeddings[:, 0], y=embeddings[:, 1], hue=self.embeddings_df[col], ax=ax)
             ax.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
-            fig.suptitle(title)
+            fig.suptitle(title, fontsize=16)
+            fig.tight_layout()
 
             if self.out_dir:
-                out_path = osp.join(self.out_dir, f"{title.replace(' ', '_').replace('/', '_')}.png")
+                out_path = osp.join(self.out_dir, f"{title.replace(' ', '_')}.png")
                 print(f"Saved {title} to {out_path}")
                 fig.savefig(out_path)
             return fig
@@ -219,11 +220,11 @@ class BatchEffectEvaluator(Evaluator):
         embeddings = tsne.fit_transform(np.array(self.embeddings_df["embedding"].tolist()))
 
         images = [
-            self.plot_tsne(embeddings, "label", "t-SNE colored by labels"),
-            self.plot_tsne(embeddings, "batch", "t-SNE colored by batch"),
-            self.plot_tsne(embeddings, "plate", "t-SNE colored by plate"),
-            self.plot_tsne(embeddings, "well", "t-SNE colored by well"),
-            self.plot_tsne(embeddings, "source", "t-SNE colored by source"),
+            self.plot_tsne(embeddings, "label", f"{key}/t-SNE colored by labels"),
+            self.plot_tsne(embeddings, "batch", f"{key}/t-SNE colored by batch"),
+            self.plot_tsne(embeddings, "plate", f"{key}/t-SNE colored by plate"),
+            self.plot_tsne(embeddings, "well", f"{key}/t-SNE colored by well"),
+            self.plot_tsne(embeddings, "source", f"{key}/t-SNE colored by source"),
         ]
 
         # Log plots to WandB
@@ -278,7 +279,7 @@ class BatchEffectEvaluator(Evaluator):
                 x_tick_rotation=90,
                 title=(title := f"{key}/Confusion matrix"),
             )
-            out_path = f"{self.out_dir}/{title.replace(' ', '_').replace('/', '_')}.png"
+            out_path = f"{self.out_dir}/{title.replace(' ', '_')}.png"
             Path(out_path).parent.mkdir(parents=True, exist_ok=True)
             fig.savefig(out_path)
             return fig
@@ -298,7 +299,8 @@ class BatchEffectEvaluator(Evaluator):
                 title=(title := f"{key}/Macro-average ROC curve"),
             )
             ax.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
-            out_path = f"{self.out_dir}/{title.replace(' ', '_').replace('/', '_')}.png"
+            fig.tight_layout()
+            out_path = f"{self.out_dir}/{title.replace(' ', '_')}.png"
             Path(out_path).parent.mkdir(parents=True, exist_ok=True)
             fig.savefig(out_path)
             return fig
@@ -318,7 +320,8 @@ class BatchEffectEvaluator(Evaluator):
                 title=(title := f"{key}/ROC curves"),
             )
             ax.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
-            out_path = f"{self.out_dir}/{title.replace(' ', '_').replace('/', '_')}.png"
+            fig.tight_layout()
+            out_path = f"{self.out_dir}/{title.replace(' ', '_')}.png"
             Path(out_path).parent.mkdir(parents=True, exist_ok=True)
             fig.savefig(out_path)
             return fig
@@ -337,7 +340,8 @@ class BatchEffectEvaluator(Evaluator):
                 title=(title := f"{key}/Micro-average precision-recall curve"),
             )
             ax.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
-            out_path = f"{self.out_dir}/{title.replace(' ', '_').replace('/', '_')}.png"
+            fig.tight_layout()
+            out_path = f"{self.out_dir}/{title.replace(' ', '_')}.png"
             Path(out_path).parent.mkdir(parents=True, exist_ok=True)
             fig.savefig(out_path)
             return fig
@@ -356,7 +360,8 @@ class BatchEffectEvaluator(Evaluator):
                 title=(title := f"{key}/Precision-recall curves"),
             )
             ax.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
-            out_path = f"{self.out_dir}/{title.replace(' ', '_').replace('/', '_')}.png"
+            fig.tight_layout()
+            out_path = f"{self.out_dir}/{title.replace(' ', '_')}.png"
             Path(out_path).parent.mkdir(parents=True, exist_ok=True)
             fig.savefig(out_path)
             return fig
@@ -501,41 +506,47 @@ class BatchEffectEvaluator(Evaluator):
             self.plot_embeddings(key=f"{key_prefix}/Embeddings")
 
         if self.logistic:
-            print("Running Logistic Regressions...")
-            cls = LogisticRegression(max_iter=1000)
+            try:
+                print("Running Logistic Regressions...")
+                cls = LogisticRegression(max_iter=1000)
 
-            if self.fully_random_split:
-                print("Fully random split")
-                self.fully_random(cls, key=f"{key_prefix}/LR/FullyRandom")
-            if self.well_split:
-                print("Not same well")
-                self.not_same_well_cls(cls, key=f"{key_prefix}/LR/NotSameWell")
-            if self.batch_split:
-                print("Not same batch")
-                self.not_same_batch(cls, key=f"{key_prefix}/LR/NotSameBatch")
-            if self.plate_split:
-                print("Not same plate")
-                self.not_same_plate(cls, key=f"{key_prefix}/LR/NotSamePlate")
-            if self.source_split:
-                print("Not same source")
-                self.not_same_source(cls, key=f"{key_prefix}/LR/NotSameSource")
+                if self.fully_random_split:
+                    print("Fully random split")
+                    self.fully_random(cls, key=f"{key_prefix}/LR/FullyRandom")
+                if self.well_split:
+                    print("Not same well")
+                    self.not_same_well_cls(cls, key=f"{key_prefix}/LR/NotSameWell")
+                if self.batch_split:
+                    print("Not same batch")
+                    self.not_same_batch(cls, key=f"{key_prefix}/LR/NotSameBatch")
+                if self.plate_split:
+                    print("Not same plate")
+                    self.not_same_plate(cls, key=f"{key_prefix}/LR/NotSamePlate")
+                if self.source_split:
+                    print("Not same source")
+                    self.not_same_source(cls, key=f"{key_prefix}/LR/NotSameSource")
+            except Exception as e:
+                print(f"Error while running Logistic Regression: {e}")
 
         if self.knn:
-            print("Running KNN Classifier...")
-            cls = KNeighborsClassifier(n_neighbors=3, metric="cosine")
+            try:
+                print("Running KNN Classifier...")
+                cls = KNeighborsClassifier(n_neighbors=3, metric="cosine")
 
-            if self.fully_random_split:
-                print("Fully random split")
-                self.fully_random(cls, key=f"{key_prefix}/KNN/FullyRandom")
-            if self.well_split:
-                print("Not same well")
-                self.not_same_well_cls(cls, key=f"{key_prefix}/KNN/NotSameWell")
-            if self.batch_split:
-                print("Not same batch")
-                self.not_same_batch(cls, key=f"{key_prefix}/KNN/NotSameBatch")
-            if self.plate_split:
-                print("Not same plate")
-                self.not_same_plate(cls, key=f"{key_prefix}/KNN/NotSamePlate")
-            if self.source_split:
-                print("Not same source")
-                self.not_same_source(cls, key=f"{key_prefix}/KNN/NotSameSource")
+                if self.fully_random_split:
+                    print("Fully random split")
+                    self.fully_random(cls, key=f"{key_prefix}/KNN/FullyRandom")
+                if self.well_split:
+                    print("Not same well")
+                    self.not_same_well_cls(cls, key=f"{key_prefix}/KNN/NotSameWell")
+                if self.batch_split:
+                    print("Not same batch")
+                    self.not_same_batch(cls, key=f"{key_prefix}/KNN/NotSameBatch")
+                if self.plate_split:
+                    print("Not same plate")
+                    self.not_same_plate(cls, key=f"{key_prefix}/KNN/NotSamePlate")
+                if self.source_split:
+                    print("Not same source")
+                    self.not_same_source(cls, key=f"{key_prefix}/KNN/NotSameSource")
+            except Exception as e:
+                print(f"Error while running KNN Classifier: {e}")

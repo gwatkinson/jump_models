@@ -132,12 +132,12 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
                 strict=cfg.strict,
             )
 
-            # try:
-            log.info(f"Running evaluator {evaluator.__class__.__name__}")
-            evaluator.run()
-            print("Done!")
-            # except Exception as e:
-            # log.error(f"Error while running {evaluator}: {e}")
+            try:
+                log.info(f"Running evaluator {evaluator.__class__.__name__}")
+                evaluator.run()
+                print("Done!")
+            except Exception as e:
+                log.error(f"Error while running {evaluator}: {e}")
 
         # log.info("Instantiating evaluators ...")
         # evaluator_list: Optional[EvaluatorList] = utils.instantiate_evaluator_list(
