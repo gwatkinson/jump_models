@@ -131,6 +131,7 @@ class BatchEffectEvaluator(Evaluator):
 
         self.datamodule.prepare_data()
         self.datamodule.setup("predict")
+        print("Predicting on DMSO...")
         predictions = self.trainer.predict(self.model, self.datamodule.dmso_dataloader())
         keys = list(predictions[0].keys())
 
@@ -138,6 +139,7 @@ class BatchEffectEvaluator(Evaluator):
 
         all_batches = dmso_embeddings_df["batch"].unique()
 
+        print("Fitting the transforms on batches...")
         transform_dict = {}
         for batchi in all_batches:
             dmso_embeddings_batch = np.array(dmso_embeddings_df.query("batch==@batchi").embedding.to_list())
@@ -148,6 +150,7 @@ class BatchEffectEvaluator(Evaluator):
         self.dmso_embeddings = transform_dict
 
         if embedding_path:
+            dmso_embeddings_df.to_parquet(osp.join(self.out_dir, "dmso_embeddings_df.parquet"))
             with open(embedding_path, "wb") as f:
                 pickle.dump(transform_dict, f)
 
@@ -202,7 +205,7 @@ class BatchEffectEvaluator(Evaluator):
             fig.suptitle(title)
 
             if self.out_dir:
-                out_path = osp.join(self.out_dir, f"{title.replace(' ', '_')}.png")
+                out_path = osp.join(self.out_dir, f"{title.replace(' ', '_').replace('/', '_')}.png")
                 print(f"Saved {title} to {out_path}")
                 fig.savefig(out_path)
             return fig
@@ -255,8 +258,10 @@ class BatchEffectEvaluator(Evaluator):
                 print(f"Error while computing {k}: {e}")
 
         if self.out_dir:
-            print(f"Saved metrics to {self.out_dir}/{key}_metrics.json")
-            with open(f"{self.out_dir}/{key}_metrics.json", "w") as f:
+            out_path = f"{self.out_dir}/{key}_metrics.json".replace(" ", "_").replace("/", "_")
+            Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+            print("Saved metrics to out_path")
+            with open(out_path, "w") as f:
                 json.dump(metric_dict, f)
 
         return metric_dict
@@ -273,7 +278,9 @@ class BatchEffectEvaluator(Evaluator):
                 x_tick_rotation=90,
                 title=(title := f"{key}/Confusion matrix"),
             )
-            fig.savefig(f"{self.out_dir}/{title.replace(' ', '_')}.png")
+            out_path = f"{self.out_dir}/{title.replace(' ', '_').replace('/', '_')}.png"
+            Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+            fig.savefig(out_path)
             return fig
         except Exception as e:
             print(f"Error while plotting confusion matrix: {e}")
@@ -291,7 +298,9 @@ class BatchEffectEvaluator(Evaluator):
                 title=(title := f"{key}/Macro-average ROC curve"),
             )
             ax.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
-            fig.savefig(f"{self.out_dir}/{title.replace(' ', '_')}.png")
+            out_path = f"{self.out_dir}/{title.replace(' ', '_').replace('/', '_')}.png"
+            Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+            fig.savefig(out_path)
             return fig
         except Exception as e:
             print(f"Error while plotting macro-average ROC curve: {e}")
@@ -309,7 +318,9 @@ class BatchEffectEvaluator(Evaluator):
                 title=(title := f"{key}/ROC curves"),
             )
             ax.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
-            fig.savefig(f"{self.out_dir}/{title.replace(' ', '_')}.png")
+            out_path = f"{self.out_dir}/{title.replace(' ', '_').replace('/', '_')}.png"
+            Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+            fig.savefig(out_path)
             return fig
         except Exception as e:
             print(f"Error while plotting ROC curves: {e}")
@@ -326,7 +337,9 @@ class BatchEffectEvaluator(Evaluator):
                 title=(title := f"{key}/Micro-average precision-recall curve"),
             )
             ax.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
-            fig.savefig(f"{self.out_dir}/{title.replace(' ', '_')}.png")
+            out_path = f"{self.out_dir}/{title.replace(' ', '_').replace('/', '_')}.png"
+            Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+            fig.savefig(out_path)
             return fig
         except Exception as e:
             print(f"Error while plotting micro-average precision-recall curve: {e}")
@@ -343,7 +356,9 @@ class BatchEffectEvaluator(Evaluator):
                 title=(title := f"{key}/Precision-recall curves"),
             )
             ax.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
-            fig.savefig(f"{self.out_dir}/{title.replace(' ', '_')}.png")
+            out_path = f"{self.out_dir}/{title.replace(' ', '_').replace('/', '_')}.png"
+            Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+            fig.savefig(out_path)
             return fig
         except Exception as e:
             print(f"Error while plotting precision-recall curves: {e}")

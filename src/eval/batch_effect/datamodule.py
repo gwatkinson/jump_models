@@ -207,6 +207,7 @@ class TotalBatchEffectDataModule(LightningDataModule):
 
     def prepare_data(self) -> None:
         if not Path(self.target_load_df_path).exists() or not Path(self.dmso_load_df_path).exists():
+            print("Preparing datamodule...")
             load_df = pd.read_parquet(osp.join(self.load_data_path, "final"))
             meta = pd.read_csv(osp.join(self.metadata_path, "local_metadata.csv"))
             target_local = meta.query("Metadata_PlateType == 'TARGET2'")
