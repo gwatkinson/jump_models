@@ -34,7 +34,7 @@ batch_effect:
     plate_col: Metadata_Plate
     well_col: Metadata_Well
 
-    batch_size: 128
+    batch_size: 512
     num_workers: 16
     pin_memory: False
     prefetch_factor: 2

@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import torch
 from lightning import LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers.wandb import WandbLogger
 from scikitplot.metrics import plot_confusion_matrix, plot_precision_recall, plot_roc
@@ -31,7 +30,11 @@ py_logger = pylogger.get_pylogger(__name__)
 
 
 def concat_from_list_of_dict(res, key):
-    return torch.cat([r[key] for r in res], dim=0)
+    out = np.concatenate([r[key] for r in res])
+    if out.ndim == 2:
+        return out.tolist()
+    else:
+        return out
 
 
 class BatchEffectEvaluator(Evaluator):
@@ -114,7 +117,7 @@ class BatchEffectEvaluator(Evaluator):
         predictions = self.trainer.predict(self.model, self.datamodule)
         keys = list(predictions[0].keys())
 
-        self.embeddings_df = pd.DataFrame({key: concat_from_list_of_dict(predictions, key).numpy() for key in keys})
+        self.embeddings_df = pd.DataFrame({key: concat_from_list_of_dict(predictions, key) for key in keys})
 
         self.n_labels = self.embeddings_df["label"].nunique()
         self.label_encoder = LabelEncoder()

@@ -178,6 +178,8 @@ def main(ckpt_path: str, eval_cfg, devices, test, strict) -> None:
     cfg.strict = strict
     cfg.task = "eval"
 
+    cfg.logger.wandb.name += "_eval"
+
     # if isinstance(eval_cfg, str):
     #     eval_cfg = [eval_cfg]
 
