@@ -131,6 +131,7 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
             )
 
             try:
+                log.info(f"Running evaluator {key}")
                 evaluator.run()
             except Exception as e:
                 log.error(f"Error while running {evaluator}: {e}")

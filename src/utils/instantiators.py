@@ -74,12 +74,14 @@ def instantiate_evaluator(
 
     if isinstance(evaluator_cfg, DictConfig):
         if "model" in evaluator_cfg:
+            log.info("Instantiating model")
             model = hydra.utils.instantiate(model_cfg)
             module = hydra.utils.instantiate(evaluator_cfg.model, cross_modal_module=model)
         else:
             raise ValueError("Evaluator config must contain a model!")
 
         if "datamodule" in evaluator_cfg:
+            log.info("Instantiating datamodule")
             datamodule = hydra.utils.instantiate(evaluator_cfg.datamodule)
         else:
             raise ValueError("Evaluator config must contain a datamodule!")
@@ -90,6 +92,7 @@ def instantiate_evaluator(
             callbacks = []
 
         if "trainer" in evaluator_cfg:
+            log.info("Instantiating trainer")
             trainer = hydra.utils.instantiate(evaluator_cfg.trainer, callbacks=callbacks, logger=logger)
         else:
             trainer = None
@@ -97,7 +100,7 @@ def instantiate_evaluator(
         if evaluator_cfg.evaluator.name is None:
             evaluator_cfg.evaluator.name = name
 
-        log.info(f"Instantiating evaluator <{evaluator_cfg.model._target_}>")
+        log.info("Instantiating evaluator")
         evaluator = hydra.utils.instantiate(
             evaluator_cfg.evaluator, model=module, datamodule=datamodule, trainer=trainer
         )
