@@ -25,9 +25,10 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import LabelEncoder
 
 from src.eval import Evaluator
-from src.utils import pylogger
 
-py_logger = pylogger.get_pylogger(__name__)
+# from src.utils import pylogger
+
+# print pylogger.get_pylogger(__name__)
 
 
 def concat_from_list_of_dict(res, key):
@@ -68,7 +69,7 @@ class BatchEffectEvaluator(Evaluator):
         self.datamodule = datamodule
         self.trainer = trainer
 
-        self.embeddings_df = None
+        self.embeddings_df: Optional[pd.DataFrame] = None
 
         self.plot = plot
         self.logistic = logistic
@@ -85,7 +86,7 @@ class BatchEffectEvaluator(Evaluator):
 
         self.out_dir = out_dir
         if self.out_dir is not None:
-            py_logger.info(f"Creating output directory {self.out_dir}...")
+            print(f"Creating output directory {self.out_dir}...")
             Path(self.out_dir).mkdir(parents=True, exist_ok=True)
 
         self.name = name or self.model.__class__.__name__
@@ -190,7 +191,7 @@ class BatchEffectEvaluator(Evaluator):
             try:
                 metric_dict[k] = scorer(cls, X_test, y_test)
             except Exception as e:
-                py_logger.debug(f"Error while computing {k}: {e}")
+                print(f"Error while computing {k}: {e}")
 
         # metric_dict = {k: scorer(cls, X_test, y_test) for k, scorer in self.scorers.items()}
 
@@ -211,7 +212,7 @@ class BatchEffectEvaluator(Evaluator):
             plt.close(fig)
             images.append(conf_buf)
         except Exception as e:
-            py_logger.debug(f"Error while plotting confusion matrix: {e}")
+            print(f"Error while plotting confusion matrix: {e}")
 
         # Plot ROC curve
         try:
@@ -231,7 +232,7 @@ class BatchEffectEvaluator(Evaluator):
             plt.close(fig)
             images.append(roc_buf)
         except Exception as e:
-            py_logger.debug(f"Error while plotting ROC curve: {e}")
+            print(f"Error while plotting ROC curve: {e}")
 
         # Plot total ROC curve
         try:
@@ -251,7 +252,7 @@ class BatchEffectEvaluator(Evaluator):
             plt.close(fig)
             images.append(tot_roc_buf)
         except Exception as e:
-            py_logger.debug(f"Error while plotting total ROC curve: {e}")
+            print(f"Error while plotting total ROC curve: {e}")
 
         # Plot precision-recall curve
         try:
@@ -270,7 +271,7 @@ class BatchEffectEvaluator(Evaluator):
             plt.close(fig)
             images.append(pr_buf)
         except Exception as e:
-            py_logger.debug(f"Error while plotting precision-recall curve: {e}")
+            print(f"Error while plotting precision-recall curve: {e}")
 
         # Plot total precision-recall curve
         try:
@@ -289,7 +290,7 @@ class BatchEffectEvaluator(Evaluator):
             plt.close(fig)
             images.append(tot_pr_buf)
         except Exception as e:
-            py_logger.debug(f"Error while plotting total precision-recall curve: {e}")
+            print(f"Error while plotting total precision-recall curve: {e}")
 
         # Log to WandB
         if self.logger:
@@ -399,51 +400,51 @@ class BatchEffectEvaluator(Evaluator):
         # self.plot_results(cls, X_test, y_test, key)
 
     def run(self):
-        py_logger.info("Evaluating batch effect")
         print("Evaluating batch effect")
-        py_logger.info("Getting the embeddings...")
+        print("Evaluating batch effect")
+        print("Getting the embeddings...")
         self.get_embeddings()
 
         if self.plot:
-            py_logger.info("Plotting the embeddings...")
+            print("Plotting the embeddings...")
             self.plot_embeddings()
 
         if self.logistic:
-            py_logger.info("Running Logistic Regressions...")
+            print("Running Logistic Regressions...")
             cls = LogisticRegression(max_iter=1000)
 
             if self.fully_random_split:
-                py_logger.info("Fully random split")
+                print("Fully random split")
                 self.fully_random(cls)
             if self.well_split:
-                py_logger.info("Not same well")
+                print("Not same well")
                 self.not_same_well_cls(cls)
             if self.batch_split:
-                py_logger.info("Not same batch")
+                print("Not same batch")
                 self.not_same_batch(cls)
             if self.plate_split:
-                py_logger.info("Not same plate")
+                print("Not same plate")
                 self.not_same_plate(cls)
             if self.source_split:
-                py_logger.info("Not same source")
+                print("Not same source")
                 self.not_same_source(cls)
 
         if self.knn:
-            py_logger.info("Running KNN Classifier...")
+            print("Running KNN Classifier...")
             cls = KNeighborsClassifier(n_neighbors=3, metric="cosine")
 
             if self.fully_random_split:
-                py_logger.info("Fully random split")
+                print("Fully random split")
                 self.fully_random(cls)
             if self.well_split:
-                py_logger.info("Not same well")
+                print("Not same well")
                 self.not_same_well_cls(cls)
             if self.batch_split:
-                py_logger.info("Not same batch")
+                print("Not same batch")
                 self.not_same_batch(cls)
             if self.plate_split:
-                py_logger.info("Not same plate")
+                print("Not same plate")
                 self.not_same_plate(cls)
             if self.source_split:
-                py_logger.info("Not same source")
+                print("Not same source")
                 self.not_same_source(cls)
