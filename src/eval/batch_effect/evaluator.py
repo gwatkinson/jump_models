@@ -112,10 +112,15 @@ class BatchEffectEvaluator(Evaluator):
 
     def get_embeddings(self):
         if self.embeddings_df is not None:
+            print("Found embeddings_df, skipping getting embeddings...")
+            self.n_labels = self.embeddings_df["label"].nunique()
+            self.label_encoder = LabelEncoder()
+            self.label_encoder.fit(self.embeddings_df["label"])
             return
 
         embedding_path = f"{self.out_dir}/embeddings.parquet" if self.out_dir is not None else None
         if embedding_path and Path(embedding_path).exists():
+            print(f'Found embeddings at "{embedding_path}", skipping getting embeddings...')
             self.embeddings_df = pd.read_parquet(embedding_path)
             self.n_labels = self.embeddings_df["label"].nunique()
             self.label_encoder = LabelEncoder()
@@ -140,6 +145,7 @@ class BatchEffectEvaluator(Evaluator):
         fig.suptitle(title)
 
         fig.savefig(f"{self.out_dir}/{title.replace(' ', '_')}.png")
+        print(f"Saved {title} to {self.out_dir}/{title.replace(' ', '_')}.png")
         # emb_buf = io.BytesIO()
         # fig.savefig(emb_buf)
         # plt.close(fig)
@@ -167,9 +173,9 @@ class BatchEffectEvaluator(Evaluator):
         images.append(self.plot_tsne(embeddings, "source", "t-SNE colored by source"))
 
         # Log plots to WandB
-        if self.logger:
-            self.logger.log_image(key=key, images=images)
-            self.logger.save()
+        # if self.logger:
+        #     self.logger.log_image(key=key, images=images)
+        #     self.logger.save()
 
     def plot_results(self, cls, X_test, y_test, key):
         # Metrics
@@ -295,7 +301,7 @@ class BatchEffectEvaluator(Evaluator):
         # Log to WandB
         if self.logger:
             self.logger.log_metrics(metric_dict)
-            self.logger.log_image(key=key, images=images)
+            # self.logger.log_image(key=key, images=images)
             self.logger.save()
 
     def not_same_well_cls(self, cls, key="batch_effect/NotSameWell"):
