@@ -260,7 +260,7 @@ class BatchEffectEvaluator(Evaluator):
         if self.out_dir:
             out_path = f"{self.out_dir}/{key}_metrics.json".replace(" ", "_").replace("/", "_")
             Path(out_path).parent.mkdir(parents=True, exist_ok=True)
-            print("Saved metrics to out_path")
+            print(f"Saved metrics to {out_path}")
             with open(out_path, "w") as f:
                 json.dump(metric_dict, f)
 
