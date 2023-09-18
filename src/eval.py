@@ -94,24 +94,27 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info("Instantiating loggers...")
     logger: List[Logger] = utils.instantiate_loggers(cfg.get("logger"))
 
-    log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
-    trainer: Trainer = hydra.utils.instantiate(cfg.trainer, logger=logger)
+    # log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
+    # trainer: Trainer = hydra.utils.instantiate(cfg.trainer, logger=logger)
 
-    object_dict = {
-        "cfg": cfg,
-        "datamodule": datamodule,
-        "model": model,
-        "logger": logger,
-        "trainer": trainer,
-        "ckpt_path": cfg.ckpt_path,
-    }
+    # object_dict = {
+    #     "cfg": cfg,
+    #     "datamodule": datamodule,
+    #     "model": model,
+    #     "logger": logger,
+    #     "trainer": trainer,
+    #     "ckpt_path": cfg.ckpt_path,
+    # }
 
-    if logger:
-        log.info("Logging hyperparameters!")
-        utils.log_hyperparameters(object_dict)
+    # if logger:
+    #     log.info("Logging hyperparameters!")
+    #     utils.log_hyperparameters(object_dict)
 
     if cfg.get("test"):
         log.info("Starting testing!")
+        log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
+        trainer: Trainer = hydra.utils.instantiate(cfg.trainer, logger=logger)
+
         try:
             trainer.test(model=model, datamodule=datamodule, ckpt_path=cfg.ckpt_path)
         except Exception as e:
@@ -147,9 +150,9 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
         # if evaluator_list is not None:
         #     evaluator_list.run()
 
-    metric_dict = trainer.callback_metrics
+    # metric_dict = trainer.callback_metrics
 
-    return metric_dict, object_dict
+    # return metric_dict, object_dict
 
 
 # @hydra.main(config_path="../configs", config_name="eval.yaml", version_base=None)
@@ -176,6 +179,8 @@ def main(ckpt_path: str, eval_cfg, devices, test, strict) -> None:
 
     cfg.ckpt_path = ckpt_path
     cfg.test = test
+    if not test:
+        cfg.load_first_bacth = False
 
     cfg.strict = strict
     cfg.task = "eval"
