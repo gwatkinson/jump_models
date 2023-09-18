@@ -4,7 +4,7 @@ defaults:
 batch_effect_dmso_normalized:
 
   evaluator:
-    _target_: src.eval.batch_effect_dmso.evaluator.BatchEffectEvaluator
+    _target_: src.eval.batch_effect.evaluator.BatchEffectEvaluator
 
     dmso_normalize: True
 
@@ -23,11 +23,11 @@ batch_effect_dmso_normalized:
 
 
   model:
-    _target_: src.eval.batch_effect_dmso.module.TotalBatchEffectModule
+    _target_: src.eval.batch_effect.module.TotalBatchEffectModule
 
 
   datamodule:
-    _target_: src.eval.batch_effect_dmso.datamodule.TotalBatchEffectDataModule
+    _target_: src.eval.batch_effect.datamodule.TotalBatchEffectDataModule
 
     target_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect_dmso_normalized/splits/target_load_df.csv
     dmso_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect_dmso_normalized/splits/dmso_load_df.csv
