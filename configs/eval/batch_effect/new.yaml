@@ -14,7 +14,7 @@ batch_effect:
     source_split: True
     well_split: True
     fully_random_split: True
-    embedding_path: ${paths.output_dir}/eval/batch_effect/new/embeddings.parquet
+    out_dir: ${paths.output_dir}/eval/batch_effect/new/
     name: null
     visualize_kwargs: null
 

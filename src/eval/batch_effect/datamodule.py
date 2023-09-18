@@ -174,7 +174,7 @@ class TotalBatchEffectDataModule(LightningDataModule):
             self.label_to_idx = {label: idx for idx, label in enumerate(self.labels)}
             self.num_to_labels = dict(enumerate(self.labels))
 
-        if stage == "predict" and self.predict_dataset is None:
+        if self.predict_dataset is None:
             self.predict_dataset = BatchEffectDataset(
                 target_load_df=self.target_load_df,
                 target_to_num=self.label_to_idx,
@@ -187,8 +187,6 @@ class TotalBatchEffectDataModule(LightningDataModule):
                 plate_col=self.plate_col,
                 well_col=self.well_col,
             )
-        else:
-            raise NotImplementedError
 
     def predict_dataloader(self, **kwargs) -> DataLoader:
         args = {

@@ -68,6 +68,8 @@ class BatchEffectEvaluator(Evaluator):
         self.datamodule = datamodule
         self.trainer = trainer
 
+        self.embeddings_df = None
+
         self.plot = plot
         self.logistic = logistic
         self.knn = knn
@@ -81,24 +83,17 @@ class BatchEffectEvaluator(Evaluator):
         self.test_size = test_size
         self.train_ratio = 1 - self.test_size
 
-        self.scorers = {
-            "accuracy": make_scorer(accuracy_score),
-            "balanced_accuracy": make_scorer(balanced_accuracy_score),
-            "prec": make_scorer(precision_score, average="macro"),
-            "recall": make_scorer(recall_score, average="macro"),
-            "f1": make_scorer(f1_score, average="macro"),
-            "roc_auc": make_scorer(roc_auc_score, average="macro"),
-            "top_3": make_scorer(top_k_accuracy_score, k=3),
-            "top_5": make_scorer(top_k_accuracy_score, k=5),
-            "top_10": make_scorer(top_k_accuracy_score, k=10),
-        }
-
         self.out_dir = out_dir
+        if self.out_dir is not None:
+            py_logger.info(f"Creating output directory {self.out_dir}...")
+            Path(self.out_dir).mkdir(parents=True, exist_ok=True)
+
         self.name = name or self.model.__class__.__name__
         self.prefix = f"({self.name}) " if self.name else ""
 
         self.visualize_kwargs = visualize_kwargs or {}
 
+        self.logger = None
         for logger in trainer.loggers:
             if isinstance(logger, WandbLogger):
                 self.logger = logger
@@ -115,6 +110,9 @@ class BatchEffectEvaluator(Evaluator):
         pass
 
     def get_embeddings(self):
+        if self.embeddings_df is not None:
+            return
+
         embedding_path = f"{self.out_dir}/embeddings.parquet" if self.out_dir is not None else None
         if embedding_path and Path(embedding_path).exists():
             self.embeddings_df = pd.read_parquet(embedding_path)
@@ -130,7 +128,6 @@ class BatchEffectEvaluator(Evaluator):
         self.label_encoder.fit(self.embeddings_df["label"])
 
         if embedding_path:
-            Path(embedding_path).parent.mkdir(parents=True, exist_ok=True)
             self.embeddings_df.to_parquet(embedding_path, index=False)
 
     def plot_tsne(self, embeddings, col, title="t-SNE"):
@@ -166,72 +163,136 @@ class BatchEffectEvaluator(Evaluator):
         images.append(self.plot_tsne(embeddings, "source", "t-SNE colored by source"))
 
         # Log plots to WandB
-        self.logger.log_image(key=key, images=images)
-        self.logger.save()
+        if self.logger:
+            self.logger.log_image(key=key, images=images)
+            self.logger.save()
 
-    def plot_results(self, y_test, y_predict, y_probas, key):
+    def plot_results(self, cls, X_test, y_test, key):
         # Metrics
-        metric_dict = {k: scorer(y_test, y_predict) for k, scorer in self.scorers.items()}
+        labels = np.arange(len(self.label_encoder.classes_))
+        self.scorers = {
+            "accuracy": make_scorer(accuracy_score),
+            "balanced_accuracy": make_scorer(balanced_accuracy_score),
+            "prec": make_scorer(precision_score, average="macro", labels=labels),
+            "recall": make_scorer(recall_score, average="macro", labels=labels),
+            "f1": make_scorer(f1_score, average="macro", labels=labels),
+            "roc_auc": make_scorer(roc_auc_score, average="macro", multi_class="ovr", needs_proba=True, labels=labels),
+            "top_3": make_scorer(top_k_accuracy_score, k=3, labels=labels),
+            "top_5": make_scorer(top_k_accuracy_score, k=5, labels=labels),
+            "top_10": make_scorer(top_k_accuracy_score, k=10, labels=labels),
+        }
+
+        metric_dict = {}
+        for k, scorer in self.scorers.items():
+            try:
+                metric_dict[k] = scorer(cls, X_test, y_test)
+            except Exception as e:
+                py_logger.debug(f"Error while computing {k}: {e}")
+
+        # metric_dict = {k: scorer(cls, X_test, y_test) for k, scorer in self.scorers.items()}
 
         images = []
 
-        # Plot confusion matrix
-        fig, ax = plt.subplots(figsize=(14, 14))
+        y_probas = cls.predict_proba(X_test)
+        y_test_str = self.label_encoder.inverse_transform(y_test)
+        y_predict_str = self.label_encoder.inverse_transform(cls.predict(X_test))
         labels = self.label_encoder.classes_
-        plot_confusion_matrix(y_test, y_predict, labels=labels, ax=ax, x_tick_rotation=90)
-        conf_buf = io.BytesIO()
-        fig.savefig(conf_buf)
-        plt.close(fig)
-        images.append(conf_buf)
+
+        # Plot confusion matrix
+        try:
+            fig, ax = plt.subplots(figsize=(14, 14))
+            labels = self.label_encoder.classes_
+            plot_confusion_matrix(y_test_str, y_predict_str, labels=labels, ax=ax, x_tick_rotation=90)
+            conf_buf = io.BytesIO()
+            fig.savefig(conf_buf)
+            plt.close(fig)
+            images.append(conf_buf)
+        except Exception as e:
+            py_logger.debug(f"Error while plotting confusion matrix: {e}")
 
         # Plot ROC curve
-        fig, ax = plt.subplots(figsize=(14, 14))
-        plot_roc(
-            y_test,
-            y_probas,
-            ax=ax,
-            plot_macro=True,
-            plot_micro=False,
-            classes_to_plot=[],
-            title="Macro-average ROC curve",
-        )
-        roc_buf = io.BytesIO()
-        fig.savefig(roc_buf)
-        plt.close(fig)
-        images.append(roc_buf)
+        try:
+            fig, ax = plt.subplots(figsize=(14, 14))
+            plot_roc(
+                y_test_str,
+                y_probas,
+                ax=ax,
+                plot_macro=True,
+                plot_micro=False,
+                classes_to_plot=[],
+                title=(title := "Macro-average ROC curve"),
+            )
+            fig.savefig(f"{self.out_dir}/{title.replace(' ', '_')}.png")
+            roc_buf = io.BytesIO()
+            fig.savefig(roc_buf)
+            plt.close(fig)
+            images.append(roc_buf)
+        except Exception as e:
+            py_logger.debug(f"Error while plotting ROC curve: {e}")
 
         # Plot total ROC curve
-        fig, ax = plt.subplots(figsize=(14, 14))
-        plot_roc(y_test, y_probas, ax=ax, plot_macro=True, plot_micro=True, classes_to_plot=None, title="ROC curves")
-        tot_roc_buf = io.BytesIO()
-        fig.savefig(tot_roc_buf)
-        plt.close(fig)
-        images.append(tot_roc_buf)
+        try:
+            fig, ax = plt.subplots(figsize=(14, 14))
+            plot_roc(
+                y_test_str,
+                y_probas,
+                ax=ax,
+                plot_macro=True,
+                plot_micro=True,
+                classes_to_plot=None,
+                title=(title := "ROC curves"),
+            )
+            fig.savefig(f"{self.out_dir}/{title.replace(' ', '_')}.png")
+            tot_roc_buf = io.BytesIO()
+            fig.savefig(tot_roc_buf)
+            plt.close(fig)
+            images.append(tot_roc_buf)
+        except Exception as e:
+            py_logger.debug(f"Error while plotting total ROC curve: {e}")
 
         # Plot precision-recall curve
-        fig, ax = plt.subplots(figsize=(14, 14))
-        plot_precision_recall(
-            y_test, y_probas, ax=ax, plot_micro=True, classes_to_plot=[], title="Micro-average precision-recall curve"
-        )
-        pr_buf = io.BytesIO()
-        fig.savefig(pr_buf)
-        plt.close(fig)
-        images.append(pr_buf)
+        try:
+            fig, ax = plt.subplots(figsize=(14, 14))
+            plot_precision_recall(
+                y_test_str,
+                y_probas,
+                ax=ax,
+                plot_micro=True,
+                classes_to_plot=[],
+                title=(title := "Micro-average precision-recall curve"),
+            )
+            fig.savefig(f"{self.out_dir}/{title.replace(' ', '_')}.png")
+            pr_buf = io.BytesIO()
+            fig.savefig(pr_buf)
+            plt.close(fig)
+            images.append(pr_buf)
+        except Exception as e:
+            py_logger.debug(f"Error while plotting precision-recall curve: {e}")
 
         # Plot total precision-recall curve
-        fig, ax = plt.subplots(figsize=(14, 14))
-        plot_precision_recall(
-            y_test, y_probas, ax=ax, plot_micro=True, classes_to_plot=None, title="Precision-recall curves"
-        )
-        tot_pr_buf = io.BytesIO()
-        fig.savefig(tot_pr_buf)
-        plt.close(fig)
-        images.append(tot_pr_buf)
+        try:
+            fig, ax = plt.subplots(figsize=(14, 14))
+            plot_precision_recall(
+                y_test_str,
+                y_probas,
+                ax=ax,
+                plot_micro=True,
+                classes_to_plot=None,
+                title=(title := "Precision-recall curves"),
+            )
+            fig.savefig(f"{self.out_dir}/{title.replace(' ', '_')}.png")
+            tot_pr_buf = io.BytesIO()
+            fig.savefig(tot_pr_buf)
+            plt.close(fig)
+            images.append(tot_pr_buf)
+        except Exception as e:
+            py_logger.debug(f"Error while plotting total precision-recall curve: {e}")
 
         # Log to WandB
-        self.logger.log_metrics(metric_dict)
-        self.logger.log_image(key=key, images=images)
-        self.logger.save()
+        if self.logger:
+            self.logger.log_metrics(metric_dict)
+            self.logger.log_image(key=key, images=images)
+            self.logger.save()
 
     def not_same_well_cls(self, cls, key="batch_effect/NotSameWell"):
         wells = self.embeddings_df["well"].unique()
@@ -251,10 +312,7 @@ class BatchEffectEvaluator(Evaluator):
         # KNeighborsClassifier(n_neighbors=n_neighbors, metric="cosine")
         cls.fit(X_train, y_train)
 
-        y_predict = cls.predict(X_test)
-        y_probas = cls.predict_proba(X_test)
-
-        self.plot_results(y_test, y_predict, y_probas, key)
+        self.plot_results(cls, X_test, y_test, key)
 
     def not_same_batch(self, cls, key="batch_effect/NotSameBatch"):
         batches = self.embeddings_df["batch"].unique()
@@ -274,10 +332,7 @@ class BatchEffectEvaluator(Evaluator):
         # KNeighborsClassifier(n_neighbors=n_neighbors, metric="cosine")
         cls.fit(X_train, y_train)
 
-        y_predict = cls.predict(X_test)
-        y_probas = cls.predict_proba(X_test)
-
-        self.plot_results(y_test, y_predict, y_probas, key)
+        self.plot_results(cls, X_test, y_test, key)
 
     def not_same_plate(self, cls, key="batch_effect/NotSamePlate"):
         plates = self.embeddings_df["plate"].unique()
@@ -297,10 +352,7 @@ class BatchEffectEvaluator(Evaluator):
         # KNeighborsClassifier(n_neighbors=n_neighbors, metric="cosine")
         cls.fit(X_train, y_train)
 
-        y_predict = cls.predict(X_test)
-        y_probas = cls.predict_proba(X_test)
-
-        self.plot_results(y_test, y_predict, y_probas, key)
+        self.plot_results(cls, X_test, y_test, key)
 
     def not_same_source(self, cls, key="batch_effect/NotSameSource"):
         sources = self.embeddings_df["source"].unique()
@@ -320,10 +372,7 @@ class BatchEffectEvaluator(Evaluator):
         # KNeighborsClassifier(n_neighbors=n_neighbors, metric="cosine")
         cls.fit(X_train, y_train)
 
-        y_predict = cls.predict(X_test)
-        y_probas = cls.predict_proba(X_test)
-
-        self.plot_results(y_test, y_predict, y_probas, key)
+        self.plot_results(cls, X_test, y_test, key)
 
     def fully_random(self, cls, key="batch_effect/FullyRandom"):
         idx = np.random.permutation(len(self.embeddings_df))
@@ -342,10 +391,9 @@ class BatchEffectEvaluator(Evaluator):
         # KNeighborsClassifier(n_neighbors=n_neighbors, metric="cosine")
         cls.fit(X_train, y_train)
 
-        y_predict = cls.predict(X_test)
-        y_probas = cls.predict_proba(X_test)
+        return cls, X_test, y_test
 
-        self.plot_results(y_test, y_predict, y_probas, key)
+        # self.plot_results(cls, X_test, y_test, key)
 
     def run(self):
         py_logger.info("=== Evaluating batch effect")

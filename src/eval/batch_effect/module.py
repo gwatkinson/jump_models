@@ -34,13 +34,6 @@ class TotalBatchEffectModule(LightningModule):
     ):
         super().__init__()
 
-        # this line allows to access init params with 'self.hparams' attribute
-        # also ensures init params will be stored in ckpt
-        # self.save_hyperparameters(
-        #     logger=False,
-        #     ignore=["cross_modal_module", "optimizer", "criterion", "image_encoder", "image_encoder_attribute_name"],
-        # )
-
         # encoder
         if not (image_encoder or (cross_modal_module and image_encoder_attribute_name)):
             raise ValueError("Either image_encoder or cross_modal_module with attribute name must be provided.")
