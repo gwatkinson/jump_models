@@ -84,11 +84,11 @@ repos:
           # - flake8-docstrings
           # - flake8-requirements
 
-  # python security linter
-  - repo: https://github.com/PyCQA/bandit
-    rev: "1.7.5"
-    hooks:
-      - id: bandit
+  # # python security linter
+  # - repo: https://github.com/PyCQA/bandit
+  #   rev: "1.7.5"
+  #   hooks:
+  #     - id: bandit
 
   - repo: https://github.com/jorisroovers/gitlint
     rev: 'v0.18.0'

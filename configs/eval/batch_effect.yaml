@@ -1,2 +1,3 @@
 defaults:
   - batch_effect/new@_here_
+  - batch_effect/new_dmso_normalized@_here_

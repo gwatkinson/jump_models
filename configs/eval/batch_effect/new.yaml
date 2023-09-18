@@ -5,6 +5,9 @@ batch_effect:
 
   evaluator:
     _target_: src.eval.batch_effect.evaluator.BatchEffectEvaluator
+
+    dmso_normalize: False
+
     test_size: 0.2
     plot: True
     logistic: True
@@ -27,6 +30,7 @@ batch_effect:
     _target_: src.eval.batch_effect.datamodule.TotalBatchEffectDataModule
 
     target_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect/splits/target_load_df.csv
+    dmso_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect/splits/dmso_load_df.csv
 
     label_col: target
     source_col: Metadata_Source
