@@ -1,10 +1,10 @@
 defaults:
-  - /trainer/gpu.yaml@batch_effect.trainer
+  - /trainer/gpu.yaml@batch_effect_dmso_normalized.trainer
 
 batch_effect_dmso_normalized:
 
   evaluator:
-    _target_: src.eval.batch_effect.evaluator.BatchEffectEvaluator
+    _target_: src.eval.batch_effect_dmso_normalized.evaluator.BatchEffectEvaluator
 
     dmso_normalize: True
 
@@ -17,20 +17,20 @@ batch_effect_dmso_normalized:
     source_split: True
     well_split: True
     fully_random_split: True
-    out_dir: ${paths.output_dir}/eval/batch_effect/new/
+    out_dir: ${paths.output_dir}/eval/batch_effect_dmso_normalized/new/
     name: null
     visualize_kwargs: null
 
 
   model:
-    _target_: src.eval.batch_effect.module.TotalBatchEffectModule
+    _target_: src.eval.batch_effect_dmso_normalized.module.TotalBatchEffectModule
 
 
   datamodule:
-    _target_: src.eval.batch_effect.datamodule.TotalBatchEffectDataModule
+    _target_: src.eval.batch_effect_dmso_normalized.datamodule.TotalBatchEffectDataModule
 
-    target_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect/splits/target_load_df.csv
-    dmso_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect/splits/dmso_load_df.csv
+    target_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect_dmso_normalized/splits/target_load_df.csv
+    dmso_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect_dmso_normalized/splits/dmso_load_df.csv
 
     label_col: target
     source_col: Metadata_Source
@@ -57,7 +57,7 @@ batch_effect_dmso_normalized:
 
 
   trainer:
-    default_root_dir: ${paths.output_dir}/eval/batch_effect/new
+    default_root_dir: ${paths.output_dir}/eval/batch_effect_dmso_normalized/new
     devices: ${trainer.devices}
 
   callbacks: null
