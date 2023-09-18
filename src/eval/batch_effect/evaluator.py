@@ -116,6 +116,9 @@ class BatchEffectEvaluator(Evaluator):
         embedding_path = f"{self.out_dir}/embeddings.parquet" if self.out_dir is not None else None
         if embedding_path and Path(embedding_path).exists():
             self.embeddings_df = pd.read_parquet(embedding_path)
+            self.n_labels = self.embeddings_df["label"].nunique()
+            self.label_encoder = LabelEncoder()
+            self.label_encoder.fit(self.embeddings_df["label"])
             return
 
         predictions = self.trainer.predict(self.model, self.datamodule)
@@ -396,7 +399,8 @@ class BatchEffectEvaluator(Evaluator):
         # self.plot_results(cls, X_test, y_test, key)
 
     def run(self):
-        py_logger.info("=== Evaluating batch effect")
+        py_logger.info("Evaluating batch effect")
+        print("Evaluating batch effect")
         py_logger.info("Getting the embeddings...")
         self.get_embeddings()
 
