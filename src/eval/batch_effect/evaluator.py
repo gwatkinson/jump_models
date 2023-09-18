@@ -140,7 +140,7 @@ class BatchEffectEvaluator(Evaluator):
 
         transform_dict = {}
         for batchi in all_batches:
-            dmso_embeddings_batch = np.array(dmso_embeddings_df.query("batch==@batchi").embeddings.to_list())
+            dmso_embeddings_batch = np.array(dmso_embeddings_df.query("batch==@batchi").embedding.to_list())
             spherizer = ZCA_corr()
             spherizer.fit(dmso_embeddings_batch)
             transform_dict[batchi] = spherizer
@@ -150,6 +150,18 @@ class BatchEffectEvaluator(Evaluator):
         if embedding_path:
             with open(embedding_path, "wb") as f:
                 pickle.dump(transform_dict, f)
+
+    def normalize_embeddings(self):
+        if self.dmso_normalize and self.dmso_embeddings:
+            for batchi in self.embeddings_df["batch"].unique():
+                try:
+                    dmso_embeddings_batch = np.array(self.embeddings_df.query("batch==@batchi").embedding.to_list())
+                    spherizer = self.dmso_embeddings[batchi]
+                    self.embeddings_df.loc[self.embeddings_df.batch == batchi, "embedding"] = spherizer.transform(
+                        dmso_embeddings_batch
+                    ).tolist()
+                except Exception as e:
+                    print(f"Error while normalizing batch {batchi}: {e}")
 
     def get_embeddings(self):
         if self.dmso_normalize:
@@ -176,16 +188,7 @@ class BatchEffectEvaluator(Evaluator):
             if embedding_path:
                 self.embeddings_df.to_parquet(embedding_path, index=False)
 
-        if self.dmso_normalize and self.dmso_embeddings:
-            for batchi in self.embeddings_df["batch"].unique():
-                try:
-                    dmso_embeddings_batch = np.array(self.embeddings_df.query("batch==@batchi").embeddings.to_list())
-                    spherizer = self.dmso_embeddings[batchi]
-                    self.embeddings_df.loc[self.embeddings_df.batch == batchi, "embedding"] = spherizer.transform(
-                        dmso_embeddings_batch
-                    ).tolist()
-                except Exception as e:
-                    print(f"Error while normalizing batch {batchi}: {e}")
+        self.normalize_embeddings()
 
         self.n_labels = self.embeddings_df["label"].nunique()
         self.label_encoder = LabelEncoder()

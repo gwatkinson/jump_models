@@ -234,7 +234,10 @@ class TotalBatchEffectDataModule(LightningDataModule):
                 ["Metadata_Source", "Metadata_Batch", "Metadata_Plate", "Metadata_Well"]
             ]
             dmso_merge = pd.merge(
-                dmso_meta, load_df, on=["Metadata_Source", "Metadata_Plate", "Metadata_Well"], how="inner"
+                dmso_meta,
+                load_df,
+                on=["Metadata_Source", "Metadata_Batch", "Metadata_Plate", "Metadata_Well"],
+                how="inner",
             )
 
             Path(self.dmso_load_df_path).parent.mkdir(parents=True, exist_ok=True)
