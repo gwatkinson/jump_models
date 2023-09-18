@@ -68,6 +68,7 @@ class TotalBatchEffectModule(LightningModule):
 
     def predict_step(self, batch: Any, batch_idx: int):
         labels = batch["label"]
+        sources = batch["source"]
         batches = batch["batch"]
         wells = batch["well"]
         plates = batch["plate"]
@@ -77,6 +78,7 @@ class TotalBatchEffectModule(LightningModule):
 
         return {
             "label": labels,
+            "source": sources,
             "batch": batches,
             "well": wells,
             "plate": plates,

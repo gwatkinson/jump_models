@@ -115,6 +115,10 @@ class BatchEffectEvaluator(Evaluator):
         pass
 
     def get_embeddings(self):
+        if self.embedding_path and Path(self.embedding_path).exists():
+            self.embeddings_df = pd.read_parquet(self.embedding_path)
+            return
+
         predictions = self.trainer.predict(self.model, self.datamodule)
         keys = list(predictions[0].keys())
 
@@ -127,6 +131,40 @@ class BatchEffectEvaluator(Evaluator):
         if self.embedding_path:
             Path(self.embedding_path).parent.mkdir(parents=True, exist_ok=True)
             self.embeddings_df.to_parquet(self.embedding_path, index=False)
+
+    def plot_tsne(self, embeddings, col, title="t-SNE"):
+        fig, ax = plt.subplots(figsize=(14, 14))
+        sns.scatterplot(x=embeddings[:, 0], y=embeddings[:, 1], hue=self.embeddings_df[col], ax=ax)
+        fig.suptitle(title)
+        # emb_buf = io.BytesIO()
+        # fig.savefig(emb_buf)
+        # plt.close(fig)
+        return fig
+
+    def plot_embeddings(self, key="batch_effect/Embeddings"):
+        tsne = TSNE(n_components=2, random_state=0)
+        embeddings = tsne.fit_transform(np.array(self.embeddings_df["embedding"].tolist()))
+
+        images = []
+
+        # Plot with regards to label
+        images.append(self.plot_tsne(embeddings, "label", "t-SNE colored by labels"))
+
+        # Plot with regards to batch
+        images.append(self.plot_tsne(embeddings, "batch", "t-SNE colored by batch"))
+
+        # Plot with regards to plate
+        images.append(self.plot_tsne(embeddings, "plate", "t-SNE colored by plate"))
+
+        # Plot with regards to well
+        images.append(self.plot_tsne(embeddings, "well", "t-SNE colored by well"))
+
+        # Plot with regards to source
+        images.append(self.plot_tsne(embeddings, "source", "t-SNE colored by source"))
+
+        # Log plots to WandB
+        self.logger.log_image(key=key, images=images)
+        self.logger.save()
 
     def plot_results(self, y_test, y_predict, y_probas, key):
         # Metrics
@@ -305,41 +343,6 @@ class BatchEffectEvaluator(Evaluator):
         y_probas = cls.predict_proba(X_test)
 
         self.plot_results(y_test, y_predict, y_probas, key)
-
-    def plot_tsne(self, embeddings, col, title="t-SNE"):
-        fig, ax = plt.subplots(figsize=(14, 14))
-        sns.scatterplot(x=embeddings[:, 0], y=embeddings[:, 1], hue=self.embeddings_df[col], ax=ax)
-        fig.suptitle(title)
-        emb_buf = io.BytesIO()
-        fig.savefig(emb_buf)
-        plt.close(fig)
-
-        return emb_buf
-
-    def plot_embeddings(self, key="batch_effect/Embeddings"):
-        tsne = TSNE(n_components=2, random_state=0)
-        embeddings = tsne.fit_transform(np.array(self.embeddings_df["embedding"].tolist()))
-
-        images = []
-
-        # Plot with regards to label
-        images.append(self.plot_tsne(embeddings, "label", "t-SNE colored by labels"))
-
-        # Plot with regards to batch
-        images.append(self.plot_tsne(embeddings, "batch", "t-SNE colored by batch"))
-
-        # Plot with regards to plate
-        images.append(self.plot_tsne(embeddings, "plate", "t-SNE colored by plate"))
-
-        # Plot with regards to well
-        images.append(self.plot_tsne(embeddings, "well", "t-SNE colored by well"))
-
-        # Plot with regards to source
-        images.append(self.plot_tsne(embeddings, "source", "t-SNE colored by source"))
-
-        # Log plots to WandB
-        self.logger.log_image(key=key, images=images)
-        self.logger.save()
 
     def run(self):
         py_logger.info("=== Evaluating batch effect")
