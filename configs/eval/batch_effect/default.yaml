@@ -1,80 +1,63 @@
 defaults:
-  - /model/optimizer/adamw.yaml@default_batch_effect.model.optimizer
-  - /model/scheduler/cosine_annealing_with_warmup.yaml@default_batch_effect.model.scheduler
-  - /trainer/gpu.yaml@default_batch_effect.trainer
-  - /callbacks/eval/batch_effect.yaml@default_batch_effect.callbacks
+  - /trainer/gpu.yaml@batch_effect.trainer
 
-default_batch_effect:
+batch_effect:
+
+  evaluator:
+    _target_: src.eval.batch_effect.evaluator.BatchEffectEvaluator
+
+    dmso_normalize: False
+
+    test_size: 0.2
+    plot: True
+    logistic: True
+    knn: True
+    batch_split: True
+    plate_split: True
+    source_split: True
+    well_split: True
+    fully_random_split: True
+    out_dir: ${paths.output_dir}/eval/batch_effect/new/
+    name: null
+    visualize_kwargs: null
+
+
   model:
-    _target_: src.eval.batch_effect.module.BatchEffectModule
-
-    split_name: ???
-    lr: 1e-4
-    num_classes: 118
-
-    scheduler:
-      warmup_epochs: 3
-      max_epochs: ${eval.default_batch_effect.trainer.max_epochs}
-
-    example_input_path: ${model.example_input_path}
-
-    split_lr_in_groups: False
+    _target_: src.eval.batch_effect.module.TotalBatchEffectModule
 
 
   datamodule:
-    _target_: src.eval.batch_effect.datamodule.BatchEffectDataModule
+    _target_: src.eval.batch_effect.datamodule.TotalBatchEffectDataModule
 
-    split_type: ???
+    target_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect/splits/target_load_df.csv
+    dmso_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect/splits/dmso_load_df.csv
 
-    split_path: ${paths.data_root_dir}/jump/models/eval/batch_effect/splits/default/
-    target_load_df_path:  ${paths.data_root_dir}/jump/models/eval/batch_effect/splits/target_load_df.csv
+    label_col: target
+    source_col: Metadata_Source
+    batch_col: Metadata_Batch
+    plate_col: Metadata_Plate
+    well_col: Metadata_Well
 
-    val_size: 0.1
-    test_size: 0.2
-
-    batch_size: 128
-    num_workers: 16
+    batch_size: 512
+    num_workers: 12
     pin_memory: False
     prefetch_factor: 2
     drop_last: False
 
-    transform: ${data.transform}
+    transform:
+      _target_: src.modules.transforms.SimpleTransform
+      _convert_: object
+      size: ${data.transform.size}
 
     metadata_path: ${paths.raw_metadata_path}
     load_data_path: ${paths.load_data_path}
     data_root_dir: null
-    label_col: target
 
     random_state: 42
 
-    # collate_fn: null
-    # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
-
 
   trainer:
-    default_root_dir: ???  # ${paths.output_dir}/eval/batch_effect/random
+    default_root_dir: ${paths.output_dir}/eval/batch_effect/new
     devices: ${trainer.devices}
-    min_epochs: 0
-    max_epochs: 25
-    log_every_n_steps: 1
-    num_sanity_val_steps: 1
-    check_val_every_n_epoch: 1
 
-
-  evaluator:
-    _target_: src.eval.evaluators.Evaluator
-    name: ???  #BatchEffectRandom
-    visualize_kwargs: null
-
-
-  callbacks:
-    early_stopping:
-      monitor: ???  # batch_effect/random/val/loss
-
-    model_checkpoint:
-      monitor: ???  # batch_effect/random/val/loss
-      dirpath: ???  # ${eval.default_batch_effect.trainer.default_root_dir}/checkpoints
-
-    wandb_plotter:
-      prefix: ???  # batch_effect/random
-
+  callbacks: null

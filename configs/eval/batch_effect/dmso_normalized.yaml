@@ -1,12 +1,12 @@
 defaults:
   - /trainer/gpu.yaml@batch_effect.trainer
 
-batch_effect:
+batch_effect_dmso_normalized:
 
   evaluator:
     _target_: src.eval.batch_effect.evaluator.BatchEffectEvaluator
 
-    dmso_normalize: False
+    dmso_normalize: True
 
     test_size: 0.2
     plot: True
@@ -38,7 +38,7 @@ batch_effect:
     plate_col: Metadata_Plate
     well_col: Metadata_Well
 
-    batch_size: 128
+    batch_size: 512
     num_workers: 12
     pin_memory: False
     prefetch_factor: 2
@@ -59,6 +59,5 @@ batch_effect:
   trainer:
     default_root_dir: ${paths.output_dir}/eval/batch_effect/new
     devices: ${trainer.devices}
-    limit_predict_batches: 24
 
   callbacks: null

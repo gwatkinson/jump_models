@@ -129,6 +129,8 @@ class BatchEffectEvaluator(Evaluator):
                 self.dmso_embeddings = pickle.load(f)
             return
 
+        self.datamodule.prepare_data()
+        self.datamodule.setup("predict")
         predictions = self.trainer.predict(self.model, self.datamodule.dmso_dataloader())
         keys = list(predictions[0].keys())
 
@@ -284,6 +286,7 @@ class BatchEffectEvaluator(Evaluator):
                 classes_to_plot=[],
                 title=(title := f"{key}/Macro-average ROC curve"),
             )
+            ax.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
             fig.savefig(f"{self.out_dir}/{title.replace(' ', '_')}.png")
             return fig
         except Exception as e:
@@ -301,6 +304,7 @@ class BatchEffectEvaluator(Evaluator):
                 classes_to_plot=None,
                 title=(title := f"{key}/ROC curves"),
             )
+            ax.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
             fig.savefig(f"{self.out_dir}/{title.replace(' ', '_')}.png")
             return fig
         except Exception as e:
@@ -317,6 +321,7 @@ class BatchEffectEvaluator(Evaluator):
                 classes_to_plot=[],
                 title=(title := f"{key}/Micro-average precision-recall curve"),
             )
+            ax.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
             fig.savefig(f"{self.out_dir}/{title.replace(' ', '_')}.png")
             return fig
         except Exception as e:
@@ -333,6 +338,7 @@ class BatchEffectEvaluator(Evaluator):
                 classes_to_plot=None,
                 title=(title := f"{key}/Precision-recall curves"),
             )
+            ax.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
             fig.savefig(f"{self.out_dir}/{title.replace(' ', '_')}.png")
             return fig
         except Exception as e:
