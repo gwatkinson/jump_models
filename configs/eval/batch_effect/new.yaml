@@ -35,7 +35,7 @@ batch_effect:
     well_col: Metadata_Well
 
     batch_size: 512
-    num_workers: 16
+    num_workers: 24
     pin_memory: False
     prefetch_factor: 2
     drop_last: False

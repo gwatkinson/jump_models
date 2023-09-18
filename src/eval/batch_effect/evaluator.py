@@ -1,4 +1,5 @@
 import io
+from pathlib import Path
 from typing import Optional
 
 import matplotlib.pyplot as plt
@@ -124,6 +125,7 @@ class BatchEffectEvaluator(Evaluator):
         self.label_encoder.fit(self.embeddings_df["label"])
 
         if self.embedding_path:
+            Path(self.embedding_path).parent.mkdir(parents=True, exist_ok=True)
             self.embeddings_df.to_parquet(self.embedding_path, index=False)
 
     def plot_results(self, y_test, y_predict, y_probas, key):
