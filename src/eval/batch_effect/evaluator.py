@@ -122,7 +122,7 @@ class BatchEffectEvaluator(Evaluator):
             print("Found dmso_embeddings, skipping getting embeddings...")
             return
 
-        embedding_path = f"{self.out_dir}/dmso_embeddings.pickle" if self.out_dir is not None else None
+        embedding_path = osp.join(self.out_dir, "dmso_embeddings.pickle") if self.out_dir is not None else None
         if embedding_path and Path(embedding_path).exists():
             print(f'Found dmso_df at "{embedding_path}", skipping getting embeddings...')
             with open(embedding_path, "rb") as f:
@@ -167,7 +167,7 @@ class BatchEffectEvaluator(Evaluator):
         if self.dmso_normalize:
             self.get_dmso_embeddings()
 
-        embedding_path = f"{self.out_dir}/embeddings.parquet" if self.out_dir is not None else None
+        embedding_path = osp.join(self.out_dir, "embeddings.parquet") if self.out_dir is not None else None
 
         if self.embeddings_df is not None:
             print("Found embeddings_df, skipping getting embeddings...")
@@ -202,15 +202,16 @@ class BatchEffectEvaluator(Evaluator):
             fig.suptitle(title)
 
             if self.out_dir:
-                print(f"Saved {title} to {self.out_dir}/{title.replace(' ', '_')}.png")
-                fig.savefig(osp.join(self.out_dir, f"{title.replace(' ', '_')}.png"))
+                out_path = osp.join(self.out_dir, f"{title.replace(' ', '_')}.png")
+                print(f"Saved {title} to {out_path}")
+                fig.savefig(out_path)
             return fig
 
         except Exception as e:
             print(f"Error while plotting t-SNE: {e}")
 
     def plot_embeddings(self, key="batch_effect/Embeddings"):
-        print("Fiting t-SNE...")
+        print("Fitting t-SNE...")
         tsne = TSNE(n_components=2, random_state=0)
         embeddings = tsne.fit_transform(np.array(self.embeddings_df["embedding"].tolist()))
 
@@ -377,7 +378,9 @@ class BatchEffectEvaluator(Evaluator):
             print(f"Error while logging metrics: {e}")
 
     def not_same_well_cls(self, cls, key="batch_effect/NotSameWell"):
-        wells = self.embeddings_df["well"].unique()
+        wells = self.embeddings_df.apply(
+            lambda x: f"{x['source']}_{x['batch']}_{x['plate']}_{x['well']}", axis=1
+        ).unique()
         wells = np.random.permutation(wells)
 
         train_wells = wells[: int(len(wells) * self.train_ratio)]
@@ -391,13 +394,12 @@ class BatchEffectEvaluator(Evaluator):
         X_test = np.array(test_df["embedding"].tolist())
         y_test = self.label_encoder.transform(test_df["label"].tolist())
 
-        # KNeighborsClassifier(n_neighbors=n_neighbors, metric="cosine")
         cls.fit(X_train, y_train)
 
         self.plot_results(cls, X_test, y_test, key)
 
     def not_same_batch(self, cls, key="batch_effect/NotSameBatch"):
-        batches = self.embeddings_df["batch"].unique()
+        batches = self.embeddings_df.apply(lambda x: f"{x['source']}_{x['batch']}", axis=1).unique()
         batches = np.random.permutation(batches)
 
         train_batches = batches[: int(len(batches) * self.train_ratio)]
@@ -411,13 +413,12 @@ class BatchEffectEvaluator(Evaluator):
         X_test = np.array(test_df["embedding"].tolist())
         y_test = self.label_encoder.transform(test_df["label"].tolist())
 
-        # KNeighborsClassifier(n_neighbors=n_neighbors, metric="cosine")
         cls.fit(X_train, y_train)
 
         self.plot_results(cls, X_test, y_test, key)
 
     def not_same_plate(self, cls, key="batch_effect/NotSamePlate"):
-        plates = self.embeddings_df["plate"].unique()
+        plates = self.embeddings_df.apply(lambda x: f"{x['source']}_{x['batch']}_{x['plate']}", axis=1).unique()
         plates = np.random.permutation(plates)
 
         train_plates = plates[: int(len(plates) * self.train_ratio)]
@@ -431,7 +432,6 @@ class BatchEffectEvaluator(Evaluator):
         X_test = np.array(test_df["embedding"].tolist())
         y_test = self.label_encoder.transform(test_df["label"].tolist())
 
-        # KNeighborsClassifier(n_neighbors=n_neighbors, metric="cosine")
         cls.fit(X_train, y_train)
 
         self.plot_results(cls, X_test, y_test, key)
@@ -451,7 +451,6 @@ class BatchEffectEvaluator(Evaluator):
         X_test = np.array(test_df["embedding"].tolist())
         y_test = self.label_encoder.transform(test_df["label"].tolist())
 
-        # KNeighborsClassifier(n_neighbors=n_neighbors, metric="cosine")
         cls.fit(X_train, y_train)
 
         self.plot_results(cls, X_test, y_test, key)
@@ -470,12 +469,9 @@ class BatchEffectEvaluator(Evaluator):
         X_test = np.array(test_df["embedding"].tolist())
         y_test = self.label_encoder.transform(test_df["label"].tolist())
 
-        # KNeighborsClassifier(n_neighbors=n_neighbors, metric="cosine")
         cls.fit(X_train, y_train)
 
-        return cls, X_test, y_test
-
-        # self.plot_results(cls, X_test, y_test, key)
+        self.plot_results(cls, X_test, y_test, key)
 
     def run(self):
         print("Evaluating batch effect")
@@ -483,11 +479,11 @@ class BatchEffectEvaluator(Evaluator):
         print("Getting the embeddings...")
         self.get_embeddings()
 
+        key_prefix = "batch_effect/regular" if not self.dmso_normalize else "batch_effect/dmso_normalized"
+
         if self.plot:
             print("Plotting the embeddings...")
-            self.plot_embeddings()
-
-        key_prefix = "batch_effect/regular" if not self.dmso_normalize else "batch_effect/dmso_normalized"
+            self.plot_embeddings(key=f"{key_prefix}/Embeddings")
 
         if self.logistic:
             print("Running Logistic Regressions...")
