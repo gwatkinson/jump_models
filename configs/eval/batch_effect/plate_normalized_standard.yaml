@@ -1,0 +1,12 @@
+defaults:
+  - /eval/batch_effect/default.yaml@plate_normalized_standard
+
+plate_normalized_standard:
+
+  evaluator:
+    _target_: src.eval.batch_effect.evaluator.BatchEffectEvaluator
+
+    dmso_normalize: plate
+    normalize_cls:
+      _target_: sklearn.preprocessing.StandardScaler
+      _partial_: true

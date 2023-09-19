@@ -1,63 +1,12 @@
 defaults:
-  - /trainer/gpu.yaml@plate_normalized.trainer
+  - /eval/batch_effect/default.yaml@plate_normalized
 
 plate_normalized:
 
   evaluator:
     _target_: src.eval.batch_effect.evaluator.BatchEffectEvaluator
 
-    dmso_normalize: True
-
-    test_size: 0.2
-    plot: True
-    logistic: True
-    knn: True
-    batch_split: True
-    plate_split: True
-    source_split: True
-    well_split: True
-    fully_random_split: True
-    out_dir: ${paths.output_dir}/eval/batch_effect/new/
-    name: null
-    visualize_kwargs: null
-
-
-  model:
-    _target_: src.eval.batch_effect.module.TotalBatchEffectModule
-
-
-  datamodule:
-    _target_: src.eval.batch_effect.datamodule.TotalBatchEffectDataModule
-
-    target_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect/splits/target_load_df.csv
-    dmso_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect/splits/dmso_load_df.csv
-
-    label_col: target
-    source_col: Metadata_Source
-    batch_col: Metadata_Batch
-    plate_col: Metadata_Plate
-    well_col: Metadata_Well
-
-    batch_size: 512
-    num_workers: 12
-    pin_memory: False
-    prefetch_factor: 2
-    drop_last: False
-
-    transform:
-      _target_: src.modules.transforms.SimpleTransform
-      _convert_: object
-      size: ${data.transform.size}
-
-    metadata_path: ${paths.raw_metadata_path}
-    load_data_path: ${paths.load_data_path}
-    data_root_dir: null
-
-    random_state: 42
-
-
-  trainer:
-    default_root_dir: ${paths.output_dir}/eval/batch_effect/new
-    devices: ${trainer.devices}
-
-  callbacks: null
+    dmso_normalize: plate
+    normalize_cls:
+      _target_: src.eval.batch_effect.spherize.ZCA_corr
+      _partial_: true

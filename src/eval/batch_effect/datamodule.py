@@ -153,6 +153,7 @@ class TotalBatchEffectDataModule(LightningDataModule):
         self,
         target_load_df_path: str,
         dmso_load_df_path: str,
+        subset_targets: Optional[int] = None,
         label_col: str = "target",
         source_col: str = "Metadata_Source",
         batch_col: str = "Metadata_Batch",
@@ -181,6 +182,7 @@ class TotalBatchEffectDataModule(LightningDataModule):
         self.metadata_path = metadata_path
         self.load_data_path = load_data_path
         self.random_state = random_state
+        self.subset_targets = subset_targets
 
         # dataset args
         self.label_col = label_col
@@ -247,6 +249,13 @@ class TotalBatchEffectDataModule(LightningDataModule):
     def setup(self, stage: Optional[str] = None) -> None:
         if self.target_load_df is None:
             self.target_load_df = pd.read_csv(self.target_load_df_path)
+
+            if self.subset_targets:
+                targets = self.target_load_df.target.value_counts()
+                sub_targets = targets.index[:10].tolist()
+
+                self.target_load_df = self.target_load_df[self.target_load_df["target"].isin(sub_targets)]
+
             self.labels = self.target_load_df[self.label_col].unique().tolist()
             self.labels.sort()
             self.label_to_idx = {label: idx for idx, label in enumerate(self.labels)}

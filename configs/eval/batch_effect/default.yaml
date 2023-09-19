@@ -7,8 +7,10 @@ batch_effect:
     _target_: src.eval.batch_effect.evaluator.BatchEffectEvaluator
 
     dmso_normalize: False
+    normalize_cls: null
 
     test_size: 0.2
+    nruns: 5
     plot: True
     logistic: True
     knn: True
@@ -31,6 +33,8 @@ batch_effect:
 
     target_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect/splits/target_load_df.csv
     dmso_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect/splits/dmso_load_df.csv
+
+    subset_targets: 10 # 10 targets instead of 128
 
     label_col: target
     source_col: Metadata_Source

@@ -1,9 +1,13 @@
 # from torch.distributions import MultivariateNormal
+from collections import defaultdict
+
 import torch
+import torch.nn.functional as F
 from torch import Tensor, nn
 from torch.nn.modules.loss import _Loss
 
 from src.modules.losses.base_losses import LossWithTemperature, cov_loss_fn, std_loss_fn, uniformity_loss_fn
+from src.modules.losses.contrastive_losses import calculate_rank
 
 
 class MultiviewRegLoss(_Loss):
@@ -114,6 +118,76 @@ class NTXentMultiplePositives(LossWithTemperature):
         return loss
 
 
+class MultiviewIntraModalNTXentLoss(LossWithTemperature):
+    def __init__(
+        self,
+        norm: bool = True,
+        temperature: float = 0.5,
+        return_rank: bool = False,
+        eps: float = 1e-8,
+        name: str = "MultiviewIntraModalNTXentLoss",
+        **kwargs,
+    ):
+        super().__init__(temperature=temperature, **kwargs)
+
+        self.norm = norm
+        self.eps = eps
+        self.name = name
+        self.return_rank = return_rank
+
+    def forward(self, image_emb, compound_emb, **kwargs) -> Tensor:
+        """
+        :param z1: batchsize, metric dim
+        :param z2: batchsize, num_conformers, metric dim
+        """
+        z1, z2 = compound_emb, image_emb
+
+        batch_size, metric_dim = z1.size()
+        z2 = z2.view(batch_size, -1, metric_dim)  # [batch_size, num_conformers, metric_dim]
+        batch_size, num_conformers, metric_dim = z2.size()
+
+        z1 = z1.unsqueeze(1)  # [batch_size, 1, metric_dim]
+        z3 = torch.cat([z1, z2], dim=1)  # [batch_size, num_conformers+1, metric_dim]
+
+        if self.norm:
+            z3 = F.normalize(z3, dim=2)
+
+        possible_pairs = torch.triu_indices(num_conformers + 1, num_conformers + 1, 1)  # [2, num_pairs]
+        num_pairs = possible_pairs.size(1)
+
+        loss_value = 0
+        loss_dict = {}
+        results_dict = defaultdict(list)
+        for _ in range(num_pairs):
+            i, j = possible_pairs[:, _]
+            z1p = z3[:, i, :].squeeze()
+            z2p = z3[:, j, :].squeeze()
+
+            sim_matrix = torch.einsum("ik,jk->ij", z1p, z2p)  # [batch_size, batch_size]
+            sim_matrix = torch.exp(sim_matrix / self.temperature)  # [batch_size, batch_size]
+
+            pos_sim = sim_matrix[range(batch_size), range(batch_size)]  # [batch_size]
+            loss = pos_sim / (sim_matrix.sum(dim=1) - pos_sim)  # [batch_size]
+            loss = -torch.log(loss).mean()
+
+            loss_dict[f"loss_{i}_{j}"] = loss
+            loss_value += loss
+
+            if self.return_rank:
+                results = calculate_rank(sim_matrix, only_average=True)
+                for k, v in results.items():
+                    results_dict[k].append(v)
+
+        loss_dict["loss"] = loss_value
+
+        if self.return_rank:
+            for k, v in results_dict.items():
+                loss_dict[f"{k}_mean"] = torch.stack(v).mean()
+                loss_dict[f"{k}_std"] = torch.stack(v).std()
+
+        return loss_dict
+
+
 class KLDivergenceMultiplePositives(LossWithTemperature):
     def __init__(
         self,
@@ -211,8 +285,7 @@ class NTXentLikelihoodLoss(LossWithTemperature):
         for i, z1_mean in enumerate(z1_means):
             z1_std = z1_stds[i]  # [metric_dim]
             p = torch.distributions.Normal(z1_mean, z1_std)
-            for j, z2_elem in enumerate(z2):
-                z2_elem = z2_elem  # [num_conformers, metric_dim]
+            for _, z2_elem in enumerate(z2):
                 prob = torch.exp(p.log_prob(z2_elem))
                 likelihood_kernel.append(prob.mean())
         likelihood_kernel = torch.stack(likelihood_kernel)

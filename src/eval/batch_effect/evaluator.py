@@ -1,6 +1,7 @@
 import json
 import os.path as osp
 import pickle
+from collections import defaultdict
 from pathlib import Path
 from typing import Optional, Union
 
@@ -64,7 +65,9 @@ class BatchEffectEvaluator(Evaluator):
         source_split: bool = True,
         well_split: bool = True,
         fully_random_split: bool = True,
+        nruns: int = 5,
         dmso_normalize: Union[str, bool] = "batch",
+        normalize_cls=ZCA_corr,
         out_dir: Optional[str] = None,
         name: Optional[str] = None,
         visualize_kwargs: Optional[dict] = None,
@@ -77,6 +80,10 @@ class BatchEffectEvaluator(Evaluator):
 
         self.dmso_normalize: str = dmso_normalize
         self.dmso_transforms: Optional[dict] = None
+        self.normalize_cls = normalize_cls
+        self.normalize_cls_str = normalize_cls.__name__ if normalize_cls else "None"
+
+        self.nruns = nruns if nruns > 1 else 0
 
         self.plot = plot
         self.logistic = logistic
@@ -123,7 +130,7 @@ class BatchEffectEvaluator(Evaluator):
             return
 
         embedding_path = (
-            osp.join(self.out_dir, f"dmso_{self.dmso_normalize}_transforms.pickle")
+            osp.join(self.out_dir, f"dmso_{self.dmso_normalize}_transforms_{self.normalize_cls_str}.pickle")
             if self.out_dir is not None
             else None
         )
@@ -134,7 +141,7 @@ class BatchEffectEvaluator(Evaluator):
             return
 
         dmso_embeddings_df_path = (
-            osp.join(self.out_dir, f"dmso_{self.dmso_normalize}_embeddings_df.parquet")
+            osp.join(self.out_dir, f"dmso_{self.dmso_normalize}_embeddings_{self.normalize_cls_str}_df.parquet")
             if self.out_dir is not None
             else None
         )
@@ -148,6 +155,14 @@ class BatchEffectEvaluator(Evaluator):
             keys = list(predictions[0].keys())
             dmso_embeddings_df = pd.DataFrame({key: concat_from_list_of_dict(predictions, key) for key in keys})
 
+            dmso_embeddings_df["batch"] = dmso_embeddings_df.assign(lambda x: x["source"] + "__" + x["batch"])
+            dmso_embeddings_df["plate"] = dmso_embeddings_df.assign(
+                lambda x: x["source"] + "__" + x["batch"] + "__" + x["plate"]
+            )
+            dmso_embeddings_df["well"] = dmso_embeddings_df.assign(
+                lambda x: x["source"] + "__" + x["batch"] + "__" + x["plate"] + "__" + x["well"]
+            )
+
         all_batches = dmso_embeddings_df[self.dmso_normalize].unique()
 
         print("Fitting the transforms on batches...")
@@ -156,7 +171,7 @@ class BatchEffectEvaluator(Evaluator):
             dmso_embeddings_batch = np.array(
                 dmso_embeddings_df.query(f"{self.dmso_normalize}==@batchi").embedding.to_list()
             )
-            spherizer = ZCA_corr()
+            spherizer = self.normalize_cls()
             spherizer.fit(dmso_embeddings_batch)
             transform_dict[batchi] = spherizer
 
@@ -178,14 +193,11 @@ class BatchEffectEvaluator(Evaluator):
                         self.embeddings_df.query(f"{self.dmso_normalize}==@batchi").embedding.to_list()
                     )
                     spherizer = self.dmso_transforms[batchi]
-                    self.embeddings_df.loc[
-                        self.embeddings_df[self.dmso_normalize] == batchi, "embedding"
-                    ] = spherizer.transform(dmso_embeddings_batch).tolist()
+                    self.embeddings_df.loc[self.embeddings_df[self.dmso_normalize] == batchi, "embedding"] = pd.Series(
+                        spherizer.transform(dmso_embeddings_batch).tolist()
+                    ).values
                 except Exception as e:
                     print(f"Error while normalizing batch {batchi}: {e}")
-
-    def subset_embeddings(self):
-        pass  # TODO
 
     def get_embeddings(self):
         embedding_path = osp.join(self.out_dir, "embeddings.parquet") if self.out_dir is not None else None
@@ -201,6 +213,14 @@ class BatchEffectEvaluator(Evaluator):
             keys = list(predictions[0].keys())
 
             self.embeddings_df = pd.DataFrame({key: concat_from_list_of_dict(predictions, key) for key in keys})
+
+            self.embeddings_df["batch"] = self.embeddings_df.assign(lambda x: x["source"] + "__" + x["batch"])
+            self.embeddings_df["plate"] = self.embeddings_df.assign(
+                lambda x: x["source"] + "__" + x["batch"] + "__" + x["plate"]
+            )
+            self.embeddings_df["well"] = self.embeddings_df.assign(
+                lambda x: x["source"] + "__" + x["batch"] + "__" + x["plate"] + "__" + x["well"]
+            )
 
             self.n_labels = self.embeddings_df["label"].nunique()
             self.label_encoder = LabelEncoder()
@@ -218,17 +238,23 @@ class BatchEffectEvaluator(Evaluator):
         self.label_encoder = LabelEncoder()
         self.label_encoder.fit(self.embeddings_df["label"])
 
-    def plot_tsne(self, embeddings, col, title="t-SNE", remove_legend=False):
+    def plot_tsne(self, col, title="t-SNE", remove_legend=False):
         if self.embeddings_df is None:
             raise ValueError("embeddings_df is None, please run get_embeddings first")
 
         try:
             fig, ax = plt.subplots(figsize=(14, 14))
-            sns.scatterplot(x=embeddings[:, 0], y=embeddings[:, 1], hue=self.embeddings_df[col], ax=ax)
+            sns.scatterplot(
+                data=self.embeddings_df,
+                x="x",
+                y="y",
+                hue=col,
+                ax=ax,
+            )
             ax.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
             if remove_legend:
                 ax.get_legend().remove()
-            fig.suptitle(title, fontsize=16)
+            fig.suptitle(title, fontsize=18)
             fig.tight_layout()
 
             if self.out_dir:
@@ -246,14 +272,14 @@ class BatchEffectEvaluator(Evaluator):
         tsne = TSNE(n_components=2, random_state=0)
         embeddings = tsne.fit_transform(np.array(self.embeddings_df["embedding"].tolist()))
 
-        permuation_ids = np.random.permutation(len(embeddings))
+        self.embeddings_df = self.embeddings_df.assign(x=embeddings[:, 0], y=embeddings[:, 1]).sample(frac=1)
 
         images = [
-            self.plot_tsne(embeddings[permuation_ids], "label", f"{key}/t-SNE colored by labels"),
-            self.plot_tsne(embeddings[permuation_ids], "batch", f"{key}/t-SNE colored by batch", remove_legend=True),
-            self.plot_tsne(embeddings[permuation_ids], "plate", f"{key}/t-SNE colored by plate", remove_legend=True),
-            self.plot_tsne(embeddings[permuation_ids], "well", f"{key}/t-SNE colored by well", remove_legend=True),
-            self.plot_tsne(embeddings[permuation_ids], "source", f"{key}/t-SNE colored by source"),
+            self.plot_tsne("label", f"{key}/t-SNE colored by labels"),
+            self.plot_tsne("batch", f"{key}/t-SNE colored by batch", remove_legend=True),
+            self.plot_tsne("plate", f"{key}/t-SNE colored by plate", remove_legend=True),
+            self.plot_tsne("well", f"{key}/t-SNE colored by well", remove_legend=True),
+            self.plot_tsne("source", f"{key}/t-SNE colored by source"),
         ]
 
         # Log plots to WandB
@@ -265,7 +291,7 @@ class BatchEffectEvaluator(Evaluator):
         except Exception as e:
             print(f"Error while logging t-SNE plots: {e}")
 
-    def get_metric_dict(self, cls, X_test, y_test, key):
+    def get_metric_dict(self, cls, X_test, y_test, key, log=True):
         # Metrics
         labels = np.arange(len(self.label_encoder.classes_))
         self.scorers = {
@@ -294,6 +320,14 @@ class BatchEffectEvaluator(Evaluator):
             with open(out_path, "w") as f:
                 json.dump(metric_dict, f)
 
+        if log:
+            try:
+                if self.logger:
+                    self.logger.log_metrics(metric_dict)
+                    self.logger.save()
+            except Exception as e:
+                print(f"Error while logging metrics: {e}")
+
         return metric_dict
 
     def plot_conf_matrix(self, cls, X_test, y_test, key):
@@ -304,6 +338,8 @@ class BatchEffectEvaluator(Evaluator):
                 self.label_encoder.inverse_transform(y_test),
                 self.label_encoder.inverse_transform(cls.predict(X_test)),
                 labels=labels,
+                text_fontsize="small",
+                hide_counts=True,
                 ax=ax,
                 x_tick_rotation=90,
                 title=(title := f"{key}/Confusion matrix"),
@@ -397,7 +433,15 @@ class BatchEffectEvaluator(Evaluator):
         except Exception as e:
             print(f"Error while plotting precision-recall curves: {e}")
 
-    def plot_metrics(self, cls, X_test, y_test, key):
+    def log_images(self, key, images):
+        try:
+            if self.logger:
+                self.logger.log_image(key=key, images=images)
+                self.logger.save()
+        except Exception as e:
+            print(f"Error while logging metrics: {e}")
+
+    def plot_metrics(self, cls, X_test, y_test, key, log=True):
         images = []
 
         for func in [
@@ -411,115 +455,92 @@ class BatchEffectEvaluator(Evaluator):
             if fig:
                 images.append(fig)
 
+        # Log to WandB
+        if log:
+            self.log_images(key, images)
+
         return images
 
-    def plot_results(self, cls, X_test, y_test, key):
-        metric_dict = self.get_metric_dict(cls, X_test, y_test, key)
-        metric_images = self.plot_metrics(cls, X_test, y_test, key)
-
-        # Log to WandB
+    def single_run(self, cls, col, key, plot_all=False, log=True):
         try:
-            if self.logger:
-                self.logger.log_metrics(metric_dict)
-                self.logger.log_image(key=key, images=metric_images)
-                self.logger.save()
+            if col == "random":
+                idx = np.random.permutation(len(self.embeddings_df))
+            else:
+                idx = self.embeddings_df[col].unique()
+                idx = np.random.permutation(idx)
+
+            idx = idx[: int(len(idx) * self.train_ratio)]
+            idx = idx[int(len(idx) * self.train_ratio) :]
+
+            train_df = self.embeddings_df[self.embeddings_df["batch"].isin(idx)]
+            test_df = self.embeddings_df[self.embeddings_df["batch"].isin(idx)]
+
+            X_train = np.array(train_df["embedding"].tolist())
+            y_train = self.label_encoder.transform(train_df["label"].tolist())
+            X_test = np.array(test_df["embedding"].tolist())
+            y_test = self.label_encoder.transform(test_df["label"].tolist())
+
+            cls.fit(X_train, y_train)
+
+            self.get_metric_dict(cls, X_test, y_test, key, log=log)  # calculate metrics and log to wandb
+
+            if plot_all:
+                self.plot_metrics(cls, X_test, y_test, key, log=log)  # plot metrics and log to wandb
+            else:
+                fig = self.plot_conf_matrix(cls, X_test, y_test, key)
+                if fig:
+                    self.log_images(key, [fig])
+
         except Exception as e:
-            print(f"Error while logging metrics: {e}")
+            print(f"Error while running {key}: {e}")
 
-    def fit_on_train_test(self, cls, train_df, test_df, key):
-        X_train = np.array(train_df["embedding"].tolist())
-        y_train = self.label_encoder.transform(train_df["label"].tolist())
-        X_test = np.array(test_df["embedding"].tolist())
-        y_test = self.label_encoder.transform(test_df["label"].tolist())
+    def multi_run(self, nruns, cls, col, key, plot_all=False, log=True):
+        final_metric_dict = defaultdict(list)
 
-        cls.fit(X_train, y_train)
+        for _ in range(nruns):
+            metric_dict = self.not_same_col_cls(cls, col, key, plot_all=plot_all, log=False)
+            for k, v in metric_dict.items():
+                final_metric_dict[k].append(v)
 
-        self.plot_results(cls, X_test, y_test, key)
+        out_dict = {}
+        for k, v in final_metric_dict.items():
+            out_dict[f"{k}_mean"] = np.mean(v)
+            out_dict[f"{k}_std"] = np.std(v)
+            out_dict[f"{k}_min"] = np.min(v)
+            out_dict[f"{k}_max"] = np.max(v)
 
-    def not_same_well_cls(self, cls, key="batch_effect/NotSameWell"):
-        try:
-            wells = self.embeddings_df.apply(
-                lambda x: f"{x['source']}_{x['batch']}_{x['plate']}_{x['well']}", axis=1
-            ).unique()
-            wells = np.random.permutation(wells)
+        if self.out_dir:
+            out_path = f"{self.out_dir}/{key}_metrics.json".replace(" ", "_")
+            Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+            print(f"Saved metrics to {out_path}")
+            with open(out_path, "w") as f:
+                json.dump(out_dict, f)
 
-            train_wells = wells[: int(len(wells) * self.train_ratio)]
-            test_wells = wells[int(len(wells) * self.train_ratio) :]
+        if log:
+            try:
+                if self.logger:
+                    self.logger.log_metrics(out_dict)
+                    self.logger.save()
+            except Exception as e:
+                print(f"Error while logging metrics: {e}")
 
-            train_df = self.embeddings_df[self.embeddings_df["well"].isin(train_wells)]
-            test_df = self.embeddings_df[self.embeddings_df["well"].isin(test_wells)]
+        return out_dict
 
-            self.fit_on_train_test(cls, train_df, test_df, key)
-        except Exception as e:
-            print(f"Error while running NotSameWell: {e}")
-
-    def not_same_batch(self, cls, key="batch_effect/NotSameBatch"):
-        try:
-            batches = self.embeddings_df["batch"].unique()
-            batches = np.random.permutation(batches)
-
-            train_batches = batches[: int(len(batches) * self.train_ratio)]
-            test_batches = batches[int(len(batches) * self.train_ratio) :]
-
-            train_df = self.embeddings_df[self.embeddings_df["batch"].isin(train_batches)]
-            test_df = self.embeddings_df[self.embeddings_df["batch"].isin(test_batches)]
-
-            self.fit_on_train_test(cls, train_df, test_df, key)
-        except Exception as e:
-            print(f"Error while running NotSameBatch: {e}")
-
-    def not_same_plate(self, cls, key="batch_effect/NotSamePlate"):
-        try:
-            plates = self.embeddings_df["plate"].unique()
-            plates = np.random.permutation(plates)
-
-            train_plates = plates[: int(len(plates) * self.train_ratio)]
-            test_plates = plates[int(len(plates) * self.train_ratio) :]
-
-            train_df = self.embeddings_df[self.embeddings_df["plate"].isin(train_plates)]
-            test_df = self.embeddings_df[self.embeddings_df["plate"].isin(test_plates)]
-
-            self.fit_on_train_test(cls, train_df, test_df, key)
-        except Exception as e:
-            print(f"Error while running NotSamePlate: {e}")
-
-    def not_same_source(self, cls, key="batch_effect/NotSameSource"):
-        try:
-            sources = self.embeddings_df["source"].unique()
-            sources = np.random.permutation(sources)
-
-            train_sources = sources[: int(len(sources) * self.train_ratio)]
-            test_sources = sources[int(len(sources) * self.train_ratio) :]
-
-            train_df = self.embeddings_df[self.embeddings_df["source"].isin(train_sources)]
-            test_df = self.embeddings_df[self.embeddings_df["source"].isin(test_sources)]
-
-            self.fit_on_train_test(cls, train_df, test_df, key)
-        except Exception as e:
-            print(f"Error while running NotSameSource: {e}")
-
-    def fully_random(self, cls, key="batch_effect/FullyRandom"):
-        try:
-            idx = np.random.permutation(len(self.embeddings_df))
-
-            train_idx = idx[: int(len(idx) * self.train_ratio)]
-            test_idx = idx[int(len(idx) * self.train_ratio) :]
-
-            train_df = self.embeddings_df.iloc[train_idx]
-            test_df = self.embeddings_df.iloc[test_idx]
-
-            self.fit_on_train_test(cls, train_df, test_df, key)
-        except Exception as e:
-            print(f"Error while running FullyRandom: {e}")
+    def not_same_col_cls(self, cls, col, key, plot_all=False, log=True):
+        if self.nruns:
+            return self.multi_run(self.nruns, cls, col, key, plot_all=plot_all, log=log)
+        else:
+            return self.single_run(cls, col, key, plot_all=plot_all, log=log)
 
     def run(self):
-        print("Evaluating batch effect")
         print("Evaluating batch effect")
         print("Getting the embeddings...")
         self.get_embeddings()
 
         key_prefix = (
-            "batch_effect/regular" if not self.dmso_normalize else f"batch_effect/dmso_{self.dmso_normalize}_normalized"
+            "batch_effect/regular"
+            if not self.dmso_normalize
+            else f"batch_effect/dmso_{self.dmso_normalize}_normalized_{self.normalize_cls_str}"
         )
 
         if self.plot:
@@ -533,19 +554,19 @@ class BatchEffectEvaluator(Evaluator):
 
                 if self.fully_random_split:
                     print("Fully random split")
-                    self.fully_random(cls, key=f"{key_prefix}/LR/FullyRandom")
+                    self.not_same_col_cls(cls, "random", key=f"{key_prefix}/LR/FullyRandom")
                 if self.well_split:
                     print("Not same well")
-                    self.not_same_well_cls(cls, key=f"{key_prefix}/LR/NotSameWell")
+                    self.not_same_col_cls(cls, "well", key=f"{key_prefix}/LR/NotSameWell")
                 if self.batch_split:
                     print("Not same batch")
-                    self.not_same_batch(cls, key=f"{key_prefix}/LR/NotSameBatch")
+                    self.not_same_col_cls(cls, "batch", key=f"{key_prefix}/LR/NotSameBatch")
                 if self.plate_split:
                     print("Not same plate")
-                    self.not_same_plate(cls, key=f"{key_prefix}/LR/NotSamePlate")
+                    self.not_same_col_cls(cls, "plate", key=f"{key_prefix}/LR/NotSamePlate")
                 if self.source_split:
                     print("Not same source")
-                    self.not_same_source(cls, key=f"{key_prefix}/LR/NotSameSource")
+                    self.not_same_col_cls(cls, "source", key=f"{key_prefix}/LR/NotSameSource")
             except Exception as e:
                 print(f"Error while running Logistic Regression: {e}")
 
@@ -556,18 +577,18 @@ class BatchEffectEvaluator(Evaluator):
 
                 if self.fully_random_split:
                     print("Fully random split")
-                    self.fully_random(cls, key=f"{key_prefix}/KNN/FullyRandom")
+                    self.not_same_col_cls(cls, "random", key=f"{key_prefix}/KNN/FullyRandom")
                 if self.well_split:
                     print("Not same well")
-                    self.not_same_well_cls(cls, key=f"{key_prefix}/KNN/NotSameWell")
+                    self.not_same_col_cls(cls, "well", key=f"{key_prefix}/KNN/NotSameWell")
                 if self.batch_split:
                     print("Not same batch")
-                    self.not_same_batch(cls, key=f"{key_prefix}/KNN/NotSameBatch")
+                    self.not_same_col_cls(cls, "batch", key=f"{key_prefix}/KNN/NotSameBatch")
                 if self.plate_split:
                     print("Not same plate")
-                    self.not_same_plate(cls, key=f"{key_prefix}/KNN/NotSamePlate")
+                    self.not_same_col_cls(cls, "plate", key=f"{key_prefix}/KNN/NotSamePlate")
                 if self.source_split:
                     print("Not same source")
-                    self.not_same_source(cls, key=f"{key_prefix}/KNN/NotSameSource")
+                    self.not_same_col_cls(cls, "source", key=f"{key_prefix}/KNN/NotSameSource")
             except Exception as e:
                 print(f"Error while running KNN Classifier: {e}")

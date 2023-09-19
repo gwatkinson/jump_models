@@ -3,3 +3,6 @@ defaults:
   - batch_effect/batch_normalized@_here_
   - batch_effect/plate_normalized@_here_
   - batch_effect/source_normalized@_here_
+  - batch_effect/batch_normalized_standard@_here_
+  - batch_effect/plate_normalized_standard@_here_
+  - batch_effect/source_normalize_standardd@_here_
