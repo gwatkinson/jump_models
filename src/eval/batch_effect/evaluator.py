@@ -207,6 +207,7 @@ class BatchEffectEvaluator(Evaluator):
 
             if self.out_dir:
                 out_path = osp.join(self.out_dir, f"{title.replace(' ', '_')}.png")
+                Path(out_path).parent.mkdir(parents=True, exist_ok=True)
                 print(f"Saved {title} to {out_path}")
                 fig.savefig(out_path)
             return fig
@@ -397,18 +398,7 @@ class BatchEffectEvaluator(Evaluator):
         except Exception as e:
             print(f"Error while logging metrics: {e}")
 
-    def not_same_well_cls(self, cls, key="batch_effect/NotSameWell"):
-        wells = self.embeddings_df.apply(
-            lambda x: f"{x['source']}_{x['batch']}_{x['plate']}_{x['well']}", axis=1
-        ).unique()
-        wells = np.random.permutation(wells)
-
-        train_wells = wells[: int(len(wells) * self.train_ratio)]
-        test_wells = wells[int(len(wells) * self.train_ratio) :]
-
-        train_df = self.embeddings_df[self.embeddings_df["well"].isin(train_wells)]
-        test_df = self.embeddings_df[self.embeddings_df["well"].isin(test_wells)]
-
+    def fit_on_train_test(self, cls, train_df, test_df, key):
         X_train = np.array(train_df["embedding"].tolist())
         y_train = self.label_encoder.transform(train_df["label"].tolist())
         X_test = np.array(test_df["embedding"].tolist())
@@ -417,81 +407,82 @@ class BatchEffectEvaluator(Evaluator):
         cls.fit(X_train, y_train)
 
         self.plot_results(cls, X_test, y_test, key)
+
+    def not_same_well_cls(self, cls, key="batch_effect/NotSameWell"):
+        try:
+            wells = self.embeddings_df.apply(
+                lambda x: f"{x['source']}_{x['batch']}_{x['plate']}_{x['well']}", axis=1
+            ).unique()
+            wells = np.random.permutation(wells)
+
+            train_wells = wells[: int(len(wells) * self.train_ratio)]
+            test_wells = wells[int(len(wells) * self.train_ratio) :]
+
+            train_df = self.embeddings_df[self.embeddings_df["well"].isin(train_wells)]
+            test_df = self.embeddings_df[self.embeddings_df["well"].isin(test_wells)]
+
+            self.fit_on_train_test(cls, train_df, test_df, key)
+        except Exception as e:
+            print(f"Error while running NotSameWell: {e}")
 
     def not_same_batch(self, cls, key="batch_effect/NotSameBatch"):
-        batches = self.embeddings_df.apply(lambda x: f"{x['source']}_{x['batch']}", axis=1).unique()
-        batches = np.random.permutation(batches)
+        try:
+            batches = self.embeddings_df["batch"].unique()
+            batches = np.random.permutation(batches)
 
-        train_batches = batches[: int(len(batches) * self.train_ratio)]
-        test_batches = batches[int(len(batches) * self.train_ratio) :]
+            train_batches = batches[: int(len(batches) * self.train_ratio)]
+            test_batches = batches[int(len(batches) * self.train_ratio) :]
 
-        train_df = self.embeddings_df[self.embeddings_df["batch"].isin(train_batches)]
-        test_df = self.embeddings_df[self.embeddings_df["batch"].isin(test_batches)]
+            train_df = self.embeddings_df[self.embeddings_df["batch"].isin(train_batches)]
+            test_df = self.embeddings_df[self.embeddings_df["batch"].isin(test_batches)]
 
-        X_train = np.array(train_df["embedding"].tolist())
-        y_train = self.label_encoder.transform(train_df["label"].tolist())
-        X_test = np.array(test_df["embedding"].tolist())
-        y_test = self.label_encoder.transform(test_df["label"].tolist())
-
-        cls.fit(X_train, y_train)
-
-        self.plot_results(cls, X_test, y_test, key)
+            self.fit_on_train_test(cls, train_df, test_df, key)
+        except Exception as e:
+            print(f"Error while running NotSameBatch: {e}")
 
     def not_same_plate(self, cls, key="batch_effect/NotSamePlate"):
-        plates = self.embeddings_df.apply(lambda x: f"{x['source']}_{x['batch']}_{x['plate']}", axis=1).unique()
-        plates = np.random.permutation(plates)
+        try:
+            plates = self.embeddings_df["plate"].unique()
+            plates = np.random.permutation(plates)
 
-        train_plates = plates[: int(len(plates) * self.train_ratio)]
-        test_plates = plates[int(len(plates) * self.train_ratio) :]
+            train_plates = plates[: int(len(plates) * self.train_ratio)]
+            test_plates = plates[int(len(plates) * self.train_ratio) :]
 
-        train_df = self.embeddings_df[self.embeddings_df["plate"].isin(train_plates)]
-        test_df = self.embeddings_df[self.embeddings_df["plate"].isin(test_plates)]
+            train_df = self.embeddings_df[self.embeddings_df["plate"].isin(train_plates)]
+            test_df = self.embeddings_df[self.embeddings_df["plate"].isin(test_plates)]
 
-        X_train = np.array(train_df["embedding"].tolist())
-        y_train = self.label_encoder.transform(train_df["label"].tolist())
-        X_test = np.array(test_df["embedding"].tolist())
-        y_test = self.label_encoder.transform(test_df["label"].tolist())
-
-        cls.fit(X_train, y_train)
-
-        self.plot_results(cls, X_test, y_test, key)
+            self.fit_on_train_test(cls, train_df, test_df, key)
+        except Exception as e:
+            print(f"Error while running NotSamePlate: {e}")
 
     def not_same_source(self, cls, key="batch_effect/NotSameSource"):
-        sources = self.embeddings_df["source"].unique()
-        sources = np.random.permutation(sources)
+        try:
+            sources = self.embeddings_df["source"].unique()
+            sources = np.random.permutation(sources)
 
-        train_sources = sources[: int(len(sources) * self.train_ratio)]
-        test_sources = sources[int(len(sources) * self.train_ratio) :]
+            train_sources = sources[: int(len(sources) * self.train_ratio)]
+            test_sources = sources[int(len(sources) * self.train_ratio) :]
 
-        train_df = self.embeddings_df[self.embeddings_df["source"].isin(train_sources)]
-        test_df = self.embeddings_df[self.embeddings_df["source"].isin(test_sources)]
+            train_df = self.embeddings_df[self.embeddings_df["source"].isin(train_sources)]
+            test_df = self.embeddings_df[self.embeddings_df["source"].isin(test_sources)]
 
-        X_train = np.array(train_df["embedding"].tolist())
-        y_train = self.label_encoder.transform(train_df["label"].tolist())
-        X_test = np.array(test_df["embedding"].tolist())
-        y_test = self.label_encoder.transform(test_df["label"].tolist())
-
-        cls.fit(X_train, y_train)
-
-        self.plot_results(cls, X_test, y_test, key)
+            self.fit_on_train_test(cls, train_df, test_df, key)
+        except Exception as e:
+            print(f"Error while running NotSameSource: {e}")
 
     def fully_random(self, cls, key="batch_effect/FullyRandom"):
-        idx = np.random.permutation(len(self.embeddings_df))
+        try:
+            idx = np.random.permutation(len(self.embeddings_df))
 
-        train_idx = idx[: int(len(idx) * self.train_ratio)]
-        test_idx = idx[int(len(idx) * self.train_ratio) :]
+            train_idx = idx[: int(len(idx) * self.train_ratio)]
+            test_idx = idx[int(len(idx) * self.train_ratio) :]
 
-        train_df = self.embeddings_df.iloc[train_idx]
-        test_df = self.embeddings_df.iloc[test_idx]
+            train_df = self.embeddings_df.iloc[train_idx]
+            test_df = self.embeddings_df.iloc[test_idx]
 
-        X_train = np.array(train_df["embedding"].tolist())
-        y_train = self.label_encoder.transform(train_df["label"].tolist())
-        X_test = np.array(test_df["embedding"].tolist())
-        y_test = self.label_encoder.transform(test_df["label"].tolist())
-
-        cls.fit(X_train, y_train)
-
-        self.plot_results(cls, X_test, y_test, key)
+            self.fit_on_train_test(cls, train_df, test_df, key)
+        except Exception as e:
+            print(f"Error while running FullyRandom: {e}")
 
     def run(self):
         print("Evaluating batch effect")
