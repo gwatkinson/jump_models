@@ -29,12 +29,18 @@ compile: False
 evaluate: False
 
 model:
-  embedding_dim: 768
+  embedding_dim: 1024
   lr: 3e-4
 
   model:
     criterion:
-      temperature: 0.5
+      temperature: 0.3
+
+  molecule_encoder:
+    dropout: 0.2
+
+  image_encoder:
+    dropout: 0.2
 
   scheduler:
     warmup_epochs: 10
@@ -50,7 +56,21 @@ data:
   drop_last: True
 
   transform:
+    _target_: src.modules.transforms.ComplexTransform
+    _convert_: object
     size: 512
+    flip_p: 0.5
+    resize_p: 0.3
+    color_p: 0.2
+    resize_min_ratio: 0.9
+    intensity: 0.2
+    brightness: 0.1
+    fill_nan: True
+    use_flip: True
+    use_blur: False
+    use_color_jitter: True
+    use_drop: False
+    use_resized_crop: True
 
   splitter:
     _target_: src.splitters.RandomSplitter

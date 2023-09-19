@@ -50,7 +50,7 @@ class CNNEncoder(nn.Module):
                 for mod in named_module:
                     if "drop_block" in mod:
                         parent = ".".join(mod.split(".")[:-1])
-                        setattr(self.backbone, parent, nn.Dropout2d(dropout))
+                        setattr(self.backbone, parent, nn.Dropout(dropout))
 
         elif "rexnet" in model_name or "regnety" in model_name or "nf_regnet" in model_name:
             self.backbone.stem.conv.weight = nn.Parameter(
