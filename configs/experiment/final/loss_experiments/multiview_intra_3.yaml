@@ -20,8 +20,16 @@ trainer:
   devices: ???
 
 model:
+  embedding_dim: 1024
+
   criterion:
-    temperature: 0.5
+    temperature: 0.3
+
+  molecule_encoder:
+    dropout: 0.2
+
+  image_encoder:
+    dropout: 0.2
 
 data:
   n_views: 3
@@ -53,7 +61,6 @@ data:
 
   split_path: ${paths.split_path}/random_split/
   train_ids_name: train_med
-
 
 
 
