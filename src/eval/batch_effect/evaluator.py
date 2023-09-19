@@ -2,7 +2,7 @@ import json
 import os.path as osp
 import pickle
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -64,7 +64,7 @@ class BatchEffectEvaluator(Evaluator):
         source_split: bool = True,
         well_split: bool = True,
         fully_random_split: bool = True,
-        dmso_normalize: bool = True,
+        dmso_normalize: Union[str, bool] = "batch",
         out_dir: Optional[str] = None,
         name: Optional[str] = None,
         visualize_kwargs: Optional[dict] = None,
@@ -75,8 +75,8 @@ class BatchEffectEvaluator(Evaluator):
 
         self.embeddings_df: Optional[pd.DataFrame] = None
 
-        self.dmso_normalize = dmso_normalize
-        self.dmso_embeddings: Optional[dict] = None
+        self.dmso_normalize: str = dmso_normalize
+        self.dmso_transforms: Optional[dict] = None
 
         self.plot = plot
         self.logistic = logistic
@@ -118,58 +118,76 @@ class BatchEffectEvaluator(Evaluator):
         pass
 
     def get_dmso_embeddings(self):
-        if self.dmso_embeddings is not None:
+        if self.dmso_transforms is not None:
             print("Found dmso_embeddings, skipping getting embeddings...")
             return
 
-        embedding_path = osp.join(self.out_dir, "dmso_embeddings.pickle") if self.out_dir is not None else None
+        embedding_path = (
+            osp.join(self.out_dir, f"dmso_{self.dmso_normalize}_transforms.pickle")
+            if self.out_dir is not None
+            else None
+        )
         if embedding_path and Path(embedding_path).exists():
             print(f'Found dmso_df at "{embedding_path}", skipping getting embeddings...')
             with open(embedding_path, "rb") as f:
-                self.dmso_embeddings = pickle.load(f)
+                self.dmso_transforms = pickle.load(f)
             return
 
-        self.datamodule.prepare_data()
-        self.datamodule.setup("predict")
-        print("Predicting on DMSO...")
-        predictions = self.trainer.predict(self.model, self.datamodule.dmso_dataloader())
-        keys = list(predictions[0].keys())
+        dmso_embeddings_df_path = (
+            osp.join(self.out_dir, f"dmso_{self.dmso_normalize}_embeddings_df.parquet")
+            if self.out_dir is not None
+            else None
+        )
+        if dmso_embeddings_df_path and Path(dmso_embeddings_df_path).exists():
+            dmso_embeddings_df = pd.read_parquet(dmso_embeddings_df_path)
+        else:
+            self.datamodule.prepare_data()
+            self.datamodule.setup("predict")
+            print("Predicting on DMSO...")
+            predictions = self.trainer.predict(self.model, self.datamodule.dmso_dataloader())
+            keys = list(predictions[0].keys())
+            dmso_embeddings_df = pd.DataFrame({key: concat_from_list_of_dict(predictions, key) for key in keys})
 
-        dmso_embeddings_df = pd.DataFrame({key: concat_from_list_of_dict(predictions, key) for key in keys})
-
-        all_batches = dmso_embeddings_df["batch"].unique()
+        all_batches = dmso_embeddings_df[self.dmso_normalize].unique()
 
         print("Fitting the transforms on batches...")
         transform_dict = {}
         for batchi in all_batches:
-            dmso_embeddings_batch = np.array(dmso_embeddings_df.query("batch==@batchi").embedding.to_list())
+            dmso_embeddings_batch = np.array(
+                dmso_embeddings_df.query(f"{self.dmso_normalize}==@batchi").embedding.to_list()
+            )
             spherizer = ZCA_corr()
             spherizer.fit(dmso_embeddings_batch)
             transform_dict[batchi] = spherizer
 
-        self.dmso_embeddings = transform_dict
+        self.dmso_transforms = transform_dict
 
         if embedding_path:
-            dmso_embeddings_df.to_parquet(osp.join(self.out_dir, "dmso_embeddings_df.parquet"))
+            dmso_embeddings_df.to_parquet(dmso_embeddings_df_path)
             with open(embedding_path, "wb") as f:
                 pickle.dump(transform_dict, f)
 
     def normalize_embeddings(self):
-        if self.dmso_normalize and self.dmso_embeddings:
-            for batchi in self.embeddings_df["batch"].unique():
+        if self.embeddings_df is None:
+            raise ValueError("embeddings_df is None, please run get_embeddings first")
+
+        if self.dmso_normalize and self.dmso_transforms:
+            for batchi in self.embeddings_df[self.dmso_normalize].unique():
                 try:
-                    dmso_embeddings_batch = np.array(self.embeddings_df.query("batch==@batchi").embedding.to_list())
-                    spherizer = self.dmso_embeddings[batchi]
-                    self.embeddings_df.loc[self.embeddings_df.batch == batchi, "embedding"] = spherizer.transform(
-                        dmso_embeddings_batch
-                    ).tolist()
+                    dmso_embeddings_batch = np.array(
+                        self.embeddings_df.query(f"{self.dmso_normalize}==@batchi").embedding.to_list()
+                    )
+                    spherizer = self.dmso_transforms[batchi]
+                    self.embeddings_df.loc[
+                        self.embeddings_df[self.dmso_normalize] == batchi, "embedding"
+                    ] = spherizer.transform(dmso_embeddings_batch).tolist()
                 except Exception as e:
                     print(f"Error while normalizing batch {batchi}: {e}")
 
-    def get_embeddings(self):
-        if self.dmso_normalize:
-            self.get_dmso_embeddings()
+    def subset_embeddings(self):
+        pass  # TODO
 
+    def get_embeddings(self):
         embedding_path = osp.join(self.out_dir, "embeddings.parquet") if self.out_dir is not None else None
 
         if self.embeddings_df is not None:
@@ -191,17 +209,25 @@ class BatchEffectEvaluator(Evaluator):
             if embedding_path:
                 self.embeddings_df.to_parquet(embedding_path, index=False)
 
+        if self.dmso_normalize:
+            self.get_dmso_embeddings()
+
         self.normalize_embeddings()
 
         self.n_labels = self.embeddings_df["label"].nunique()
         self.label_encoder = LabelEncoder()
         self.label_encoder.fit(self.embeddings_df["label"])
 
-    def plot_tsne(self, embeddings, col, title="t-SNE"):
+    def plot_tsne(self, embeddings, col, title="t-SNE", remove_legend=False):
+        if self.embeddings_df is None:
+            raise ValueError("embeddings_df is None, please run get_embeddings first")
+
         try:
             fig, ax = plt.subplots(figsize=(14, 14))
             sns.scatterplot(x=embeddings[:, 0], y=embeddings[:, 1], hue=self.embeddings_df[col], ax=ax)
             ax.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
+            if remove_legend:
+                ax.get_legend().remove()
             fig.suptitle(title, fontsize=16)
             fig.tight_layout()
 
@@ -220,12 +246,14 @@ class BatchEffectEvaluator(Evaluator):
         tsne = TSNE(n_components=2, random_state=0)
         embeddings = tsne.fit_transform(np.array(self.embeddings_df["embedding"].tolist()))
 
+        permuation_ids = np.random.permutation(len(embeddings))
+
         images = [
-            self.plot_tsne(embeddings, "label", f"{key}/t-SNE colored by labels"),
-            self.plot_tsne(embeddings, "batch", f"{key}/t-SNE colored by batch"),
-            self.plot_tsne(embeddings, "plate", f"{key}/t-SNE colored by plate"),
-            self.plot_tsne(embeddings, "well", f"{key}/t-SNE colored by well"),
-            self.plot_tsne(embeddings, "source", f"{key}/t-SNE colored by source"),
+            self.plot_tsne(embeddings[permuation_ids], "label", f"{key}/t-SNE colored by labels"),
+            self.plot_tsne(embeddings[permuation_ids], "batch", f"{key}/t-SNE colored by batch", remove_legend=True),
+            self.plot_tsne(embeddings[permuation_ids], "plate", f"{key}/t-SNE colored by plate", remove_legend=True),
+            self.plot_tsne(embeddings[permuation_ids], "well", f"{key}/t-SNE colored by well", remove_legend=True),
+            self.plot_tsne(embeddings[permuation_ids], "source", f"{key}/t-SNE colored by source"),
         ]
 
         # Log plots to WandB
@@ -260,7 +288,7 @@ class BatchEffectEvaluator(Evaluator):
                 print(f"Error while computing {k}: {e}")
 
         if self.out_dir:
-            out_path = f"{self.out_dir}/{key}_metrics.json".replace(" ", "_").replace("/", "_")
+            out_path = f"{self.out_dir}/{key}_metrics.json".replace(" ", "_")
             Path(out_path).parent.mkdir(parents=True, exist_ok=True)
             print(f"Saved metrics to {out_path}")
             with open(out_path, "w") as f:
@@ -490,7 +518,9 @@ class BatchEffectEvaluator(Evaluator):
         print("Getting the embeddings...")
         self.get_embeddings()
 
-        key_prefix = "batch_effect/regular" if not self.dmso_normalize else "batch_effect/dmso_normalized"
+        key_prefix = (
+            "batch_effect/regular" if not self.dmso_normalize else f"batch_effect/dmso_{self.dmso_normalize}_normalized"
+        )
 
         if self.plot:
             print("Plotting the embeddings...")

@@ -1,7 +1,7 @@
 defaults:
-  - /trainer/gpu.yaml@batch_effect_dmso_normalized.trainer
+  - /trainer/gpu.yaml@plate_normalized.trainer
 
-batch_effect_dmso_normalized:
+plate_normalized:
 
   evaluator:
     _target_: src.eval.batch_effect.evaluator.BatchEffectEvaluator
@@ -29,8 +29,8 @@ batch_effect_dmso_normalized:
   datamodule:
     _target_: src.eval.batch_effect.datamodule.TotalBatchEffectDataModule
 
-    target_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect_dmso_normalized/splits/target_load_df.csv
-    dmso_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect_dmso_normalized/splits/dmso_load_df.csv
+    target_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect/splits/target_load_df.csv
+    dmso_load_df_path: ${paths.data_root_dir}/jump/models/eval/batch_effect/splits/dmso_load_df.csv
 
     label_col: target
     source_col: Metadata_Source
@@ -57,7 +57,7 @@ batch_effect_dmso_normalized:
 
 
   trainer:
-    default_root_dir: ${paths.output_dir}/eval/batch_effect_dmso_normalized/new
+    default_root_dir: ${paths.output_dir}/eval/batch_effect/new
     devices: ${trainer.devices}
 
   callbacks: null

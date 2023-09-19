@@ -29,8 +29,12 @@ compile: False
 evaluate: False
 
 model:
-  embedding_dim: 256  # TODO: check if default should be 128 or 256 or 512
+  embedding_dim: 768
   lr: 3e-4
+
+  model:
+    criterion:
+      temperature: 0.5
 
   scheduler:
     warmup_epochs: 10
@@ -49,27 +53,20 @@ data:
     size: 512
 
   splitter:
-    train: ???
+    _target_: src.splitters.RandomSplitter
+    train: 32_768
     test: 8192
     val: 4096
     retrieval: 4096
 
-  split_path: ${paths.split_path}/scaffold_split/
+  split_path: ${paths.split_path}/random_split/
+
   train_ids_name: ???
-
-  # splitter:
-  #   train: -1 # for the rest
-  #   test: 8192
-  #   val: 4096
-  #   retrieval: 4096
-
-  # split_path: ${paths.split_path}/scaffold_split/
-  # train_ids_name: train_big
 
 
 trainer:
   min_epochs: 0
-  max_epochs: 100
+  max_epochs: 200
   log_every_n_steps: 1
   num_sanity_val_steps: 1
 
@@ -86,7 +83,6 @@ callbacks:
     patience: 25
     min_delta: 0
     mode: "min"
-
 
 
 logger:

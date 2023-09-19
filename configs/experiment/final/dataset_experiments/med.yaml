@@ -7,6 +7,8 @@ data:
   splitter:
     train: 32_768
 
+  batch_size: 196
+
   train_ids_name: train_med
 
 trainer:

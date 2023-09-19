@@ -1,3 +1,5 @@
 defaults:
-  - batch_effect/dmso_normalized@_here_
   - batch_effect/default@_here_
+  - batch_effect/batch_normalized@_here_
+  - batch_effect/plate_normalized@_here_
+  - batch_effect/source_normalized@_here_
