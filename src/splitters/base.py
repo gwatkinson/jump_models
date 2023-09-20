@@ -68,7 +68,7 @@ class BaseSplitter(ABC):
         raise NotImplementedError
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(train={self.train}, val={self.val}, test={self.test}, len_compound_list={self.n_compounds})"
+        return f"{self.__class__.__name__}(train={self.train}, val={self.val}, test={self.test})"
 
     def __call__(
         self,

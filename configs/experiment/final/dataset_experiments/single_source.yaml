@@ -1,0 +1,25 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/dataset_experiments/default.yaml@_global_
+  - override /data: single_source
+
+data:
+  splitter:
+    train: 32_768
+
+  batch_size: 196
+
+  split_path: ${paths.split_path}/single_source_split/
+  train_ids_name: med
+
+  image_metadata_path: ${paths.metadata_path}/images_metadata_source_1.parquet
+  compound_metadata_path: ${paths.metadata_path}/compound_dict_source_1.json
+
+
+trainer:
+  devices: ???
+
+logger:
+  wandb:
+    name: med_single_source

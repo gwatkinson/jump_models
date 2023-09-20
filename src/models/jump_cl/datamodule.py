@@ -148,11 +148,6 @@ class BasicJUMPDataModule(LightningDataModule):
         py_logger.debug(f"Loading metadata df from {meta_dir} ...")
         meta_df = load_metadata_df_from_csv(meta_dir)
 
-        py_logger.debug(f"ID cols: {self.id_cols}")
-        py_logger.debug(f"Extra cols: {self.extra_cols}")
-        py_logger.debug(f"load_df cols: {load_df.columns.tolist()}")
-        py_logger.debug(f"meta_df cols: {meta_df.columns.tolist()}")
-
         py_logger.info("Merging metadata and load data...")
         load_df_with_meta = load_df.merge(meta_df, how="left", on=self.id_cols).dropna(subset=[self.compound_col])
         load_df_with_meta = load_df_with_meta.query("Metadata_PlateType == 'COMPOUND'")
@@ -183,43 +178,45 @@ class BasicJUMPDataModule(LightningDataModule):
         test_ids_path = Path(self.test_ids_path)
         val_ids_path = Path(self.val_ids_path)
         retrieval_ids_path = Path(self.retrieval_ids_path)
-        load_dir = Path(self.local_load_data_dir)
-        meta_dir = Path(self.metadata_dir)
-        f_string = self.index_str
-        cols_to_keep = (
-            self.id_cols
-            + [self.col_fstring.format(channel=channel) for channel in self.channels]
-            + [self.compound_col]
-            + self.extra_cols
-        )
+        # load_dir = Path(self.local_load_data_dir)
+        # meta_dir = Path(self.metadata_dir)
+        # f_string = self.index_str
+        # cols_to_keep = (
+        #     self.id_cols
+        #     + [self.col_fstring.format(channel=channel) for channel in self.channels]
+        #     + [self.compound_col]
+        #     + self.extra_cols
+        # )
 
         # Prepare image metadata
         if not img_path.exists():
-            py_logger.info("Preparing image metadata")
-            py_logger.debug(f"{img_path} does not exist.")
-            py_logger.debug(f"Loading load data df from {load_dir} ...")
-            load_df = load_load_df_from_parquet(load_dir)
+            self.prepare_load_df_with_meta()
 
-            py_logger.debug(f"Loading metadata df from {meta_dir} ...")
-            meta_df = load_metadata_df_from_csv(meta_dir)
+            # py_logger.info("Preparing image metadata")
+            # py_logger.debug(f"{img_path} does not exist.")
+            # py_logger.debug(f"Loading load data df from {load_dir} ...")
+            # load_df = load_load_df_from_parquet(load_dir)
 
-            py_logger.info("Merging metadata and load data...")
-            load_df_with_meta = load_df.merge(meta_df, how="left", on=self.id_cols).dropna(subset=[self.compound_col])
-            load_df_with_meta = load_df_with_meta.query("Metadata_PlateType == 'COMPOUND'")
-            load_df_with_meta["index"] = load_df_with_meta.apply(lambda x: f_string.format(**x), axis=1)
+            # py_logger.debug(f"Loading metadata df from {meta_dir} ...")
+            # meta_df = load_metadata_df_from_csv(meta_dir)
 
-            load_df_with_meta = load_df_with_meta.set_index("index", drop=True).loc[:, cols_to_keep]
+            # py_logger.info("Merging metadata and load data...")
+            # load_df_with_meta = load_df.merge(meta_df, how="left", on=self.id_cols).dropna(subset=[self.compound_col])
+            # load_df_with_meta = load_df_with_meta.query("Metadata_PlateType == 'COMPOUND'")
+            # load_df_with_meta["index"] = load_df_with_meta.apply(lambda x: f_string.format(**x), axis=1)
 
-            py_logger.debug(f"load_df_with_meta ids unique: {load_df_with_meta.index.is_unique}")
+            # load_df_with_meta = load_df_with_meta.set_index("index", drop=True).loc[:, cols_to_keep]
 
-            py_logger.debug(f"Saving image metadata df to {img_path} ...")
-            img_path.parent.mkdir(exist_ok=True, parents=True)
-            load_df_with_meta.to_parquet(
-                path=str(img_path),
-                engine="pyarrow",
-                compression="snappy",
-                index=True,
-            )
+            # py_logger.debug(f"load_df_with_meta ids unique: {load_df_with_meta.index.is_unique}")
+
+            # py_logger.debug(f"Saving image metadata df to {img_path} ...")
+            # img_path.parent.mkdir(exist_ok=True, parents=True)
+            # load_df_with_meta.to_parquet(
+            #     path=str(img_path),
+            #     engine="pyarrow",
+            #     compression="snappy",
+            #     index=True,
+            # )
 
         # Prepare compound metadata
         if not comp_path.exists():
@@ -585,3 +582,46 @@ class BasicJUMPDataModule(LightningDataModule):
     def load_state_dict(self, state_dict: Dict[str, Any]):
         """Things to do when loading checkpoint."""
         pass
+
+
+class SingleSourceDataModule(BasicJUMPDataModule):
+    source_to_keep = "source_1"
+
+    def prepare_load_df_with_meta(self):
+        img_path = Path(self.image_metadata_path)
+        load_dir = Path(self.local_load_data_dir)
+        meta_dir = Path(self.metadata_dir)
+        f_string = self.index_str
+        cols_to_keep = (
+            self.id_cols
+            + [self.col_fstring.format(channel=channel) for channel in self.channels]
+            + [self.compound_col]
+            + self.extra_cols
+        )
+
+        py_logger.info("Preparing image metadata")
+        py_logger.debug(f"{img_path} does not exist.")
+        py_logger.debug(f"Loading load data df from {load_dir} ...")
+        # !! This is the only change
+        load_df = load_load_df_from_parquet(load_dir).query(f'Metadata_Source == "{self.source_to_keep}"')
+
+        py_logger.debug(f"Loading metadata df from {meta_dir} ...")
+        meta_df = load_metadata_df_from_csv(meta_dir)
+
+        py_logger.info("Merging metadata and load data...")
+        load_df_with_meta = load_df.merge(meta_df, how="left", on=self.id_cols).dropna(subset=[self.compound_col])
+        load_df_with_meta = load_df_with_meta.query("Metadata_PlateType == 'COMPOUND'")
+        load_df_with_meta["index"] = load_df_with_meta.apply(lambda x: f_string.format(**x), axis=1)
+
+        load_df_with_meta = load_df_with_meta.set_index("index", drop=True).loc[:, cols_to_keep]
+
+        py_logger.debug(f"load_df_with_meta ids unique: {load_df_with_meta.index.is_unique}")
+
+        py_logger.debug(f"Saving image metadata df to {img_path} ...")
+        img_path.parent.mkdir(exist_ok=True, parents=True)
+        load_df_with_meta.to_parquet(
+            path=str(img_path),
+            engine="pyarrow",
+            compression="snappy",
+            index=True,
+        )

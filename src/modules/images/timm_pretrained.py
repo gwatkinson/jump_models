@@ -6,6 +6,23 @@ from src.utils import pylogger
 logger = pylogger.get_pylogger(__name__)
 
 
+def replace_dropout(module, name, dropout=0.2, name_to_change="drop_block"):
+    """Recursively put desired batch norm in nn.module module.
+
+    set module = net to start code.
+    """
+    # go through all attributes of module nn.module (e.g. network or layer) and put batch norms if present
+    for attr_str in dir(module):
+        if name_to_change in attr_str:
+            logger.debug("replaced: ", name, attr_str)
+            new_dropout = nn.Dropout(dropout)
+            setattr(module, attr_str, new_dropout)
+
+    # iterate through immediate child modules. Note, the recursion is done by our code no need to use named_modules()
+    for name, immediate_child_module in module.named_children():
+        replace_dropout(immediate_child_module, name, dropout=dropout, name_to_change=name_to_change)
+
+
 class CNNEncoder(nn.Module):
     def __init__(
         self,
@@ -46,11 +63,7 @@ class CNNEncoder(nn.Module):
 
             if dropout > 0.0:
                 logger.info(f"Setting dropout rate to {dropout}")
-                named_module = [mod[0] for mod in self.backbone.named_modules()]
-                for mod in named_module:
-                    if "drop_block" in mod:
-                        parent = ".".join(mod.split(".")[:-1])
-                        setattr(self.backbone, parent, nn.Dropout(dropout))
+                replace_dropout(self.backbone, name="backbone", dropout=dropout, name_to_change="drop_block")
 
         elif "rexnet" in model_name or "regnety" in model_name or "nf_regnet" in model_name:
             self.backbone.stem.conv.weight = nn.Parameter(

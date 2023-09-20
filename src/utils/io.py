@@ -17,7 +17,7 @@ def download_and_extract_zip(url: str, path: str) -> None:
     zipfile.extractall(path)
 
 
-def load_load_df_from_parquet(path: str, job_dtypes: Optional[Dict[str, Any]] = None, **kwargs) -> pd.DataFrame:
+def load_load_df_from_parquet(path, job_dtypes: Optional[Dict[str, Any]] = None, **kwargs) -> pd.DataFrame:
     """Load the load_data df from a csv file using only the columns specified
     in the job_dtypes dict."""
 
@@ -40,7 +40,7 @@ def load_load_df_from_parquet(path: str, job_dtypes: Optional[Dict[str, Any]] = 
     return load_df
 
 
-def load_metadata_df_from_csv(path: str, job_dtypes: Optional[Dict[str, Any]] = None, **kwargs) -> pd.DataFrame:
+def load_metadata_df_from_csv(path, job_dtypes: Optional[Dict[str, Any]] = None, **kwargs) -> pd.DataFrame:
     """Load the complete_metadata df from a csv file using only the columns
     specified in the job_dtypes dict."""
 
