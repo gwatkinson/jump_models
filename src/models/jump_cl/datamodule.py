@@ -608,6 +608,9 @@ class SingleSourceDataModule(BasicJUMPDataModule):
         py_logger.debug(f"Loading metadata df from {meta_dir} ...")
         meta_df = load_metadata_df_from_csv(meta_dir)
 
+        print(load_df.head().to_markdown())
+        print(meta_df.head().to_markdown())
+
         py_logger.info("Merging metadata and load data...")
         load_df_with_meta = load_df.merge(meta_df, how="left", on=self.id_cols).dropna(subset=[self.compound_col])
         load_df_with_meta = load_df_with_meta.query("Metadata_PlateType == 'COMPOUND'")
