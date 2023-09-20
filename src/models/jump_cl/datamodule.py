@@ -598,12 +598,17 @@ class SingleSourceDataModule(BasicJUMPDataModule):
             + [self.compound_col]
             + self.extra_cols
         )
+        id_cols = [_ for _ in self.id_cols if _ != "Metadata_Source"]
 
         py_logger.info("Preparing image metadata")
         py_logger.debug(f"{img_path} does not exist.")
         py_logger.debug(f"Loading load data df from {load_dir} ...")
         # !! This is the only change
-        load_df = load_load_df_from_parquet(load_dir).query(f'Metadata_Source == "{self.source_to_keep}"')
+        load_df = (
+            load_load_df_from_parquet(load_dir)
+            .query(f'Metadata_Source == "{self.source_to_keep}"')
+            .drop(columns=["Metadata_Source"])
+        )
 
         py_logger.debug(f"Loading metadata df from {meta_dir} ...")
         meta_df = load_metadata_df_from_csv(meta_dir)
@@ -612,7 +617,7 @@ class SingleSourceDataModule(BasicJUMPDataModule):
         print(meta_df.head().to_markdown())
 
         py_logger.info("Merging metadata and load data...")
-        load_df_with_meta = load_df.merge(meta_df, how="left", on=self.id_cols).dropna(subset=[self.compound_col])
+        load_df_with_meta = load_df.merge(meta_df, how="left", on=id_cols).dropna(subset=[self.compound_col])
         load_df_with_meta = load_df_with_meta.query("Metadata_PlateType == 'COMPOUND'")
         load_df_with_meta["index"] = load_df_with_meta.apply(lambda x: f_string.format(**x), axis=1)
 

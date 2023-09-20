@@ -13,6 +13,22 @@ from src.utils import pylogger
 logger = pylogger.get_pylogger(__name__)
 
 
+class ProjectionHead(nn.Sequential):
+    def __init__(self, in_dim, embedding_dim, dropout=0.1, n_layers=1) -> None:
+        layers = [
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(in_dim, embedding_dim),
+        ]
+
+        for _ in range(n_layers - 1):
+            layers.append(nn.ReLU())
+            layers.append(nn.Dropout(dropout))
+            layers.append(nn.Linear(embedding_dim, embedding_dim))
+
+        super().__init__(*layers)
+
+
 class BasicJUMPModule(LightningModule):
     """Basic Jump LightningModule to run a simple contrastive training.
 
@@ -65,11 +81,18 @@ class BasicJUMPModule(LightningModule):
         self.image_dim = self.image_encoder.out_dim
         self.molecule_dim = self.molecule_encoder.out_dim
 
-        self.image_projection_head = nn.Sequential(
-            nn.ReLU(), nn.Dropout(kwargs.get("dropout", 0.1)), nn.Linear(self.image_dim, embedding_dim)
+        self.image_projection_head = ProjectionHead(
+            in_dim=self.image_dim,
+            embedding_dim=embedding_dim,
+            dropout=getattr(image_encoder, "dropout", 0.1),
+            n_layers=kwargs.get("n_layers", 2),
         )
-        self.molecule_projection_head = nn.Sequential(
-            nn.ReLU(), nn.Dropout(kwargs.get("dropout", 0.1)), nn.Linear(self.molecule_dim, embedding_dim)
+
+        self.molecule_projection_head = ProjectionHead(
+            in_dim=self.molecule_dim,
+            embedding_dim=embedding_dim,
+            dropout=getattr(molecule_encoder, "dropout", 0.1),
+            n_layers=kwargs.get("n_layers", 2),
         )
 
         # self.criterion.to(self.device)

@@ -36,6 +36,7 @@ class CNNEncoder(nn.Module):
         self.n_channels = n_ch = n_channels
         self.pretrained = pretrained
         self.model_name = model_name = instance_model_name
+        self.dropout = dropout
 
         self.backbone = timm.create_model(model_name, pretrained=self.pretrained)
 

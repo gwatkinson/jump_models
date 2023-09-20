@@ -163,7 +163,6 @@ class PNA(nn.Module):
         self,
         hidden_dim,
         target_dim,
-        # out_dim,
         aggregators: List[str],
         scalers: List[str],
         readout_aggregators: List[str],
@@ -213,6 +212,7 @@ class PNA(nn.Module):
             batch_norm_momentum=batch_norm_momentum,
         )
         self.out_dim = target_dim
+        self.dropout = dropout
 
         if ckpt_path is not None:
             ckpt = torch.load(ckpt_path, map_location=torch.device("cpu"))
