@@ -4,7 +4,6 @@ defaults:
   - /experiment/final/dataset_experiments/multiview_default.yaml@_global_
   - override /model/image_encoder: resnet50.yaml
   - override /model/optimizer: sgd.yaml
-  - override /data/compound_transform@_global_.data.compound_transform: pna.yaml
 
 
 data:
@@ -18,42 +17,12 @@ data:
 model:
   embedding_dim: 512
   lr: 8e-4
+  dropout: 0.2
 
   criterion:
     temperature: 0.7
     lambda_image: 0.5
 
-  molecule_encoder:
-    _target_: src.modules.molecules.pna.PNA
-
-    ckpt_path: null  # path to checkpoint to load (with this exact config)
-    target_dim: 512
-    hidden_dim: 256
-    mid_batch_norm: True
-    last_batch_norm: True
-    readout_batchnorm: True
-    batch_norm_momentum: 0.95
-    readout_hidden_dim: 256
-    readout_layers: 2
-    dropout: 0.0
-    mlp_dropout: 0.25
-    propagation_depth: 12
-    aggregators:
-      - mean
-      - max
-      - min
-      - std
-    scalers:
-      - identity
-      - amplification
-      - attenuation
-    readout_aggregators:
-      - min
-      - max
-      - mean
-    pretrans_layers: 3
-    posttrans_layers: 2
-    residual: True
 
 
 trainer:
