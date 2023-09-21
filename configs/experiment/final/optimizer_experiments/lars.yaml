@@ -1,0 +1,18 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/optimizer_experiments/default.yaml@_global_
+  - override /model/optimizer: lars.yaml
+
+trainer:
+  devices: ???
+
+model:
+  lr: 3
+
+  criterion:
+    temperature: 2
+
+logger:
+  wandb:
+    name: med_lars
