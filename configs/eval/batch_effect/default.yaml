@@ -8,6 +8,7 @@ batch_effect:
 
     dmso_normalize: False
     normalize_cls: null
+    embedding_col: projection
 
     test_size: 0.2
     nruns: 5

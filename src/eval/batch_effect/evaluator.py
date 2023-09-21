@@ -56,6 +56,7 @@ class BatchEffectEvaluator(Evaluator):
         model: LightningModule,
         datamodule: LightningDataModule,
         trainer: Trainer,
+        embedding_col: str = "embedding",
         test_size: float = 0.2,
         plot: bool = True,
         logistic: bool = True,
@@ -76,9 +77,11 @@ class BatchEffectEvaluator(Evaluator):
         self.datamodule = datamodule
         self.trainer = trainer
 
+        self.embedding_col = embedding_col
+
         self.embeddings_df: Optional[pd.DataFrame] = None
 
-        self.dmso_normalize: str = dmso_normalize
+        self.dmso_normalize: str | bool = dmso_normalize
         self.dmso_transforms: Optional[dict] = None
         self.normalize_cls = normalize_cls
         self.normalize_cls_str = normalize_cls.__name__ if normalize_cls else "None"
@@ -169,7 +172,7 @@ class BatchEffectEvaluator(Evaluator):
         transform_dict = {}
         for batchi in all_batches:
             dmso_embeddings_batch = np.array(
-                dmso_embeddings_df.query(f"{self.dmso_normalize}==@batchi").embedding.to_list()
+                dmso_embeddings_df.query(f"{self.dmso_normalize}==@batchi")[self.embedding_col].to_list()
             )
             spherizer = self.normalize_cls()
             spherizer.fit(dmso_embeddings_batch)
@@ -190,14 +193,16 @@ class BatchEffectEvaluator(Evaluator):
             for batchi in self.embeddings_df[self.dmso_normalize].unique():
                 try:
                     dmso_embeddings_batch = np.array(
-                        self.embeddings_df.query(f"{self.dmso_normalize}==@batchi").embedding.to_list()
+                        self.embeddings_df.query(f"{self.dmso_normalize}==@batchi")[self.embedding_col].to_list()
                     )
                     spherizer = self.dmso_transforms[batchi]
-                    self.embeddings_df.loc[self.embeddings_df[self.dmso_normalize] == batchi, "embedding"] = pd.Series(
-                        spherizer.transform(dmso_embeddings_batch).tolist()
-                    ).values
+                    self.embeddings_df.loc[
+                        self.embeddings_df[self.dmso_normalize] == batchi, "normed_embedding"
+                    ] = pd.Series(spherizer.transform(dmso_embeddings_batch).tolist()).values
                 except Exception as e:
                     print(f"Error while normalizing batch {batchi}: {e}")
+        else:
+            self.embeddings_df["normed_embedding"] = self.embeddings_df[self.embedding_col]
 
     def get_embeddings(self):
         embedding_path = osp.join(self.out_dir, "embeddings.parquet") if self.out_dir is not None else None
@@ -268,9 +273,12 @@ class BatchEffectEvaluator(Evaluator):
             print(f"Error while plotting t-SNE: {e}")
 
     def plot_embeddings(self, key="batch_effect/Embeddings"):
+        if self.embeddings_df is None:
+            raise ValueError("embeddings_df is None, please run get_embeddings first")
+
         print("Fitting t-SNE...")
         tsne = TSNE(n_components=2, random_state=0)
-        embeddings = tsne.fit_transform(np.array(self.embeddings_df["embedding"].tolist()))
+        embeddings = tsne.fit_transform(np.array(self.embeddings_df[self.embedding_col].tolist()))
 
         self.embeddings_df = self.embeddings_df.assign(x=embeddings[:, 0], y=embeddings[:, 1]).sample(frac=1)
 
@@ -475,9 +483,9 @@ class BatchEffectEvaluator(Evaluator):
             train_df = self.embeddings_df[self.embeddings_df["batch"].isin(idx)]
             test_df = self.embeddings_df[self.embeddings_df["batch"].isin(idx)]
 
-            X_train = np.array(train_df["embedding"].tolist())
+            X_train = np.array(train_df[self.embedding_col].tolist())
             y_train = self.label_encoder.transform(train_df["label"].tolist())
-            X_test = np.array(test_df["embedding"].tolist())
+            X_test = np.array(test_df[self.embedding_col].tolist())
             y_test = self.label_encoder.transform(test_df["label"].tolist())
 
             cls.fit(X_train, y_train)

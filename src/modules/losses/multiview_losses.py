@@ -135,7 +135,7 @@ class MultiviewIntraModalNTXentLoss(LossWithTemperature):
         self.name = name
         self.return_rank = return_rank
 
-    def forward(self, image_emb, compound_emb, **kwargs) -> Tensor:
+    def forward(self, image_emb, compound_emb, **kwargs):
         """
         :param z1: batchsize, metric dim
         :param z2: batchsize, num_conformers, metric dim
@@ -177,6 +177,7 @@ class MultiviewIntraModalNTXentLoss(LossWithTemperature):
                 results = calculate_rank(sim_matrix, only_average=True)
                 for k, v in results.items():
                     results_dict[k].append(v)
+                    loss_dict[f"{k}_{i}_{j}"] = v
 
         loss_dict["loss"] = loss_value
 

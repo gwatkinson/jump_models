@@ -84,14 +84,14 @@ class BasicJUMPModule(LightningModule):
         self.image_projection_head = ProjectionHead(
             in_dim=self.image_dim,
             embedding_dim=embedding_dim,
-            dropout=getattr(image_encoder, "dropout", 0.1),
+            dropout=kwargs.get("dropout", 0.2),
             n_layers=kwargs.get("n_layers", 2),
         )
 
         self.molecule_projection_head = ProjectionHead(
             in_dim=self.molecule_dim,
             embedding_dim=embedding_dim,
-            dropout=getattr(molecule_encoder, "dropout", 0.1),
+            dropout=kwargs.get("dropout", 0.2),
             n_layers=kwargs.get("n_layers", 2),
         )
 
