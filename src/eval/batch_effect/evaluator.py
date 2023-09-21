@@ -502,7 +502,7 @@ class BatchEffectEvaluator(Evaluator):
         final_metric_dict = defaultdict(list)
 
         for _ in range(nruns):
-            metric_dict = self.not_same_col_cls(cls, col, key, plot_all=plot_all, log=False)
+            metric_dict = self.single_run(cls, col, key, plot_all=plot_all, log=False)
             for k, v in metric_dict.items():
                 final_metric_dict[k].append(v)
 
