@@ -218,6 +218,9 @@ def main(ckpt_path: str, eval_cfg, devices, test, strict) -> None:
     cfg.evaluate = True
 
     if devices is not None:
+        if len(list(devices)) == 1:
+            cfg.trainer.accelerator = "gpu"
+
         cfg.trainer.devices = list(devices)
 
         for evaluator in cfg.eval:
