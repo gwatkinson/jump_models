@@ -333,6 +333,7 @@ class BatchEffectEvaluator(Evaluator):
                         self.embeddings_df.query(f"{self.dmso_normalize}==@batchi")[self.embedding_col].to_list()
                     )
                     spherizer = self.dmso_transforms[batchi]
+                    self.embeddings_df["normed_embedding"] = self.embeddings_df[self.embedding_col]
                     self.embeddings_df.loc[
                         self.embeddings_df[self.dmso_normalize] == batchi, "normed_embedding"
                     ] = pd.Series(spherizer.transform(dmso_embeddings_batch).tolist()).values
