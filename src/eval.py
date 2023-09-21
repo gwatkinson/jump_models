@@ -162,7 +162,7 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
 @click.argument("ckpt_path", type=click.Path(exists=True))
 @click.option("--eval_cfg", "-e", type=str, help="Evaluator config to run", default="evaluators")  # , multiple=True
 @click.option("--devices", "-d", help="List of devices to use", multiple=True, type=int, default=None)
-@click.option("--test", "-t", help="Test", default=False)
+@click.option("--test/--no-test", "-t/-nt", help="Test", default=False)
 @click.option("--strict", "-s", help="Strict", default=False)
 def main(ckpt_path: str, eval_cfg, devices, test, strict) -> None:
     """Main entrypoint for evaluation.
