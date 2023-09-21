@@ -29,10 +29,9 @@ from sklearn.preprocessing import LabelEncoder
 
 from src.eval import Evaluator
 from src.eval.batch_effect.spherize import ZCA_corr
+from src.utils import pylogger
 
-# from src.utils import pylogger
-
-# print pylogger.get_pylogger(__name__)
+py_logger = pylogger.get_pylogger(__name__)
 
 
 def concat_from_list_of_dict(res, key):
@@ -117,33 +116,33 @@ class BatchEffectEvaluator(Evaluator):
                 self.logger = logger
                 break
 
-    def finetune(self):
-        # No finetuning for retrieval tasks
-        pass
-
-    def evaluate(self):
-        pass
-
-    def visualize(self, outs, **kwargs):
-        pass
-
     def single_run(self, cls, col, key, plot_all=False, log=True):
+        if self.embeddings_df is None:
+            raise ValueError("embeddings_df is None, please run get_embeddings first")
+
         try:
+            n = len(self.embeddings_df)
+
             if col == "random":
-                idx = np.random.permutation(len(self.embeddings_df))
+                idx = np.random.permutation(n)
             else:
                 idx = self.embeddings_df[col].unique()
                 idx = np.random.permutation(idx)
 
-            idx = idx[: int(len(idx) * self.train_ratio)]
-            idx = idx[int(len(idx) * self.train_ratio) :]
+            threshold = int(n * self.train_ratio)
+            train_idx = idx[:threshold]
+            test_idx = idx[threshold:]
 
-            train_df = self.embeddings_df[self.embeddings_df["batch"].isin(idx)]
-            test_df = self.embeddings_df[self.embeddings_df["batch"].isin(idx)]
+            if col == "random":
+                train_df = self.embeddings_df.iloc[train_idx]
+                test_df = self.embeddings_df.iloc[test_idx]
+            else:
+                train_df = self.embeddings_df[self.embeddings_df[col].isin(train_idx)]
+                test_df = self.embeddings_df[self.embeddings_df[col].isin(test_idx)]
 
-            X_train = np.array(train_df[self.embedding_col].tolist())
+            X_train = np.array(train_df["normed_embedding"].tolist())
             y_train = self.label_encoder.transform(train_df["label"].tolist())
-            X_test = np.array(test_df[self.embedding_col].tolist())
+            X_test = np.array(test_df["normed_embedding"].tolist())
             y_test = self.label_encoder.transform(test_df["label"].tolist())
 
             cls.fit(X_train, y_train)
@@ -200,6 +199,7 @@ class BatchEffectEvaluator(Evaluator):
 
     def run(self):
         print("Evaluating batch effect")
+        py_logger.info("Evaluating batch effect")
         print("Getting the embeddings...")
         self.get_embeddings()
 
@@ -596,3 +596,13 @@ class BatchEffectEvaluator(Evaluator):
             self.log_images(key, images)
 
         return images
+
+    def finetune(self):
+        # No finetuning for retrieval tasks
+        pass
+
+    def evaluate(self):
+        pass
+
+    def visualize(self, outs, **kwargs):
+        pass

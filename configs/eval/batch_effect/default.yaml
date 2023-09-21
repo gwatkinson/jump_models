@@ -12,14 +12,14 @@ batch_effect:
 
     test_size: 0.2
     nruns: 5
-    plot: True
+    plot: False
     logistic: True
     knn: True
     batch_split: True
     plate_split: True
     source_split: True
     well_split: True
-    fully_random_split: False
+    fully_random_split: True
     out_dir: ${paths.output_dir}/eval/batch_effect/new/
     name: null
     visualize_kwargs: null

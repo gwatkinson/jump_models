@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from pathlib import Path
 from typing import List, Tuple
 
@@ -41,23 +42,13 @@ LOGFORMAT = (
 )
 logging.root.setLevel(LOG_LEVEL)
 formatter = ColoredFormatter(LOGFORMAT)
-stream = logging.StreamHandler()
+stream = logging.StreamHandler(sys.stdout)
 stream.setLevel(LOG_LEVEL)
 stream.setFormatter(formatter)
 
 log = utils.get_pylogger(__name__)
 log.setLevel(LOG_LEVEL)
 log.addHandler(stream)
-
-# import colorlog
-
-# handler = colorlog.StreamHandler()
-# handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(levelname)s:%(name)s:%(message)s'))
-
-# log = colorlog.getLogger(__name__)
-# log.addHandler(handler)
-
-# logging.basicConfig(level=logging.INFO)
 
 
 def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
