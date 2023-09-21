@@ -2,7 +2,7 @@
 
 defaults:
   - /experiment/final/dataset_experiments/multiview_default.yaml@_global_
-  - override /model/image_encoder: resnet50.yaml
+  # - override /model/image_encoder: resnet50.yaml
   - override /model/optimizer: sgd.yaml
 
 
