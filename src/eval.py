@@ -1,10 +1,8 @@
-import logging
 import os
 from pathlib import Path
 from typing import List, Tuple
 
 import click
-import colorlog
 import hydra
 import pyrootutils
 from hydra import compose, initialize_config_dir
@@ -13,6 +11,7 @@ from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig, OmegaConf
 
 from src import utils
+from src.utils import color_log
 
 # from src.eval import EvaluatorList
 
@@ -35,29 +34,10 @@ pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 # ------------------------------------------------------------------------------------ #
 
 
-LOG_LEVEL = logging.INFO
-LOGFORMAT = (
-    "[%(cyan)s%(asctime)s%(reset)s][%(blue)s%(name)s%(reset)s][%(log_color)s%(levelname)s%(reset)s] - %(message)s"
-)
-# logging.root.setLevel(LOG_LEVEL)
-# formatter = ColoredFormatter(LOGFORMAT)
-# stream = logging.StreamHandler(sys.stdout)
-# stream.setLevel(LOG_LEVEL)
-# stream.setFormatter(formatter)
-
-# log = utils.get_pylogger(__name__)
-# log.setLevel(LOG_LEVEL)
-# log.addHandler(stream)
+log = color_log.get_pylogger(__name__)
 
 
-handler = colorlog.StreamHandler()
-formatter = colorlog.ColoredFormatter(LOGFORMAT)
-handler.setFormatter(formatter)
-log = colorlog.getLogger(__name__)
-log.addHandler(handler)
-log.setLevel(LOG_LEVEL)
-
-
+@utils.task_wrapper
 def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     """Evaluates given checkpoint on a datamodule testset.
 
@@ -165,23 +145,6 @@ def main(ckpt_path: str, eval_cfg, devices, test, strict) -> None:
     cfg.logger.wandb.name += "_eval"
     cfg.logger.wandb.job_type = "eval"
 
-    # if isinstance(eval_cfg, str):
-    #     eval_cfg = [eval_cfg]
-
-    # eval_dict = {}
-
-    # for eval_cfg_ in eval_cfg:
-    #     eval_cfg_path = Path(cfg.paths.root_dir) / "configs" / "eval" / f"{eval_cfg_}.yaml"
-    #     if not eval_cfg_path.exists():
-    #         raise ValueError(f"Config for {eval_cfg_} not found!")
-
-    #     abs_config_dir = str(eval_cfg_path.parent.parent.resolve())
-
-    #     with initialize_config_dir(version_base=None, config_dir=abs_config_dir):
-    #         eval_cfg_ = compose(config_name=f"eval/{eval_cfg_}")
-
-    #     eval_dict = OmegaConf.merge(eval_dict, eval_cfg_)
-
     eval_cfg_path = Path(cfg.paths.root_dir) / "configs" / "eval" / f"{eval_cfg}.yaml"
     if not eval_cfg_path.exists():
         raise ValueError(f"Config for {eval_cfg} not found!")
@@ -207,8 +170,6 @@ def main(ckpt_path: str, eval_cfg, devices, test, strict) -> None:
 
     cfg.extras.print_eval = True
 
-    # apply extra utilities
-    # (e.g. ask for tags if none are provided in cfg, print cfg tree, etc.)
     utils.extras(cfg)
 
     evaluate(cfg)

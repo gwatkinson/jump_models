@@ -140,8 +140,6 @@ class BatchEffectEvaluator(Evaluator):
                 train_df = self.embeddings_df[self.embeddings_df[col].isin(train_idx)]
                 test_df = self.embeddings_df[self.embeddings_df[col].isin(test_idx)]
 
-                print(train_df.head().to_markdown())
-
             X_train = np.array(train_df["normed_embedding"].tolist())
             y_train = self.label_encoder.transform(train_df["label"].tolist())
             X_test = np.array(test_df["normed_embedding"].tolist())
@@ -172,7 +170,7 @@ class BatchEffectEvaluator(Evaluator):
 
         for i in range(nruns):
             print(f"Run {i+1}/{nruns}")
-            metric_dict = self.single_run(cls, col, key, plot_all=plot_all, log=False, save=False)
+            metric_dict = self.single_run(cls, col, key, plot_all=plot_all, log=True, save=False)
             for k, v in metric_dict.items():
                 final_metric_dict[k].append(v)
 
