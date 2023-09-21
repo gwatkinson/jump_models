@@ -12,7 +12,7 @@ batch_effect:
 
     test_size: 0.2
     nruns: 5
-    plot: False
+    plot: True
     logistic: True
     knn: True
     batch_split: True

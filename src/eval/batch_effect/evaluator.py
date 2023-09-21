@@ -116,7 +116,7 @@ class BatchEffectEvaluator(Evaluator):
                 self.logger = logger
                 break
 
-    def single_run(self, cls, col, key, plot_all=False, log=True):
+    def single_run(self, cls, col, key, plot_all=False, log=True, save=True):
         if self.embeddings_df is None:
             raise ValueError("embeddings_df is None, please run get_embeddings first")
 
@@ -147,7 +147,9 @@ class BatchEffectEvaluator(Evaluator):
 
             cls.fit(X_train, y_train)
 
-            self.get_metric_dict(cls, X_test, y_test, key, log=log)  # calculate metrics and log to wandb
+            metric_dict = self.get_metric_dict(
+                cls, X_test, y_test, key, log=log, save=save
+            )  # calculate metrics and log to wandb
 
             if plot_all:
                 self.plot_metrics(cls, X_test, y_test, key, log=log)  # plot metrics and log to wandb
@@ -156,14 +158,16 @@ class BatchEffectEvaluator(Evaluator):
                 if fig:
                     self.log_images(key, [fig])
 
+            return metric_dict
+
         except Exception as e:
             print(f"Error while running {key}: {e}")
 
-    def multi_run(self, nruns, cls, col, key, plot_all=False, log=True):
+    def multi_run(self, nruns, cls, col, key, plot_all=False, log=True, save=True):
         final_metric_dict = defaultdict(list)
 
         for _ in range(nruns):
-            metric_dict = self.single_run(cls, col, key, plot_all=plot_all, log=False)
+            metric_dict = self.single_run(cls, col, key, plot_all=plot_all, log=False, save=False)
             for k, v in metric_dict.items():
                 final_metric_dict[k].append(v)
 
@@ -174,7 +178,7 @@ class BatchEffectEvaluator(Evaluator):
             out_dict[f"{k}_min"] = np.min(v)
             out_dict[f"{k}_max"] = np.max(v)
 
-        if self.out_dir:
+        if save and self.out_dir:
             out_path = f"{self.out_dir}/{key}_metrics.json".replace(" ", "_")
             Path(out_path).parent.mkdir(parents=True, exist_ok=True)
             print(f"Saved metrics to {out_path}")
@@ -191,11 +195,11 @@ class BatchEffectEvaluator(Evaluator):
 
         return out_dict
 
-    def not_same_col_cls(self, cls, col, key, plot_all=False, log=True):
+    def not_same_col_cls(self, cls, col, key, plot_all=False, log=True, save=True):
         if self.nruns:
-            return self.multi_run(self.nruns, cls, col, key, plot_all=plot_all, log=log)
+            return self.multi_run(self.nruns, cls, col, key, plot_all=plot_all, log=log, save=save)
         else:
-            return self.single_run(cls, col, key, plot_all=plot_all, log=log)
+            return self.single_run(cls, col, key, plot_all=plot_all, log=log, save=save)
 
     def run(self):
         print("Evaluating batch effect")
@@ -375,6 +379,12 @@ class BatchEffectEvaluator(Evaluator):
         if self.embeddings_df is None:
             raise ValueError("embeddings_df is None, please run get_embeddings first")
 
+        if self.out_dir:
+            out_path = osp.join(self.out_dir, f"{title.replace(' ', '_')}.png")
+            if Path(out_path).exists():
+                print(f'Found {title} at "{out_path}", skipping plotting t-SNE...')
+                return
+
         try:
             fig, ax = plt.subplots(figsize=(14, 14))
             sns.scatterplot(
@@ -427,7 +437,7 @@ class BatchEffectEvaluator(Evaluator):
         except Exception as e:
             print(f"Error while logging t-SNE plots: {e}")
 
-    def get_metric_dict(self, cls, X_test, y_test, key, log=True):
+    def get_metric_dict(self, cls, X_test, y_test, key, log=True, save=True):
         # Metrics
         labels = np.arange(len(self.label_encoder.classes_))
         self.scorers = {
@@ -449,7 +459,7 @@ class BatchEffectEvaluator(Evaluator):
             except Exception as e:
                 print(f"Error while computing {k}: {e}")
 
-        if self.out_dir:
+        if save and self.out_dir:
             out_path = f"{self.out_dir}/{key}_metrics.json".replace(" ", "_")
             Path(out_path).parent.mkdir(parents=True, exist_ok=True)
             print(f"Saved metrics to {out_path}")
