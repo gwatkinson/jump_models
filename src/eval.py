@@ -93,27 +93,24 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info("Instantiating loggers...")
     logger: List[Logger] = utils.instantiate_loggers(cfg.get("logger"))
 
-    # log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
-    # trainer: Trainer = hydra.utils.instantiate(cfg.trainer, logger=logger)
+    log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
+    trainer: Trainer = hydra.utils.instantiate(cfg.trainer, logger=logger)
 
-    # object_dict = {
-    #     "cfg": cfg,
-    #     "datamodule": datamodule,
-    #     "model": model,
-    #     "logger": logger,
-    #     "trainer": trainer,
-    #     "ckpt_path": cfg.ckpt_path,
-    # }
+    object_dict = {
+        "cfg": cfg,
+        "datamodule": datamodule,
+        "model": model,
+        "logger": logger,
+        "trainer": trainer,
+        "ckpt_path": cfg.ckpt_path,
+    }
 
-    # if logger:
-    #     log.info("Logging hyperparameters!")
-    #     utils.log_hyperparameters(object_dict)
+    if logger:
+        log.info("Logging hyperparameters!")
+        utils.log_hyperparameters(object_dict)
 
     if cfg.get("test"):
         log.info("Starting testing!")
-        log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
-        trainer: Trainer = hydra.utils.instantiate(cfg.trainer, logger=logger)
-
         try:
             trainer.test(model=model, datamodule=datamodule, ckpt_path=cfg.ckpt_path)
         except Exception as e:
@@ -138,24 +135,6 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
                 print("Done!")
             except Exception as e:
                 log.error(f"Error while running {evaluator}: {e}")
-
-        # log.info("Instantiating evaluators ...")
-        # evaluator_list: Optional[EvaluatorList] = utils.instantiate_evaluator_list(
-        #     cfg.get("eval"),
-        #     model_cfg=cfg.model,
-        #     logger=logger,
-        #     ckpt_path=cfg.ckpt_path,
-        # )
-
-        # if evaluator_list is not None:
-        #     evaluator_list.run()
-
-    # metric_dict = trainer.callback_metrics
-
-    # return metric_dict, object_dict
-
-
-# @hydra.main(config_path="../configs", config_name="eval.yaml", version_base=None)
 
 
 @click.command()
@@ -219,7 +198,7 @@ def main(ckpt_path: str, eval_cfg, devices, test, strict) -> None:
 
     if devices is not None:
         if len(list(devices)) == 1:
-            cfg.trainer.accelerator = "gpu"
+            cfg.trainer.strategy = None
 
         cfg.trainer.devices = list(devices)
 

@@ -158,12 +158,10 @@ class BatchEffectEvaluator(Evaluator):
             keys = list(predictions[0].keys())
             dmso_embeddings_df = pd.DataFrame({key: concat_from_list_of_dict(predictions, key) for key in keys})
 
-            dmso_embeddings_df["batch"] = dmso_embeddings_df.assign(lambda x: x["source"] + "__" + x["batch"])
-            dmso_embeddings_df["plate"] = dmso_embeddings_df.assign(
-                lambda x: x["source"] + "__" + x["batch"] + "__" + x["plate"]
-            )
-            dmso_embeddings_df["well"] = dmso_embeddings_df.assign(
-                lambda x: x["source"] + "__" + x["batch"] + "__" + x["plate"] + "__" + x["well"]
+            dmso_embeddings_df = dmso_embeddings_df.assign(
+                well=lambda x: x["source"] + "__" + x["batch"] + "__" + x["plate"] + "__" + x["well"],
+                plate=lambda x: x["source"] + "__" + x["batch"] + "__" + x["plate"],
+                batch=lambda x: x["source"] + "__" + x["batch"],
             )
 
         all_batches = dmso_embeddings_df[self.dmso_normalize].unique()
@@ -219,12 +217,10 @@ class BatchEffectEvaluator(Evaluator):
 
             self.embeddings_df = pd.DataFrame({key: concat_from_list_of_dict(predictions, key) for key in keys})
 
-            self.embeddings_df["batch"] = self.embeddings_df.assign(lambda x: x["source"] + "__" + x["batch"])
-            self.embeddings_df["plate"] = self.embeddings_df.assign(
-                lambda x: x["source"] + "__" + x["batch"] + "__" + x["plate"]
-            )
-            self.embeddings_df["well"] = self.embeddings_df.assign(
-                lambda x: x["source"] + "__" + x["batch"] + "__" + x["plate"] + "__" + x["well"]
+            self.embeddings_df = self.embeddings_df.assign(
+                well=lambda x: x["source"] + "__" + x["batch"] + "__" + x["plate"] + "__" + x["well"],
+                plate=lambda x: x["source"] + "__" + x["batch"] + "__" + x["plate"],
+                batch=lambda x: x["source"] + "__" + x["batch"],
             )
 
             self.n_labels = self.embeddings_df["label"].nunique()
