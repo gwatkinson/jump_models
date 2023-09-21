@@ -121,12 +121,12 @@ class BatchEffectEvaluator(Evaluator):
             raise ValueError("embeddings_df is None, please run get_embeddings first")
 
         try:
-            n = len(self.embeddings_df)
-
             if col == "random":
+                n = len(self.embeddings_df)
                 idx = np.random.permutation(n)
             else:
                 idx = self.embeddings_df[col].unique()
+                n = len(idx)
                 idx = np.random.permutation(idx)
 
             threshold = int(n * self.train_ratio)
@@ -140,10 +140,14 @@ class BatchEffectEvaluator(Evaluator):
                 train_df = self.embeddings_df[self.embeddings_df[col].isin(train_idx)]
                 test_df = self.embeddings_df[self.embeddings_df[col].isin(test_idx)]
 
+                print(train_df.head().to_markdown())
+
             X_train = np.array(train_df["normed_embedding"].tolist())
             y_train = self.label_encoder.transform(train_df["label"].tolist())
             X_test = np.array(test_df["normed_embedding"].tolist())
             y_test = self.label_encoder.transform(test_df["label"].tolist())
+
+            print(f"X_train: {X_train.shape}, y_train: {y_train.shape}, X_test: {X_test.shape}, y_test: {y_test.shape}")
 
             cls.fit(X_train, y_train)
 
@@ -166,7 +170,8 @@ class BatchEffectEvaluator(Evaluator):
     def multi_run(self, nruns, cls, col, key, plot_all=False, log=True, save=True):
         final_metric_dict = defaultdict(list)
 
-        for _ in range(nruns):
+        for i in range(nruns):
+            print(f"Run {i+1}/{nruns}")
             metric_dict = self.single_run(cls, col, key, plot_all=plot_all, log=False, save=False)
             for k, v in metric_dict.items():
                 final_metric_dict[k].append(v)
@@ -460,7 +465,7 @@ class BatchEffectEvaluator(Evaluator):
                 print(f"Error while computing {k}: {e}")
 
         if save and self.out_dir:
-            out_path = f"{self.out_dir}/{key}_metrics.json".replace(" ", "_")
+            out_path = osp.join(self.out_dir, f"{key}_metrics.json".replace(" ", "_"))
             Path(out_path).parent.mkdir(parents=True, exist_ok=True)
             print(f"Saved metrics to {out_path}")
             with open(out_path, "w") as f:

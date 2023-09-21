@@ -1,13 +1,12 @@
 import logging
 import os
-import sys
 from pathlib import Path
 from typing import List, Tuple
 
 import click
+import colorlog
 import hydra
 import pyrootutils
-from colorlog import ColoredFormatter
 from hydra import compose, initialize_config_dir
 from lightning import LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
@@ -40,15 +39,23 @@ LOG_LEVEL = logging.INFO
 LOGFORMAT = (
     "[%(cyan)s%(asctime)s%(reset)s][%(blue)s%(name)s%(reset)s][%(log_color)s%(levelname)s%(reset)s] - %(message)s"
 )
-logging.root.setLevel(LOG_LEVEL)
-formatter = ColoredFormatter(LOGFORMAT)
-stream = logging.StreamHandler(sys.stdout)
-stream.setLevel(LOG_LEVEL)
-stream.setFormatter(formatter)
+# logging.root.setLevel(LOG_LEVEL)
+# formatter = ColoredFormatter(LOGFORMAT)
+# stream = logging.StreamHandler(sys.stdout)
+# stream.setLevel(LOG_LEVEL)
+# stream.setFormatter(formatter)
 
-log = utils.get_pylogger(__name__)
+# log = utils.get_pylogger(__name__)
+# log.setLevel(LOG_LEVEL)
+# log.addHandler(stream)
+
+
+handler = colorlog.StreamHandler()
+formatter = colorlog.ColoredFormatter(LOGFORMAT)
+handler.setFormatter(formatter)
+log = colorlog.getLogger(__name__)
+log.addHandler(handler)
 log.setLevel(LOG_LEVEL)
-log.addHandler(stream)
 
 
 def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
