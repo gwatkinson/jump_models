@@ -197,8 +197,7 @@ def main(ckpt_path: str, eval_cfg, devices, test, strict) -> None:
     cfg.evaluate = True
 
     if devices is not None:
-        if len(list(devices)) == 1:
-            cfg.trainer.strategy = None
+        cfg.trainer.strategy = "auto"
 
         cfg.trainer.devices = list(devices)
 
