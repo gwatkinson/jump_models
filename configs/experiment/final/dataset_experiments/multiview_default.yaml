@@ -4,7 +4,7 @@ defaults:
   - /experiment/final/dataset_experiments/default.yaml@_global_
   - override /data: multiview.yaml
   - override /model: multiview.yaml
-  - override /model/criterion: multiview_ntxent.yaml
+  - override /model/criterion: multiview_intra.yaml
 
 tags:
   - final_experiments

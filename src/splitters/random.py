@@ -46,6 +46,9 @@ class RandomSplitter(BaseSplitter):
     def split_train(self, total_train_cpds=None) -> List[str]:
         total_train_cpds = total_train_cpds or self.total_train_cpds
 
+        if len(total_train_cpds) == self.train:
+            return total_train_cpds
+
         train_cpds, _ = train_test_split(
             total_train_cpds,
             train_size=self.train,
