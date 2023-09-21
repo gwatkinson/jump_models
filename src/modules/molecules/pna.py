@@ -178,6 +178,7 @@ class PNA(nn.Module):
         last_batch_norm: bool = False,
         propagation_depth: int = 5,
         dropout: float = 0.0,
+        mlp_dropout: float = 0.0,
         posttrans_layers: int = 1,
         pretrans_layers: int = 1,
         batch_norm_momentum=0.1,
@@ -210,9 +211,10 @@ class PNA(nn.Module):
             out_dim=target_dim,
             layers=readout_layers,
             batch_norm_momentum=batch_norm_momentum,
+            dropout=mlp_dropout,
         )
         self.out_dim = target_dim
-        self.dropout = dropout
+        self.dropout = mlp_dropout
 
         if ckpt_path is not None:
             ckpt = torch.load(ckpt_path, map_location=torch.device("cpu"))
@@ -231,14 +233,6 @@ class PNA(nn.Module):
             self.load_state_dict(ckpt["model_state_dict"])
 
         self.backbone = self.node_gnn
-
-        # self.projection_head = nn.Sequential(
-        #     nn.Linear(target_dim, out_dim),
-        #     nn.ReLU(),
-        #     nn.LayerNorm(out_dim),
-        #     nn.Dropout(0.1),
-        #     nn.Linear(out_dim, out_dim),
-        # )
 
     def forward(self, graph: dgl.DGLGraph):
         self.node_gnn(graph)

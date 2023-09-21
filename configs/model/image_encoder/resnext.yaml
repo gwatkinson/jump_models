@@ -5,4 +5,3 @@ instance_model_name: resnext50_32x4d.a1h_in1k
 # target_num: ${model.embedding_dim}
 n_channels: 5
 pretrained: True
-

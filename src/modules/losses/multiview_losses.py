@@ -124,6 +124,7 @@ class MultiviewIntraModalNTXentLoss(LossWithTemperature):
         norm: bool = True,
         temperature: float = 0.5,
         return_rank: bool = False,
+        lambda_image: float = 0.5,
         eps: float = 1e-8,
         name: str = "MultiviewIntraModalNTXentLoss",
         **kwargs,
@@ -133,6 +134,7 @@ class MultiviewIntraModalNTXentLoss(LossWithTemperature):
         self.norm = norm
         self.eps = eps
         self.name = name
+        self.lambda_image = lambda_image  # factor for intra image loss
         self.return_rank = return_rank
 
     def forward(self, image_emb, compound_emb, **kwargs):
@@ -169,6 +171,9 @@ class MultiviewIntraModalNTXentLoss(LossWithTemperature):
             pos_sim = sim_matrix[range(batch_size), range(batch_size)]  # [batch_size]
             loss = pos_sim / (sim_matrix.sum(dim=1) - pos_sim)  # [batch_size]
             loss = -torch.log(loss).mean()
+
+            if i != 0 and j != 0:
+                loss = self.lambda_image * loss
 
             loss_dict[f"loss_{i}_{j}"] = loss
             loss_value += loss
