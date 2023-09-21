@@ -127,6 +127,138 @@ class BatchEffectEvaluator(Evaluator):
     def visualize(self, outs, **kwargs):
         pass
 
+    def single_run(self, cls, col, key, plot_all=False, log=True):
+        try:
+            if col == "random":
+                idx = np.random.permutation(len(self.embeddings_df))
+            else:
+                idx = self.embeddings_df[col].unique()
+                idx = np.random.permutation(idx)
+
+            idx = idx[: int(len(idx) * self.train_ratio)]
+            idx = idx[int(len(idx) * self.train_ratio) :]
+
+            train_df = self.embeddings_df[self.embeddings_df["batch"].isin(idx)]
+            test_df = self.embeddings_df[self.embeddings_df["batch"].isin(idx)]
+
+            X_train = np.array(train_df[self.embedding_col].tolist())
+            y_train = self.label_encoder.transform(train_df["label"].tolist())
+            X_test = np.array(test_df[self.embedding_col].tolist())
+            y_test = self.label_encoder.transform(test_df["label"].tolist())
+
+            cls.fit(X_train, y_train)
+
+            self.get_metric_dict(cls, X_test, y_test, key, log=log)  # calculate metrics and log to wandb
+
+            if plot_all:
+                self.plot_metrics(cls, X_test, y_test, key, log=log)  # plot metrics and log to wandb
+            else:
+                fig = self.plot_conf_matrix(cls, X_test, y_test, key)
+                if fig:
+                    self.log_images(key, [fig])
+
+        except Exception as e:
+            print(f"Error while running {key}: {e}")
+
+    def multi_run(self, nruns, cls, col, key, plot_all=False, log=True):
+        final_metric_dict = defaultdict(list)
+
+        for _ in range(nruns):
+            metric_dict = self.single_run(cls, col, key, plot_all=plot_all, log=False)
+            for k, v in metric_dict.items():
+                final_metric_dict[k].append(v)
+
+        out_dict = {}
+        for k, v in final_metric_dict.items():
+            out_dict[f"{k}_mean"] = np.mean(v)
+            out_dict[f"{k}_std"] = np.std(v)
+            out_dict[f"{k}_min"] = np.min(v)
+            out_dict[f"{k}_max"] = np.max(v)
+
+        if self.out_dir:
+            out_path = f"{self.out_dir}/{key}_metrics.json".replace(" ", "_")
+            Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+            print(f"Saved metrics to {out_path}")
+            with open(out_path, "w") as f:
+                json.dump(out_dict, f)
+
+        if log:
+            try:
+                if self.logger:
+                    self.logger.log_metrics(out_dict)
+                    self.logger.save()
+            except Exception as e:
+                print(f"Error while logging metrics: {e}")
+
+        return out_dict
+
+    def not_same_col_cls(self, cls, col, key, plot_all=False, log=True):
+        if self.nruns:
+            return self.multi_run(self.nruns, cls, col, key, plot_all=plot_all, log=log)
+        else:
+            return self.single_run(cls, col, key, plot_all=plot_all, log=log)
+
+    def run(self):
+        print("Evaluating batch effect")
+        print("Getting the embeddings...")
+        self.get_embeddings()
+
+        key_prefix = (
+            "batch_effect/regular"
+            if not self.dmso_normalize
+            else f"batch_effect/dmso_{self.dmso_normalize}_normalized_{self.normalize_cls_str}"
+        )
+
+        if self.plot:
+            print("Plotting the embeddings...")
+            self.plot_embeddings(key=f"{key_prefix}/Embeddings")
+
+        if self.logistic:
+            try:
+                print("Running Logistic Regressions...")
+                cls = LogisticRegression(max_iter=1000)
+
+                if self.fully_random_split:
+                    print("Fully random split")
+                    self.not_same_col_cls(cls, "random", key=f"{key_prefix}/LR/FullyRandom")
+                if self.well_split:
+                    print("Not same well")
+                    self.not_same_col_cls(cls, "well", key=f"{key_prefix}/LR/NotSameWell")
+                if self.batch_split:
+                    print("Not same batch")
+                    self.not_same_col_cls(cls, "batch", key=f"{key_prefix}/LR/NotSameBatch")
+                if self.plate_split:
+                    print("Not same plate")
+                    self.not_same_col_cls(cls, "plate", key=f"{key_prefix}/LR/NotSamePlate")
+                if self.source_split:
+                    print("Not same source")
+                    self.not_same_col_cls(cls, "source", key=f"{key_prefix}/LR/NotSameSource")
+            except Exception as e:
+                print(f"Error while running Logistic Regression: {e}")
+
+        if self.knn:
+            try:
+                print("Running KNN Classifier...")
+                cls = KNeighborsClassifier(n_neighbors=3, metric="cosine")
+
+                if self.fully_random_split:
+                    print("Fully random split")
+                    self.not_same_col_cls(cls, "random", key=f"{key_prefix}/KNN/FullyRandom")
+                if self.well_split:
+                    print("Not same well")
+                    self.not_same_col_cls(cls, "well", key=f"{key_prefix}/KNN/NotSameWell")
+                if self.batch_split:
+                    print("Not same batch")
+                    self.not_same_col_cls(cls, "batch", key=f"{key_prefix}/KNN/NotSameBatch")
+                if self.plate_split:
+                    print("Not same plate")
+                    self.not_same_col_cls(cls, "plate", key=f"{key_prefix}/KNN/NotSamePlate")
+                if self.source_split:
+                    print("Not same source")
+                    self.not_same_col_cls(cls, "source", key=f"{key_prefix}/KNN/NotSameSource")
+            except Exception as e:
+                print(f"Error while running KNN Classifier: {e}")
+
     def get_dmso_embeddings(self):
         if self.dmso_transforms is not None:
             print("Found dmso_embeddings, skipping getting embeddings...")
@@ -464,135 +596,3 @@ class BatchEffectEvaluator(Evaluator):
             self.log_images(key, images)
 
         return images
-
-    def single_run(self, cls, col, key, plot_all=False, log=True):
-        try:
-            if col == "random":
-                idx = np.random.permutation(len(self.embeddings_df))
-            else:
-                idx = self.embeddings_df[col].unique()
-                idx = np.random.permutation(idx)
-
-            idx = idx[: int(len(idx) * self.train_ratio)]
-            idx = idx[int(len(idx) * self.train_ratio) :]
-
-            train_df = self.embeddings_df[self.embeddings_df["batch"].isin(idx)]
-            test_df = self.embeddings_df[self.embeddings_df["batch"].isin(idx)]
-
-            X_train = np.array(train_df[self.embedding_col].tolist())
-            y_train = self.label_encoder.transform(train_df["label"].tolist())
-            X_test = np.array(test_df[self.embedding_col].tolist())
-            y_test = self.label_encoder.transform(test_df["label"].tolist())
-
-            cls.fit(X_train, y_train)
-
-            self.get_metric_dict(cls, X_test, y_test, key, log=log)  # calculate metrics and log to wandb
-
-            if plot_all:
-                self.plot_metrics(cls, X_test, y_test, key, log=log)  # plot metrics and log to wandb
-            else:
-                fig = self.plot_conf_matrix(cls, X_test, y_test, key)
-                if fig:
-                    self.log_images(key, [fig])
-
-        except Exception as e:
-            print(f"Error while running {key}: {e}")
-
-    def multi_run(self, nruns, cls, col, key, plot_all=False, log=True):
-        final_metric_dict = defaultdict(list)
-
-        for _ in range(nruns):
-            metric_dict = self.single_run(cls, col, key, plot_all=plot_all, log=False)
-            for k, v in metric_dict.items():
-                final_metric_dict[k].append(v)
-
-        out_dict = {}
-        for k, v in final_metric_dict.items():
-            out_dict[f"{k}_mean"] = np.mean(v)
-            out_dict[f"{k}_std"] = np.std(v)
-            out_dict[f"{k}_min"] = np.min(v)
-            out_dict[f"{k}_max"] = np.max(v)
-
-        if self.out_dir:
-            out_path = f"{self.out_dir}/{key}_metrics.json".replace(" ", "_")
-            Path(out_path).parent.mkdir(parents=True, exist_ok=True)
-            print(f"Saved metrics to {out_path}")
-            with open(out_path, "w") as f:
-                json.dump(out_dict, f)
-
-        if log:
-            try:
-                if self.logger:
-                    self.logger.log_metrics(out_dict)
-                    self.logger.save()
-            except Exception as e:
-                print(f"Error while logging metrics: {e}")
-
-        return out_dict
-
-    def not_same_col_cls(self, cls, col, key, plot_all=False, log=True):
-        if self.nruns:
-            return self.multi_run(self.nruns, cls, col, key, plot_all=plot_all, log=log)
-        else:
-            return self.single_run(cls, col, key, plot_all=plot_all, log=log)
-
-    def run(self):
-        print("Evaluating batch effect")
-        print("Getting the embeddings...")
-        self.get_embeddings()
-
-        key_prefix = (
-            "batch_effect/regular"
-            if not self.dmso_normalize
-            else f"batch_effect/dmso_{self.dmso_normalize}_normalized_{self.normalize_cls_str}"
-        )
-
-        if self.plot:
-            print("Plotting the embeddings...")
-            self.plot_embeddings(key=f"{key_prefix}/Embeddings")
-
-        if self.logistic:
-            try:
-                print("Running Logistic Regressions...")
-                cls = LogisticRegression(max_iter=1000)
-
-                if self.fully_random_split:
-                    print("Fully random split")
-                    self.not_same_col_cls(cls, "random", key=f"{key_prefix}/LR/FullyRandom")
-                if self.well_split:
-                    print("Not same well")
-                    self.not_same_col_cls(cls, "well", key=f"{key_prefix}/LR/NotSameWell")
-                if self.batch_split:
-                    print("Not same batch")
-                    self.not_same_col_cls(cls, "batch", key=f"{key_prefix}/LR/NotSameBatch")
-                if self.plate_split:
-                    print("Not same plate")
-                    self.not_same_col_cls(cls, "plate", key=f"{key_prefix}/LR/NotSamePlate")
-                if self.source_split:
-                    print("Not same source")
-                    self.not_same_col_cls(cls, "source", key=f"{key_prefix}/LR/NotSameSource")
-            except Exception as e:
-                print(f"Error while running Logistic Regression: {e}")
-
-        if self.knn:
-            try:
-                print("Running KNN Classifier...")
-                cls = KNeighborsClassifier(n_neighbors=3, metric="cosine")
-
-                if self.fully_random_split:
-                    print("Fully random split")
-                    self.not_same_col_cls(cls, "random", key=f"{key_prefix}/KNN/FullyRandom")
-                if self.well_split:
-                    print("Not same well")
-                    self.not_same_col_cls(cls, "well", key=f"{key_prefix}/KNN/NotSameWell")
-                if self.batch_split:
-                    print("Not same batch")
-                    self.not_same_col_cls(cls, "batch", key=f"{key_prefix}/KNN/NotSameBatch")
-                if self.plate_split:
-                    print("Not same plate")
-                    self.not_same_col_cls(cls, "plate", key=f"{key_prefix}/KNN/NotSamePlate")
-                if self.source_split:
-                    print("Not same source")
-                    self.not_same_col_cls(cls, "source", key=f"{key_prefix}/KNN/NotSameSource")
-            except Exception as e:
-                print(f"Error while running KNN Classifier: {e}")
