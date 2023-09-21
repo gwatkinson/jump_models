@@ -29,7 +29,7 @@ compile: False
 evaluate: False
 
 model:
-  embedding_dim: 1024
+  embedding_dim: 512
   lr: 3e-4
 
   model:
@@ -40,7 +40,7 @@ model:
     dropout: 0.2
 
   image_encoder:
-    dropout: 0.2
+    dropout: 0.
 
   scheduler:
     warmup_epochs: 10
