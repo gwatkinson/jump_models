@@ -8,7 +8,6 @@ from typing import Callable, Dict, List, Optional
 
 import pandas as pd
 import torch
-from PIL import UnidentifiedImageError
 from torch.utils.data import Dataset
 
 from src.utils import pylogger
@@ -142,10 +141,11 @@ class MoleculeImageDataset(Dataset):
 
                 return {"image": img_array, "compound": tr_compound}
 
-            except UnidentifiedImageError:
+            except Exception as e:
                 tries += 1
-                py_logger.warning(f"Could not load image {image_id}. Try: {tries}/{self.max_tries}")
-                corresponding_images = [i for i in corresponding_images if i != image_id]
+                py_logger.warning(f"Could not load image: {e}. Try: {tries}/{self.max_tries}")
+                if "image_id" in locals():
+                    corresponding_images = [i for i in corresponding_images if i != image_id]
 
         raise RuntimeError(f"Could not find an image for compound {compound} after {self.max_tries} tries.")
 

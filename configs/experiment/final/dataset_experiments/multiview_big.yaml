@@ -18,7 +18,7 @@ model:
   dropout: 0.2
 
   criterion:
-    temperature: 0.7
+    temperature: 0.3
     lambda_image: 0.5
 
 
