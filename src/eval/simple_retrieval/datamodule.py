@@ -8,8 +8,8 @@ import pandas as pd
 from lightning.pytorch import LightningDataModule
 from torch.utils.data import DataLoader
 
+from src.models.jump_cl.dataset import MoleculeImageDataset
 from src.modules.collate_fn import default_collate
-from src.modules.datasets.base_class import MoleculeImageDataset
 from src.utils import pylogger
 
 py_logger = pylogger.get_pylogger(__name__)
@@ -101,18 +101,13 @@ class SimpleRetrievalDataModule(LightningDataModule):
                 retrieval_compound_dict = json.load(handle)
 
             self.retrieval_dataset = MoleculeImageDataset(
-                compound_dict=retrieval_compound_dict,
                 load_df=retrieval_load_df,
+                compound_dict=retrieval_compound_dict,
                 transform=self.transform,
                 compound_transform=self.compound_transform,
                 sampler=self.image_sampler,
                 compound_str_type=self.compound_str_type,
-                use_compond_cache=self.use_compond_cache,
                 max_tries=self.max_tries,
-                remove_bad=self.remove_bad,
-                verbose=self.verbose,
-                check_compound_transform=self.check_compound_transform,
-                channels=self.channels,
             )
 
     def train_dataloader(self):
@@ -124,7 +119,7 @@ class SimpleRetrievalDataModule(LightningDataModule):
     def test_dataloader(self):
         pass
 
-    def retrieval_dataloader(self, **kwargs) -> DataLoader:
+    def predict_dataloader(self, **kwargs) -> DataLoader:
         retrieval_kwargs = {
             "batch_size": self.batch_size,
             "num_workers": self.num_workers,

@@ -3,7 +3,6 @@
 from typing import Any, Callable, Dict, Optional
 
 import torch
-import torch.nn as nn
 from lightning import LightningModule
 from torch import Tensor
 from torchmetrics import MetricCollection
@@ -45,9 +44,7 @@ class IDRRetrievalModule(LightningModule):
 
     def __init__(
         self,
-        cross_modal_module: Optional[LightningModule] = None,
-        image_encoder: Optional[nn.Module] = None,
-        molecule_encoder: Optional[nn.Module] = None,
+        cross_modal_module: LightningModule,
         distance_metric: Optional[Callable] = None,
         example_input: Optional[Dict[str, Tensor]] = None,
         example_input_path: Optional[str] = None,
@@ -55,25 +52,13 @@ class IDRRetrievalModule(LightningModule):
     ):
         super().__init__()
 
-        self.save_hyperparameters(logger=False, ignore=["cross_modal_module", "image_encoder", "molecule_encoder"])
+        self.save_hyperparameters(logger=False, ignore=["cross_modal_module"])
 
-        if not (image_encoder or cross_modal_module):
-            raise ValueError("Either image_encoder or cross_modal_module must be provided.")
+        self.image_encoder = cross_modal_module.image_encoder
+        self.image_projection_head = cross_modal_module.image_projection_head
 
-        if not (molecule_encoder or cross_modal_module):
-            raise ValueError("Either molecule_encoder or cross_modal_module must be provided.")
-
-        if image_encoder is not None:
-            self.image_encoder = image_encoder
-        else:
-            self.image_encoder = cross_modal_module.image_encoder
-            self.image_projection_head = cross_modal_module.image_projection_head
-
-        if molecule_encoder is not None:
-            self.molecule_encoder = molecule_encoder
-        else:
-            self.molecule_encoder = cross_modal_module.molecule_encoder
-            self.molecule_projection_head = cross_modal_module.molecule_projection_head
+        self.molecule_encoder = cross_modal_module.molecule_encoder
+        self.molecule_projection_head = cross_modal_module.molecule_projection_head
 
         if not self.image_projection_head.out_features == self.molecule_projection_head.out_features:
             raise ValueError(
@@ -100,13 +85,17 @@ class IDRRetrievalModule(LightningModule):
         return output
 
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> Any:
-        output = {"dataloader_idx": dataloader_idx, "batch_idx": batch_idx}
+        output = {
+            "dataloader_idx": dataloader_idx,
+            "batch_idx": batch_idx,
+            "compound_str": batch["compound_str"],
+            "image_id": batch["image_id"],
+        }
 
         if "compound" in batch:
-            output["compound"] = self.molecule_encoder(batch["compound"])
-            output["activity_flag"] = batch["activity_flag"]
+            output["compound"] = self.molecule_projection_head(self.molecule_encoder(batch["compound"]))
         if "image" in batch:
-            output["image"] = self.image_encoder(batch["image"])
+            output["image"] = self.image_projection_head(self.image_encoder(batch["image"]))
 
         return output
 
@@ -120,63 +109,3 @@ class IDRRetrievalModule(LightningModule):
         # self.retrieval_metrics.reset()
 
         return gene_metrics
-
-
-def calculate_rank(sim_matrix: Tensor, only_average=False) -> Tensor:
-    with torch.no_grad():
-        labels = torch.arange(sim_matrix.shape[0], device=sim_matrix.device).repeat(sim_matrix.shape[0], 1).t()
-
-        # X to Y ranking
-        row_order_x = sim_matrix.argsort(descending=True, dim=-1)
-        x_to_y = (row_order_x == labels).nonzero(as_tuple=True)[1]
-
-        # Y to X ranking
-        row_order_y = sim_matrix.argsort(descending=True, dim=0).t()
-        y_to_x = (row_order_y == labels).nonzero(as_tuple=True)[1]
-
-        batch_size = sim_matrix.shape[0]
-
-        x_to_y_top1 = (x_to_y == 0).float().mean()
-        x_to_y_top1_normed = x_to_y_top1 * batch_size
-        x_to_y_top5 = (x_to_y < 5).float().mean()
-        x_to_y_top10 = (x_to_y < 10).float().mean()
-        x_to_y_mean_pos = 1 + x_to_y.float().mean()
-        x_to_y_mean_pos_normed = x_to_y_mean_pos / batch_size
-
-        y_to_x_top1 = (y_to_x == 0).float().mean()
-        y_to_x_top1_normed = y_to_x_top1 * batch_size
-        y_to_x_top5 = (y_to_x < 5).float().mean()
-        y_to_x_top10 = (y_to_x < 10).float().mean()
-        y_to_x_mean_pos = 1 + y_to_x.float().mean()
-        y_to_x_mean_pos_normed = y_to_x_mean_pos / batch_size
-
-        if only_average:
-            return {
-                "top1": (x_to_y_top1 + y_to_x_top1) / 2,
-                "top1_normed": (x_to_y_top1_normed + y_to_x_top1_normed) / 2,
-                "top5": (x_to_y_top5 + y_to_x_top5) / 2,
-                "top10": (x_to_y_top10 + y_to_x_top10) / 2,
-                "mean_pos": (x_to_y_mean_pos + y_to_x_mean_pos) / 2,
-                "mean_pos_normed": (x_to_y_mean_pos_normed + y_to_x_mean_pos_normed) / 2,
-            }
-        else:
-            return {
-                "top1": (x_to_y_top1 + y_to_x_top1) / 2,
-                "top1_normed": (x_to_y_top1_normed + y_to_x_top1_normed) / 2,
-                "top5": (x_to_y_top5 + y_to_x_top5) / 2,
-                "top10": (x_to_y_top10 + y_to_x_top10) / 2,
-                "mean_pos": (x_to_y_mean_pos + y_to_x_mean_pos) / 2,
-                "mean_pos_normed": (x_to_y_mean_pos_normed + y_to_x_mean_pos_normed) / 2,
-                "x_to_y_top1": x_to_y_top1,
-                "x_to_y_top1_normed": x_to_y_top1_normed,
-                "x_to_y_top5": x_to_y_top5,
-                "x_to_y_top10": x_to_y_top10,
-                "x_to_y_mean_pos": x_to_y_mean_pos,
-                "x_to_y_mean_pos_normed": x_to_y_mean_pos_normed,
-                "y_to_x_top1": y_to_x_top1,
-                "y_to_x_top1_normed": y_to_x_top1_normed,
-                "y_to_x_top5": y_to_x_top5,
-                "y_to_x_top10": y_to_x_top10,
-                "y_to_x_mean_pos": y_to_x_mean_pos,
-                "y_to_x_mean_pos_normed": y_to_x_mean_pos_normed,
-            }

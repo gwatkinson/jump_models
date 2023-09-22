@@ -33,6 +33,7 @@ class MoleculeImageDataset(Dataset):
         col_fstring: str = "FileName_Orig{channel}",
         max_tries: int = 10,
         check_transform: bool = True,
+        compound_str_type: Optional[str] = None,
         use_compond_cache: bool = False,
     ):
         """Initializes the dataset.
@@ -62,12 +63,15 @@ class MoleculeImageDataset(Dataset):
         self.transform = transform
         self.compound_transform = compound_transform
 
+        if compound_str_type and hasattr(self.compound_transform, "compound_str_type"):
+            self.compound_transform.compound_str_type = self.compound_str_type
+
         # data
         self.load_df = load_df
         self.compound_dict = compound_dict
         self.image_list = self.load_df.index.tolist()
 
-        self.check_transform = check_transform
+        # self.check_transform = check_transform
 
         # if check_transform:
         #     py_logger.info("Checking compounds with transformation...")
@@ -139,7 +143,7 @@ class MoleculeImageDataset(Dataset):
                 if self.transform:
                     img_array = self.transform(img_array)
 
-                return {"image": img_array, "compound": tr_compound}
+                return {"image": img_array, "compound": tr_compound, "compound_str": compound, "image_id": image_id}
 
             except Exception as e:
                 tries += 1
