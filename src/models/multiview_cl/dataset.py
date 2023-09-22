@@ -115,7 +115,7 @@ class MultiviewDataset(Dataset):
             tries = 0
             fetched = False
 
-            while not fetched or (tries < self.max_tries and len(batch_images) > 0):
+            while not fetched and tries < self.max_tries and len(batch_images) > 0:
                 try:
                     # Random choice in the list of images
                     image_id = random.choice(batch_images)
@@ -161,3 +161,4 @@ class MultiviewDataset(Dataset):
                 py_logger.warning(
                     f"Could not get item {idx}. Trying random compound. Try: {tries}/{self.max_tries}. Error: {e}"
                 )
+        raise RuntimeError(f"Could not get item {idx} after {self.max_tries} tries.")
