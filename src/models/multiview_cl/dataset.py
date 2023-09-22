@@ -73,7 +73,7 @@ class MultiviewDataset(Dataset):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(n_compounds={self.n_compounds}, n_images={self.n_images})"
 
-    def __getitem__(self, idx):
+    def get_item(self, idx):
         # Get the compound
         compound = self.compound_list[idx]  # An inchi or smiles string
 
@@ -148,3 +148,16 @@ class MultiviewDataset(Dataset):
         batches = [batch_to_num[batch] for batch in batch_to_try]
 
         return {"compound": tr_compound, "image": images, "batch": batches, "compound_name": compound}
+
+    def __getitem__(self, idx):
+        tries = 0
+        while tries < self.max_tries:
+            try:
+                out = self.get_item(idx)
+                return out
+            except Exception as e:
+                idx = random.randint(0, self.n_compounds - 1)
+                tries += 1
+                py_logger.warning(
+                    f"Could not get item {idx}. Trying random compound. Try: {tries}/{self.max_tries}. Error: {e}"
+                )
