@@ -1,51 +1,16 @@
 """LightningModule for Jump MOA datasets evalulation."""
 
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Dict, Optional
 
 import torch
 from lightning import LightningModule
 from torch import Tensor
-from torchmetrics import MetricCollection
-from torchmetrics.functional import pairwise_cosine_similarity
-from torchmetrics.retrieval import (
-    RetrievalFallOut,
-    RetrievalHitRate,
-    RetrievalMAP,
-    RetrievalMRR,
-    RetrievalNormalizedDCG,
-    RetrievalPrecision,
-    RetrievalRecall,
-)
 
 
-class IDRRetrievalModule(LightningModule):
-    retrieval_metrics = MetricCollection(
-        {
-            "RetrievalMRR": RetrievalMRR(),
-            "RetrievalHitRate_top_1": RetrievalHitRate(top_k=1),
-            "RetrievalHitRate_top_3": RetrievalHitRate(top_k=3),
-            "RetrievalHitRate_top_5": RetrievalHitRate(top_k=5),
-            "RetrievalHitRate_top_10": RetrievalHitRate(top_k=10),
-            "RetrievalFallOut_top_1": RetrievalFallOut(top_k=1),
-            "RetrievalFallOut_top_5": RetrievalFallOut(top_k=5),
-            "RetrievalMAP_top_1": RetrievalMAP(top_k=1),
-            "RetrievalMAP_top_5": RetrievalMAP(top_k=5),
-            "RetrievalPrecision_top_1": RetrievalPrecision(top_k=1),
-            "RetrievalPrecision_top_3": RetrievalPrecision(top_k=3),
-            "RetrievalPrecision_top_5": RetrievalPrecision(top_k=5),
-            "RetrievalPrecision_top_10": RetrievalPrecision(top_k=10),
-            "RetrievalRecall_top_1": RetrievalRecall(top_k=1),
-            "RetrievalRecall_top_3": RetrievalRecall(top_k=3),
-            "RetrievalRecall_top_5": RetrievalRecall(top_k=5),
-            "RetrievalRecall_top_10": RetrievalRecall(top_k=10),
-            "RetrievalNormalizedDCG": RetrievalNormalizedDCG(),
-        }
-    )
-
+class SimpleRetrievalModule(LightningModule):
     def __init__(
         self,
         cross_modal_module: LightningModule,
-        distance_metric: Optional[Callable] = None,
         example_input: Optional[Dict[str, Tensor]] = None,
         example_input_path: Optional[str] = None,
         **kwargs,
@@ -66,11 +31,6 @@ class IDRRetrievalModule(LightningModule):
             )
 
         self.embedding_dim = self.molecule_projection_head.out_features
-
-        if distance_metric is None:
-            self.distance_metric = pairwise_cosine_similarity
-        else:
-            self.distance_metric = distance_metric
 
         if example_input is not None:
             self.example_input_array = example_input
@@ -93,19 +53,8 @@ class IDRRetrievalModule(LightningModule):
         }
 
         if "compound" in batch:
-            output["compound"] = self.molecule_projection_head(self.molecule_encoder(batch["compound"]))
+            output["compound_emb"] = self.molecule_projection_head(self.molecule_encoder(batch["compound"]))
         if "image" in batch:
-            output["image"] = self.image_projection_head(self.image_encoder(batch["image"]))
+            output["image_emb"] = self.image_projection_head(self.image_encoder(batch["image"]))
 
         return output
-
-    def retrieval(self, image_embeddings: torch.Tensor, compound_embeddings: torch.Tensor, activities: torch.Tensor):
-        dist = self.distance_metric(compound_embeddings, image_embeddings)
-        indexes = torch.arange(dist.shape[1]).expand(dist.shape)
-        target = activities.expand(dist.T.shape).T
-
-        gene_metrics = self.retrieval_metrics(preds=dist, target=target, indexes=indexes)
-
-        # self.retrieval_metrics.reset()
-
-        return gene_metrics

@@ -31,10 +31,7 @@ class SimpleRetrievalDataModule(LightningDataModule):
         sampler: Optional[Callable] = None,
         channels: Sequence[str] = ("DNA", "AGP", "ER", "Mito", "RNA"),
         check_compound_transform: bool = False,
-        use_compond_cache: bool = False,
         max_tries: int = 10,
-        remove_bad: bool = True,
-        verbose: bool = False,
         data_root_dir: Optional[str] = None,
         **kwargs,
     ):
@@ -75,10 +72,7 @@ class SimpleRetrievalDataModule(LightningDataModule):
         self.data_root_dir = data_root_dir
         self.channels = channels
         self.col_fstring = "FileName_Orig{}"
-        self.use_compond_cache = use_compond_cache
         self.max_tries = max_tries
-        self.remove_bad = remove_bad
-        self.verbose = verbose
         self.image_sampler = sampler
         self.check_compound_transform = check_compound_transform
 
