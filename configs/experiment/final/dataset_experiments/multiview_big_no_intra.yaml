@@ -1,0 +1,36 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/dataset_experiments/multiview_default.yaml@_global_
+  - override /model/criterion: multiview_ntxent.yaml
+
+
+data:
+  splitter:
+    train: -1
+  n_views: 3
+  batch_size: 64
+  train_ids_name: train_big
+
+
+model:
+  embedding_dim: 512
+  lr: 8e-4
+  dropout: 0.2
+
+  criterion:
+    temperature: 0.3
+    lambda_image: 0.5
+
+
+
+trainer:
+  devices: ???
+  max_epochs: 200
+
+
+logger:
+  wandb:
+    name: big_dataset_multiview
+    group: multiview
+    project: big_dataset_multiview
