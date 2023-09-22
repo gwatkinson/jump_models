@@ -34,6 +34,6 @@ trainer:
 
 logger:
   wandb:
-    name: med_dataset
+    name: med_dataset_no_transform
 
 
