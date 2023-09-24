@@ -2,7 +2,7 @@
 
 defaults:
   - /experiment/final/optimizer_experiments/default.yaml@_global_
-  - override /model/criterion: ntxent.yaml
+  - override /model/optimizer: adamw.yaml
 
 
 trainer:
