@@ -44,12 +44,20 @@ class HintClinicalDataset(Dataset):
     def check_smiles_list(self, smiles_list_str):
         smiles_list = self.smiles_txt_to_lst(smiles_list_str)
         valid_smiles = []
+        invalid_smiles = ["[Na+].[Cl-]", "[Cl-].[Na+]", "O", "[Se]", "[Sm]", "[Zn]", "[Li+]"]
+
         for smiles in smiles_list:
-            mol = datamol.to_mol(smiles)
-            if smiles in ["[Cl-].[Na+]", "O", "[Se]", "[Li+]"]:
+            if smiles in invalid_smiles:
                 continue
+
+            mol = datamol.to_mol(smiles)
             if mol is not None:
-                valid_smiles.append(datamol.to_smiles(mol))
+                num_atoms = mol.GetNumAtoms()
+                new_smiles = datamol.to_smiles(mol)
+                if num_atoms >= 2 and new_smiles not in invalid_smiles:
+                    valid_smiles.append(new_smiles)
+            # else:
+            # print(f"Invalid SMILES: {smiles}")
 
         return valid_smiles
 
@@ -61,9 +69,10 @@ class HintClinicalDataset(Dataset):
         for smiles_list in smiles_to_test:
             valid_smiles.append(self.check_smiles_list(smiles_list))
 
-        self.df["valid_smiles"] = valid_smiles
+        valid_df = self.df.copy()
+        valid_df["valid_smiles"] = valid_smiles
 
-        return self.df[self.df["valid_smiles"].apply(len) != 0]
+        return valid_df[valid_df["valid_smiles"].apply(len) != 0]
 
     def __getitem__(self, index):
         label = self.targets.iloc[index]
