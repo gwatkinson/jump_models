@@ -77,7 +77,7 @@ class OGBClassificationModule(LightningModule):
         self.embedding_dim = self.molecule_projection_head.out_features
         self.head = MLP(
             input_dim=self.embedding_dim,
-            out_dim=2,
+            out_dim=self.out_dim,
             embedding_dim=[self.embedding_dim // 2, self.embedding_dim // 4],
             norm_layer=nn.BatchNorm1d,
             dropout=0.2,
