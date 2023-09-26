@@ -3,7 +3,7 @@ defaults:
   - /callbacks/lightning/model_checkpoint@_here_
   # - /callbacks/lightning/lr_finder@_here_
   - /callbacks/lightning/early_stopping@_here_
-  - /callbacks/custom/wandb_plotter@_here_
+  # - /callbacks/custom/wandb_plotter@_here_
   - /callbacks/custom/nan_loss@_here_
   # - /callbacks/custom/molecule_freezer@_here_
   - /callbacks/lightning/lr_monitor@_here_
@@ -23,17 +23,17 @@ early_stopping:
   min_delta: 0
   mode: min
 
-wandb_plotter:
-  watch: False
-  log_freq: 50
-  plot_every_n_epoch: 1
-  prefix: ???
-  fig_kws:
-    figsize: [16, 16]
-  plot_kws:
-    annot: True
-    cmap: Blues
-    cbar: False
-    square: True
-    robust: True
-    fmt: "g"
+# wandb_plotter:
+#   watch: False
+#   log_freq: 50
+#   plot_every_n_epoch: 1
+#   prefix: ???
+#   fig_kws:
+#     figsize: [16, 16]
+#   plot_kws:
+#     annot: True
+#     cmap: Blues
+#     cbar: False
+#     square: True
+#     robust: True
+#     fmt: "g"

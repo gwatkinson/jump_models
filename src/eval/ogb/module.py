@@ -274,16 +274,16 @@ class OGBRegressionModule(OGBClassificationModule):
 
     def model_step(self, batch: Any, stage: str = "train", on_step_loss=True):
         compound = batch["compound"]
-        targets = batch["label"]
+        targets = batch["label"].squeeze()
 
-        logits = self.model(compound)
+        logits = self.model(compound).squeeze()
 
         loss = self.criterion(logits, targets)
 
         # update metrics
         self.loss_dict[stage](loss)
-        self.plot_metrics_dict[stage](logits[:, -1], targets)
-        other_metrics = self.other_metrics_dict[stage](logits[:, -1], targets)
+        self.plot_metrics_dict[stage](logits, targets)
+        other_metrics = self.other_metrics_dict[stage](logits, targets)
 
         # log metrics
         self.log(

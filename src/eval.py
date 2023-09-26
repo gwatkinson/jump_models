@@ -60,16 +60,6 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info(f"Instantiating model <{cfg.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(cfg.model)
 
-    example_input = None
-    if cfg.get("load_first_bacth"):
-        log.info("Loading first batch...")
-        print("Loading first batch...")
-        datamodule.prepare_data()
-        datamodule.setup("test")
-        dl = datamodule.test_dataloader(batch_size=2)
-        example_input = next(iter(dl))
-        model.example_input_array = example_input
-
     log.info("Instantiating loggers...")
     logger: List[Logger] = utils.instantiate_loggers(cfg.get("logger"))
 
@@ -88,6 +78,16 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     if logger:
         log.info("Logging hyperparameters!")
         utils.log_hyperparameters(object_dict)
+
+    example_input = None
+    if cfg.get("load_first_bacth"):
+        log.info("Loading first batch...")
+        print("Loading first batch...")
+        datamodule.prepare_data()
+        datamodule.setup("test")
+        dl = datamodule.test_dataloader(batch_size=2)
+        example_input = next(iter(dl))
+        model.example_input_array = example_input
 
     if cfg.get("test"):
         log.info("Starting testing!")
