@@ -6,6 +6,10 @@ import torch
 from lightning import LightningModule
 from torch import Tensor
 
+from src.utils import color_log
+
+py_logger = color_log.get_pylogger(__name__)
+
 
 class SimpleRetrievalModule(LightningModule):
     def __init__(

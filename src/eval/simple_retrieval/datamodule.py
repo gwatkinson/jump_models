@@ -10,9 +10,9 @@ from torch.utils.data import DataLoader
 
 from src.models.jump_cl.dataset import MoleculeImageDataset
 from src.modules.collate_fn import default_collate
-from src.utils import pylogger
+from src.utils import color_log
 
-py_logger = pylogger.get_pylogger(__name__)
+py_logger = color_log.get_pylogger(__name__)
 
 
 class SimpleRetrievalDataModule(LightningDataModule):
@@ -85,8 +85,9 @@ class SimpleRetrievalDataModule(LightningDataModule):
         return df
 
     def setup(self, stage: Optional[str] = None) -> None:
-        if (stage == "retrieval" or stage is None) and self.retrieval_dataset is None:
+        if (stage == "retrieval" or stage is None or stage == "predict") and self.retrieval_dataset is None:
             py_logger.info("Preparing retrieval dataset")
+            print("Preparing retrieval dataset")
 
             retrieval_load_df = pd.read_parquet(Path(self.split_path) / "retrieval_load_df.parquet")
             retrieval_load_df = self.replace_root_dir(retrieval_load_df)

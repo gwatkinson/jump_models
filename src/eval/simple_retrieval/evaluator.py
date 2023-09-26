@@ -23,9 +23,9 @@ from torchmetrics.retrieval import (
 )
 
 from src.eval import Evaluator
-from src.utils import pylogger
+from src.utils import color_log
 
-py_logger = pylogger.get_pylogger(__name__)
+py_logger = color_log.get_pylogger(__name__)
 
 
 def concat_from_list_of_dict_to_list(res, key):
