@@ -63,6 +63,7 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     example_input = None
     if cfg.get("load_first_bacth"):
         log.info("Loading first batch...")
+        print("Loading first batch...")
         datamodule.prepare_data()
         datamodule.setup("test")
         dl = datamodule.test_dataloader(batch_size=2)
