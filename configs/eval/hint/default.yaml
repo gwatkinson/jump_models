@@ -10,7 +10,7 @@ model:
 
   phase: ???  # "I", "II", "III"
 
-  freeze_molecule_encoder: False
+  freeze_molecule_encoder: True
   lr: 8e-5
 
   compound_transform: ${data.compound_transform}
