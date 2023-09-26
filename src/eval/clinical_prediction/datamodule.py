@@ -76,6 +76,8 @@ class HintClinicalDataset(Dataset):
 
 
 class HintClinicalDataModule(LightningDataModule):
+    default_phase = Optional[Literal["I", "II", "III"]] = None
+
     def __init__(
         self,
         hint_dir: str,
@@ -92,7 +94,7 @@ class HintClinicalDataModule(LightningDataModule):
         super().__init__()
 
         self.hint_dir = hint_dir
-        self.phase = phase
+        self.phase = phase or self.default_phase
 
         # dataset args
         self.smiless_col = smiless_col
@@ -188,12 +190,12 @@ class HintClinicalDataModule(LightningDataModule):
 
 
 class HintClinicalDataModulePhaseI(HintClinicalDataModule):
-    phase = "I"
+    default_phase = "I"
 
 
 class HintClinicalDataModulePhaseII(HintClinicalDataModule):
-    phase = "II"
+    default_phase = "II"
 
 
 class HintClinicalDataModulePhaseIII(HintClinicalDataModule):
-    phase = "III"
+    default_phase = "III"

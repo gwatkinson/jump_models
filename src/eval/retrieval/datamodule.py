@@ -128,6 +128,7 @@ class IDRRetrievalDataModule(LightningDataModule):
         target_col: str = "Activity_Flag",
         smiles_col: str = "SMILES",
         img_collate_fn: Optional[Callable] = default_collate,
+        **kwargs,
     ):
         super().__init__()
 

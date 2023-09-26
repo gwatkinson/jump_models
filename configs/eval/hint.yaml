@@ -1,4 +1,4 @@
 defaults:
-  - hint/phase_I@_here_
-  - hint/phase_II@_here_
-  - hint/phase_III@_here_
+  - hint/phaseI@_here_
+  - hint/phaseII@_here_
+  - hint/phaseIII@_here_
