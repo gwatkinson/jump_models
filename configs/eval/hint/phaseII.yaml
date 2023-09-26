@@ -20,10 +20,10 @@ phaseII:
 
   callbacks:
     early_stopping:
-      monitor: hint/phase_II/val/BinaryAUROC
+      monitor: hint/phase_II/val/loss
 
     model_checkpoint:
-      monitor: hint/phase_II/val/BinaryAUROC
+      monitor: hint/phase_II/val/loss
       dirpath: ${eval.phaseII.trainer.default_root_dir}/checkpoints
 
     wandb_plotter:

@@ -10,8 +10,8 @@ model:
 
   phase: ???  # "I", "II", "III"
 
-  freeze_molecule_encoder: False
-  lr: 8e-6
+  freeze_molecule_encoder: True
+  lr: 1e-5
 
   compound_transform: ${data.compound_transform}
 
@@ -20,6 +20,7 @@ model:
 
   scheduler:
     warmup_epochs: 10
+    warmup_start_lr: 1e-6
     max_epochs: ${eval.default_hint.trainer.max_epochs}
 
   example_input_path: ${model.example_input_path}
