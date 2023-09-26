@@ -55,8 +55,6 @@ class HintClinicalModule(LightningModule):
         optimizer: Optional[torch.optim.Optimizer] = None,
         scheduler: Optional[torch.optim.lr_scheduler.LRScheduler] = None,
         criterion: Optional[torch.nn.Module] = None,
-        molecule_encoder: Optional[nn.Module] = None,
-        molecule_encoder_attribute_name: str = "molecule_encoder",
         compound_transform: Optional[Callable] = None,
         example_input: Optional[torch.Tensor] = None,
         example_input_path: Optional[str] = None,
@@ -80,15 +78,9 @@ class HintClinicalModule(LightningModule):
         self.phase = phase or self.default_phase
 
         # encoder
-        if not (molecule_encoder or (cross_modal_module and molecule_encoder_attribute_name)):
-            raise ValueError("Either molecule_encoder or cross_modal_module with attribute name must be provided.")
-
-        if molecule_encoder is not None:
-            self.molecule_encoder = copy.deepcopy(molecule_encoder)
-            self.model_name = molecule_encoder.__class__.__name__
-        else:
-            self.molecule_encoder = copy.deepcopy(getattr(cross_modal_module, molecule_encoder_attribute_name))
-            self.model_name = self.molecule_encoder.__class__.__name__
+        self.molecule_encoder = copy.deepcopy(cross_modal_module.molecule_encoder)
+        self.molecule_projection_head = copy.deepcopy(cross_modal_module.molecule_projection_head)
+        self.model_name = self.molecule_encoder.__class__.__name__
 
         if freeze_molecule_encoder:
             for p in self.molecule_encoder.parameters():
@@ -100,7 +92,7 @@ class HintClinicalModule(LightningModule):
             self.compound_transform.compound_str_type = "smiles"
 
         # head
-        self.embedding_dim = self.molecule_encoder.out_dim
+        self.embedding_dim = self.molecule_projection_head.out_features
         self.head = MLP(
             input_dim=self.embedding_dim,
             out_dim=2,
@@ -182,6 +174,7 @@ class HintClinicalModule(LightningModule):
         batched_graphs, ids = self.get_batched_graphs(smiles_lst_lst)
 
         b_emb = self.molecule_encoder(batched_graphs)
+        b_emb = self.molecule_projection_head(b_emb)
         ids = torch.IntTensor(ids).to(self.device)
 
         # Average the embeddings wrt the ids
@@ -196,7 +189,9 @@ class HintClinicalModule(LightningModule):
         return mean
 
     def forward(self, compound, **kwargs):
-        return self.molecule_encoder(compound)
+        b_emb = self.molecule_encoder(compound)
+        b_emb = self.molecule_projection_head(b_emb)
+        return b_emb
 
     def model_step(self, batch: Any, stage: str = "train", on_step_loss=True):
         smiles_list = batch["smiles_list"]

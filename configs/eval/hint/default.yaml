@@ -11,9 +11,12 @@ model:
   phase: ???  # "I", "II", "III"
 
   freeze_molecule_encoder: True
-  lr: 8e-5
+  lr: 3e-5
 
   compound_transform: ${data.compound_transform}
+
+  optimizer:
+    weight_decay: 0.05
 
   scheduler:
     warmup_epochs: 10
