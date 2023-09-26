@@ -31,6 +31,7 @@ logger = pylogger.get_pylogger(__name__)
 
 class HintClinicalModule(LightningModule):
     prefix: str = "hint"
+    default_phase: Optional[Literal["I", "II", "III"]] = None
 
     default_criterion = nn.CrossEntropyLoss
 
@@ -74,7 +75,7 @@ class HintClinicalModule(LightningModule):
             ],
         )
 
-        self.phase = phase
+        self.phase = phase or self.default_phase
 
         # encoder
         if not (molecule_encoder or (cross_modal_module and molecule_encoder_attribute_name)):
@@ -296,12 +297,12 @@ class HintClinicalModule(LightningModule):
 
 
 class HintClinicalModulePhaseI(HintClinicalModule):
-    phase = "I"
+    default_phase = "I"
 
 
 class HintClinicalModulePhaseII(HintClinicalModule):
-    phase = "II"
+    default_phase = "II"
 
 
 class HintClinicalModulePhaseIII(HintClinicalModule):
-    phase = "III"
+    default_phase = "III"

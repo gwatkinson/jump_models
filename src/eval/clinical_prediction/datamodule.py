@@ -76,7 +76,7 @@ class HintClinicalDataset(Dataset):
 
 
 class HintClinicalDataModule(LightningDataModule):
-    default_phase = Optional[Literal["I", "II", "III"]] = None
+    default_phase: Optional[Literal["I", "II", "III"]] = None
 
     def __init__(
         self,
