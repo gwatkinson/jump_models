@@ -138,8 +138,8 @@ def main(ckpt_path: str, eval_cfg, devices, test, strict) -> None:
 
     cfg.ckpt_path = ckpt_path
     cfg.test = test
-    if not test:
-        cfg.load_first_bacth = False
+
+    cfg.load_first_bacth = True
 
     eval_cfg_path = Path(cfg.paths.root_dir) / "configs" / "eval" / f"{eval_cfg}.yaml"
     if not eval_cfg_path.exists():
