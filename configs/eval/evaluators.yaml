@@ -1,8 +1,5 @@
 defaults:
   - simple_retrieval/retrieval@_here_
-  - retrieval/idr_graph_retrieval@_here_
-  - batch_effect/default@_here_
-  - batch_effect/plate_normalized@_here_
   # - ogb/tox21@_here_
   - ogb/lipo@_here_
   - ogb/esol@_here_
@@ -11,3 +8,6 @@ defaults:
   - hint/phaseI@_here_
   - hint/phaseII@_here_
   - hint/phaseIII@_here_
+  - retrieval/idr_graph_retrieval@_here_
+  - batch_effect/default@_here_
+  - batch_effect/plate_normalized@_here_
