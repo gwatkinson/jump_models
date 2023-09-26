@@ -101,6 +101,7 @@ class NTXentMultiplePositives(LossWithTemperature):
 
         batch_size, metric_dim = z1.size()
         z2 = z2.view(batch_size, -1, metric_dim)  # [batch_size, num_conformers, metric_dim]
+        _, num_conformers, _ = z2.size()
 
         sim_matrix = torch.einsum("ik,juk->iju", z1, z2)  # [batch_size, batch_size, num_conformers]
 
@@ -115,7 +116,22 @@ class NTXentMultiplePositives(LossWithTemperature):
         loss = pos_sim / (sim_matrix.sum(dim=1) - pos_sim)  # [batch_size, num_conformers]
         loss = -torch.log(loss).mean()
 
-        return loss
+        loss_dict = {"loss": loss}
+
+        if self.return_rank:
+            results_dict = defaultdict(list)
+            for i in range(num_conformers):
+                sub_sim = sim_matrix[:, :, i]
+                results = calculate_rank(sub_sim, only_average=True)
+                for k, v in results.items():
+                    results_dict[k].append(v)
+                    loss_dict[f"{k}_{i}"] = v
+
+            for k, v in results_dict.items():
+                loss_dict[f"{k}_mean"] = torch.stack(v).mean()
+                loss_dict[f"{k}_std"] = torch.stack(v).std()
+
+        return loss_dict
 
 
 class MultiviewIntraModalNTXentLoss(LossWithTemperature):

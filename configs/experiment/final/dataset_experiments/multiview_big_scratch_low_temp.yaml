@@ -3,6 +3,7 @@
 defaults:
   - /experiment/final/dataset_experiments/multiview_default.yaml@_global_
   - override /model/molecule_encoder: pna.yaml
+  - override /model/image_encoder: resnet34.yaml
 
 
 data:
@@ -19,13 +20,15 @@ model:
   dropout: 0.2
 
   criterion:
-    temperature: 0.03
+    temperature: 0.3
     temperature_requires_grad: True
     lambda_image: 0.5
 
   optimizer:
     weight_decay: 0.1
 
+  image_encoder:
+    pretrained: False
 
 trainer:
   devices: ???
