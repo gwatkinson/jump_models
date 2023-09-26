@@ -95,7 +95,6 @@ class NTXentMultiplePositives(LossWithTemperature):
         :param z2: batchsize, num_conformers, metric dim
 
         always the same number of conformers are required
-        # TODO: make it work with different number of conformers with padding and masking ???
         """
         z1, z2 = compound_emb, image_emb
 

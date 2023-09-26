@@ -139,12 +139,6 @@ def main(ckpt_path: str, eval_cfg, devices, test, strict) -> None:
     if not test:
         cfg.load_first_bacth = False
 
-    cfg.strict = strict
-    cfg.task = "eval"
-
-    cfg.logger.wandb.name += "_eval"
-    cfg.logger.wandb.job_type = "eval"
-
     eval_cfg_path = Path(cfg.paths.root_dir) / "configs" / "eval" / f"{eval_cfg}.yaml"
     if not eval_cfg_path.exists():
         raise ValueError(f"Config for {eval_cfg} not found!")
@@ -152,9 +146,16 @@ def main(ckpt_path: str, eval_cfg, devices, test, strict) -> None:
     abs_config_dir = str(eval_cfg_path.parent.parent.resolve())
 
     with initialize_config_dir(version_base=None, config_dir=abs_config_dir):
-        eval_cfg = compose(config_name=f"eval/{eval_cfg}")
+        eval_cfg_dict = compose(config_name=f"eval/{eval_cfg}")
 
-    cfg.eval = eval_cfg.eval
+    cfg.strict = strict
+    cfg.task = "eval"
+
+    cfg.logger.wandb.group += "_eval"
+    cfg.logger.wandb.name += f"_eval_{eval_cfg}" if eval_cfg else "_eval"
+    cfg.logger.wandb.job_type = "eval"
+
+    cfg.eval = eval_cfg_dict.eval
     cfg.evaluate = True
 
     if devices is not None:
