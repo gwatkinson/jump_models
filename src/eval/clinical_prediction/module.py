@@ -104,8 +104,8 @@ class HintClinicalModule(LightningModule):
         self.head = MLP(
             input_dim=self.embedding_dim,
             out_dim=2,
-            embedding_dim=[self.embedding_dim // 2, self.embedding_dim // 4],
-            norm_layer=nn.LayerNorm,
+            embedding_dim=[self.embedding_dim // 2, self.embedding_dim // 2, self.embedding_dim // 4],
+            norm_layer=nn.BatchNorm1d,
             dropout=0.2,
         )
 

@@ -8,7 +8,6 @@ phaseII:
     compound_transform: ${data.compound_transform}
 
     scheduler:
-      warmup_epochs: 5
       max_epochs: ${eval.phaseI.trainer.max_epochs}
 
 
