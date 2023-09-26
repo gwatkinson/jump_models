@@ -23,6 +23,7 @@ from torchmetrics.classification import (
 )
 
 from src.modules.collate_fn import default_collate
+from src.modules.layers.mlp import MLP
 from src.modules.lr_schedulers.warmup_wrapper import WarmUpWrapper
 from src.utils import pylogger
 
@@ -49,6 +50,7 @@ class HintClinicalModule(LightningModule):
     def __init__(
         self,
         phase: Optional[Literal["I", "II", "III"]] = None,
+        freeze_molecule_encoder: bool = True,
         cross_modal_module: Optional[LightningModule] = None,
         optimizer: Optional[torch.optim.Optimizer] = None,
         scheduler: Optional[torch.optim.lr_scheduler.LRScheduler] = None,
@@ -88,6 +90,10 @@ class HintClinicalModule(LightningModule):
             self.molecule_encoder = copy.deepcopy(getattr(cross_modal_module, molecule_encoder_attribute_name))
             self.model_name = self.molecule_encoder.__class__.__name__
 
+        if freeze_molecule_encoder:
+            for p in self.molecule_encoder.parameters():
+                p.requires_grad = False
+
         # compound transform
         self.compound_transform = compound_transform
         if self.compound_transform is not None:
@@ -95,10 +101,12 @@ class HintClinicalModule(LightningModule):
 
         # head
         self.embedding_dim = self.molecule_encoder.out_dim
-        self.head = nn.Sequential(
-            nn.Linear(self.embedding_dim, self.embedding_dim),
-            nn.ReLU(),
-            nn.Linear(self.embedding_dim, 2),
+        self.head = MLP(
+            input_dim=self.embedding_dim,
+            out_dim=2,
+            embedding_dim=[self.embedding_dim // 2, self.embedding_dim // 4],
+            norm_layer=nn.LayerNorm,
+            dropout=0.2,
         )
 
         # loss function

@@ -44,7 +44,7 @@ class HintClinicalDataset(Dataset):
     def check_smiles_list(self, smiles_list_str):
         smiles_list = self.smiles_txt_to_lst(smiles_list_str)
         valid_smiles = []
-        invalid_smiles = ["[Na+].[Cl-]", "[Cl-].[Na+]", "O", "[Se]", "[Sm]", "[Zn]", "[Li+]"]
+        invalid_smiles = ["[Na+].[Cl-]", "[Cl-].[Na+]", "O", "[Se]", "[Sm]", "[Zn]", "[Li+]", "[Cl-].[Cl-].[Mg+2]"]
 
         for smiles in smiles_list:
             if smiles in invalid_smiles:
