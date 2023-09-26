@@ -14,7 +14,7 @@ phase_III:
 
     scheduler:
       warmup_epochs: 5
-      max_epochs: ${eval.phase_III.trainer.max_epochs}
+      max_epochs: ??? # ${eval.phase_III.trainer.max_epochs}
 
     example_input_path: ${model.example_input_path}
     # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt

@@ -21,6 +21,8 @@ class ProjectionHead(nn.Sequential):
             nn.Linear(in_dim, embedding_dim),
         ]
 
+        self.out_features = embedding_dim
+
         for _ in range(n_layers - 1):
             layers.append(nn.ReLU())
             layers.append(nn.Dropout(dropout))

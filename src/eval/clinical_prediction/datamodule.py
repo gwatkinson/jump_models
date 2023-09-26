@@ -76,11 +76,10 @@ class HintClinicalDataset(Dataset):
 
 
 class HintClinicalDataModule(LightningDataModule):
-    phase: Optional[Literal["I", "II", "III"]] = None
-
     def __init__(
         self,
         hint_dir: str,
+        phase: Optional[Literal["I", "II", "III"]] = None,
         collate_fn: Optional[Callable] = default_collate,
         smiless_col: str = "smiless",
         label_col: str = "label",
@@ -93,6 +92,7 @@ class HintClinicalDataModule(LightningDataModule):
         super().__init__()
 
         self.hint_dir = hint_dir
+        self.phase = phase
 
         # dataset args
         self.smiless_col = smiless_col
