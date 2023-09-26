@@ -19,6 +19,7 @@ from torchmetrics.classification import (
 )
 from torchmetrics.regression import MeanAbsoluteError, MeanSquaredError, R2Score
 
+from src.modules.layers.mlp import MLP
 from src.modules.lr_schedulers.warmup_wrapper import WarmUpWrapper
 from src.utils import pylogger
 
@@ -50,8 +51,8 @@ class OGBClassificationModule(LightningModule):
         cross_modal_module: LightningModule,
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
+        freeze_molecule_encoder: bool = False,
         criterion: Optional[torch.nn.Module] = None,
-        molecule_encoder_attribute_name: str = "molecule_encoder",
         example_input: Optional[torch.Tensor] = None,
         example_input_path: Optional[str] = None,
         lr: float = 1e-3,
@@ -63,18 +64,24 @@ class OGBClassificationModule(LightningModule):
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False, ignore=["cross_modal_module"])
-
         # encoder
-        # self.cross_modal_module = cross_modal_module
-
-        if not (cross_modal_module and molecule_encoder_attribute_name):
-            raise ValueError("Cross_modal_module with attribute name must be provided.")
-
-        self.molecule_encoder = copy.deepcopy(getattr(cross_modal_module, molecule_encoder_attribute_name))
+        self.molecule_encoder = copy.deepcopy(cross_modal_module.molecule_encoder)
+        self.molecule_projection_head = copy.deepcopy(cross_modal_module.molecule_projection_head)
         self.model_name = self.molecule_encoder.__class__.__name__
 
-        self.embedding_dim = self.molecule_encoder.out_dim
-        self.head = nn.Linear(self.embedding_dim, self.out_dim)
+        if freeze_molecule_encoder:
+            for p in self.molecule_encoder.parameters():
+                p.requires_grad = False
+
+        # head
+        self.embedding_dim = self.molecule_projection_head.out_features
+        self.head = MLP(
+            input_dim=self.embedding_dim,
+            out_dim=2,
+            embedding_dim=[self.embedding_dim // 2, self.embedding_dim // 4],
+            norm_layer=nn.BatchNorm1d,
+            dropout=0.2,
+        )
 
         # lr
         self.lr = lr
@@ -83,6 +90,7 @@ class OGBClassificationModule(LightningModule):
         # model
         self.model = nn.Sequential(
             self.molecule_encoder,
+            self.molecule_projection_head,
             self.head,
         )
 

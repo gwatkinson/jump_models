@@ -60,6 +60,7 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info(f"Instantiating model <{cfg.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(cfg.model)
 
+    example_input = None
     if cfg.get("load_first_bacth"):
         log.info("Loading first batch...")
         datamodule.prepare_data()
@@ -103,6 +104,7 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
                 cfg.eval[key],
                 model_cfg=cfg.model,
                 logger=logger,
+                example_input=example_input,
                 ckpt_path=cfg.ckpt_path,
                 strict=cfg.strict,
             )

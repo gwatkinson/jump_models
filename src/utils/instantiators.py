@@ -5,6 +5,7 @@ import hydra
 from lightning import Callback
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig, open_dict
+from torch import Tensor
 
 from src.utils import pylogger
 
@@ -59,6 +60,7 @@ def instantiate_evaluator(
     evaluator_cfg: DictConfig,
     model_cfg: DictConfig,
     logger: Optional[List[Logger]] = None,
+    example_input: Optional[Tensor] = None,
     ckpt_path: Optional[str] = None,
     strict: bool = True,
     name: Optional[str] = None,
@@ -76,7 +78,7 @@ def instantiate_evaluator(
         if "model" in evaluator_cfg:
             log.info("Instantiating model")
             model = hydra.utils.instantiate(model_cfg)
-            module = hydra.utils.instantiate(evaluator_cfg.model, cross_modal_module=model)
+            module = hydra.utils.instantiate(evaluator_cfg.model, cross_modal_module=model, example_input=example_input)
         else:
             raise ValueError("Evaluator config must contain a model!")
 
