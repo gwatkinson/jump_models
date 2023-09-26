@@ -109,9 +109,9 @@ class WandbPlottingCallback(WandbTrainingCallback):
         if not self.no_logger and self.num_figs > 0:
             plot_metrics = getattr(pl_module, f"{phase}_plot_metrics")
             current_epoch = trainer.current_epoch
-            table = self.tables[phase]
 
-            data = [current_epoch]
+            figs = []
+
             for name, metric in plot_metrics.items():
                 if "ConfusionMatrix" in name:
                     array = metric.compute().cpu().numpy()
@@ -131,12 +131,11 @@ class WandbPlottingCallback(WandbTrainingCallback):
                 else:
                     fig_, ax_ = metric.plot(**self.plot_kws)
                 metric.reset()
-                data.append(wandb.Image(fig_))
-                plt.close(fig_)
+                figs.append(fig_)
 
-            table.add_data(*data)
             key = f"{self.prefix}{phase}_plots"
-            self.logger.log_table(key=key, columns=table.columns, data=table.data)
+            self.logger.log_image(key=key, images=[figs], step=current_epoch)
+            self.logger.save()
 
     def on_train_epoch_end(self, trainer, pl_module):
         if not self.no_logger and (
