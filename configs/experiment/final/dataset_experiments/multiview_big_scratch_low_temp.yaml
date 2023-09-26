@@ -2,7 +2,7 @@
 
 defaults:
   - /experiment/final/dataset_experiments/multiview_default.yaml@_global_
-  - override /model/criterion: multiview_ntxent.yaml
+  - override /model/molecule_encoder: pna.yaml
 
 
 data:
@@ -15,14 +15,16 @@ data:
 
 model:
   embedding_dim: 1024
-  lr: 1e-4
+  lr: 8e-4
   dropout: 0.2
 
   criterion:
-    temperature: 0.3
+    temperature: 0.03
     temperature_requires_grad: True
     lambda_image: 0.5
 
+  optimizer:
+    weight_decay: 0.1
 
 
 trainer:
@@ -32,6 +34,6 @@ trainer:
 
 logger:
   wandb:
-    name: big_dataset_multiview_no_intra
+    name: big_dataset_multiview_from_scratch_low_temp
     group: multiview
     project: big_dataset_multiview
