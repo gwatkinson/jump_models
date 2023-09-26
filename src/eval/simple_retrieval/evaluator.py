@@ -39,6 +39,8 @@ def concat_from_list_of_dict_to_list(res, key):
 def concat_from_list_of_dict_to_tensor(res, key):
     if isinstance(res[0][key], torch.Tensor):
         out = torch.cat([r[key] for r in res], dim=0)
+    elif isinstance(res[0][key], (int, float)):
+        out = [r[key] for r in res]
     else:
         out = concat_from_list_of_dict_to_list(res, key)
     return out
@@ -152,12 +154,20 @@ class SimpleRetrievalEvaluator(Evaluator):
                 )
 
         for metric in self.metric_keys:
-            result_dict[f"retrieval/1:100/mol_to_img/{metric}_avg"] = np.mean(result_dict[f"mol_to_img/{metric}"])
-            result_dict[f"retrieval/1:100/img_to_mol/{metric}_avg"] = np.mean(result_dict[f"img_to_mol/{metric}"])
-            result_dict[f"retrieval/1:100/avg/{metric}_avg"] = np.mean(result_dict[f"avg/{metric}"])
-            result_dict[f"retrieval/1:100/mol_to_img/{metric}_std"] = np.std(result_dict[f"mol_to_img/{metric}"])
-            result_dict[f"retrieval/1:100/img_to_mol/{metric}_std"] = np.std(result_dict[f"img_to_mol/{metric}"])
-            result_dict[f"retrieval/1:100/avg/{metric}_std"] = np.std(result_dict[f"avg/{metric}"])
+            result_dict[f"retrieval/1:100/mol_to_img/{metric}_avg"] = np.mean(
+                result_dict[f"retrieval/1:100/mol_to_img/{metric}"]
+            )
+            result_dict[f"retrieval/1:100/img_to_mol/{metric}_avg"] = np.mean(
+                result_dict[f"retrieval/1:100/img_to_mol/{metric}"]
+            )
+            result_dict[f"retrieval/1:100/avg/{metric}_avg"] = np.mean(result_dict[f"retrieval/1:100/avg/{metric}"])
+            result_dict[f"retrieval/1:100/mol_to_img/{metric}_std"] = np.std(
+                result_dict[f"retrieval/1:100/mol_to_img/{metric}"]
+            )
+            result_dict[f"retrieval/1:100/img_to_mol/{metric}_std"] = np.std(
+                result_dict[f"retrieval/1:100/img_to_mol/{metric}"]
+            )
+            result_dict[f"retrieval/1:100/avg/{metric}_std"] = np.std(result_dict[f"retrieval/1:100/avg/{metric}"])
 
         if log:
             self.log_metrics(result_dict)
@@ -203,12 +213,20 @@ class SimpleRetrievalEvaluator(Evaluator):
                 )
 
         for metric in self.metric_keys:
-            result_dict[f"retrieval/1:1000/mol_to_img/{metric}_avg"] = np.mean(result_dict[f"mol_to_img/{metric}"])
-            result_dict[f"retrieval/1:1000/img_to_mol/{metric}_avg"] = np.mean(result_dict[f"img_to_mol/{metric}"])
-            result_dict[f"retrieval/1:1000/avg/{metric}_avg"] = np.mean(result_dict[f"avg/{metric}"])
-            result_dict[f"retrieval/1:1000/mol_to_img/{metric}_std"] = np.std(result_dict[f"mol_to_img/{metric}"])
-            result_dict[f"retrieval/1:1000/img_to_mol/{metric}_std"] = np.std(result_dict[f"img_to_mol/{metric}"])
-            result_dict[f"retrieval/1:1000/avg/{metric}_std"] = np.std(result_dict[f"avg/{metric}"])
+            result_dict[f"retrieval/1:1000/mol_to_img/{metric}_avg"] = np.mean(
+                result_dict[f"retrieval/1:1000/mol_to_img/{metric}"]
+            )
+            result_dict[f"retrieval/1:1000/img_to_mol/{metric}_avg"] = np.mean(
+                result_dict[f"retrieval/1:1000/img_to_mol/{metric}"]
+            )
+            result_dict[f"retrieval/1:1000/avg/{metric}_avg"] = np.mean(result_dict[f"retrieval/1:1000/avg/{metric}"])
+            result_dict[f"retrieval/1:1000/mol_to_img/{metric}_std"] = np.std(
+                result_dict[f"retrieval/1:1000/mol_to_img/{metric}"]
+            )
+            result_dict[f"retrieval/1:1000/img_to_mol/{metric}_std"] = np.std(
+                result_dict[f"retrieval/1:1000/img_to_mol/{metric}"]
+            )
+            result_dict[f"retrieval/1:1000/avg/{metric}_std"] = np.std(result_dict[f"retrieval/1:1000/avg/{metric}"])
 
         if log:
             self.log_metrics(result_dict)
@@ -270,7 +288,11 @@ class SimpleRetrievalEvaluator(Evaluator):
 
     def save_metrics(self, metrics, name="metrics.json"):
         try:
-            with open(Path(self.trainer.default_root_dir) / name, "w") as f:
+            out = Path(self.trainer.default_root_dir) / name
+            if not out.parent.exists():
+                print("Creating parent directory")
+                out.parent.mkdir(parents=True)
+            with open(out, "w") as f:
                 json.dump(metrics, f)
         except Exception as e:
             py_logger.warning(f"Could not save metrics: {e}")

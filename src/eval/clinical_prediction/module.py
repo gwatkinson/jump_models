@@ -192,7 +192,7 @@ class HintClinicalModule(LightningModule):
 
     def model_step(self, batch: Any, stage: str = "train", on_step_loss=True):
         smiles_list = batch["smiles_list"]
-        targets = batch["label"].float().view(-1, 1)
+        targets = batch["label"]
 
         compound_embeddings = self.forward_smiles_lst_lst(smiles_list)
         logits = self.head(compound_embeddings)

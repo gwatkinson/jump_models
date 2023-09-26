@@ -152,7 +152,7 @@ class OGBClassificationModule(LightningModule):
 
     def model_step(self, batch: Any, stage: str = "train", on_step_loss=True):
         compound = batch["compound"]
-        targets = batch["label"]
+        targets = batch["label"].squeeze().long()
 
         logits = self.model(compound)
 
@@ -263,6 +263,27 @@ class OGBRegressionModule(OGBClassificationModule):
         R2Score,
     ]
     plot_metrics = []
+
+    def model_step(self, batch: Any, stage: str = "train", on_step_loss=True):
+        compound = batch["compound"]
+        targets = batch["label"]
+
+        logits = self.model(compound)
+
+        loss = self.criterion(logits, targets)
+
+        # update metrics
+        self.loss_dict[stage](loss)
+        self.plot_metrics_dict[stage](logits[:, -1], targets)
+        other_metrics = self.other_metrics_dict[stage](logits[:, -1], targets)
+
+        # log metrics
+        self.log(
+            f"{self.log_prefix}/{stage}/loss", self.loss_dict[stage], on_step=on_step_loss, on_epoch=True, prog_bar=True
+        )
+        self.log_dict(other_metrics, on_step=False, on_epoch=True, prog_bar=False)
+
+        return {"loss": loss}
 
 
 class BBBPModule(OGBClassificationModule):

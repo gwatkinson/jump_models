@@ -1,14 +1,13 @@
 defaults:
+  - simple_retrieval/retrieval@_here_
   - retrieval/idr_graph_retrieval@_here_
-  - batch_effect/random@_here_
-  - batch_effect/plate_aware@_here_
-  - batch_effect/source_aware@_here_
-  # - moa/image_task@_here_
-  - ogb/tox21@_here_
+  - batch_effect/default@_here_
+  - batch_effect/plate_normalized@_here_
+  # - ogb/tox21@_here_
   - ogb/lipo@_here_
   - ogb/esol@_here_
   - ogb/bbbp@_here_
   - ogb/hiv@_here_
-  - hint/phase_I@_here_
-  - hint/phase_II@_here_
-  - hint/phase_III@_here_
+  - hint/phaseI@_here_
+  - hint/phaseII@_here_
+  - hint/phaseIII@_here_

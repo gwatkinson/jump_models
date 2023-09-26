@@ -28,7 +28,7 @@ simple_retrieval:
 
     use_compond_cache: False
 
-    data_root_dir: null
+    data_root_dir: ${paths.projects_dir}/
     split_path: ${data.split_path}
 
     channels: [DNA,AGP,ER,Mito,RNA]
