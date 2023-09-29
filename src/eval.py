@@ -172,7 +172,7 @@ def main(ckpt_path: str, eval_cfg, devices, test, strict) -> None:
             except AttributeError:
                 print(evaluator)
 
-    cfg.extras.print_eval = True
+    cfg.extras.print_eval = False
 
     utils.extras(cfg)
 

@@ -85,7 +85,7 @@ class SimpleRetrievalDataModule(LightningDataModule):
         return df
 
     def setup(self, stage: Optional[str] = None) -> None:
-        if (stage == "retrieval" or stage is None or stage == "predict") and self.retrieval_dataset is None:
+        if self.retrieval_dataset is None:
             py_logger.info("Preparing retrieval dataset")
             print("Preparing retrieval dataset")
 
