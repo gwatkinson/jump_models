@@ -57,10 +57,10 @@ lipo:
 
   callbacks:
     early_stopping:
-      monitor: ogb/lipo/val/loss
+      monitor: ogb/lipophilicity/val/loss
 
     model_checkpoint:
-      monitor: ogb/lipo/val/loss
+      monitor: ogb/lipophilicity/val/loss
       dirpath: ${eval.lipo.trainer.default_root_dir}/checkpoints
 
     wandb_plotter:

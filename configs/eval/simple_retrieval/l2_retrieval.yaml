@@ -7,8 +7,7 @@ simple_retrieval:
     _target_: src.eval.simple_retrieval.evaluator.SimpleRetrievalEvaluator
     name: IDRRetrieval
     visualize_kwargs: null
-    distance_metric: cosine
-
+    distance_metric: l2
 
   model:
     _target_: src.eval.simple_retrieval.module.SimpleRetrievalModule
