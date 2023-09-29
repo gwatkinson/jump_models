@@ -42,7 +42,7 @@ class IDRRetrievalMoleculeDataset(Dataset):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(n_groups={len(self.compound_groups)})"
 
-    def __getitem__(self, idx: int):
+    def getitem(self, idx: int):
         indexes = self.compound_groups[idx]
 
         targets = self.excape_db.loc[indexes][self.target_col].values
@@ -65,6 +65,16 @@ class IDRRetrievalMoleculeDataset(Dataset):
         }
 
         return output
+
+    def __getitem__(self, idx: int):
+        for t in range(10):
+            try:
+                it = self.getitem(idx)
+                return it
+            except Exception as e:
+                logger.warning(f"Failed to get item {idx} with error {e}. Trying again ({t + 1}/10)")
+                idx = np.random.randint(0, len(self))
+        raise RuntimeError(f"Failed to get item {idx} after 10 tries")
 
 
 class IDRRetrievalImageDataset(Dataset):
