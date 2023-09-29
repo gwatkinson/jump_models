@@ -2,6 +2,7 @@ import json
 import os.path as osp
 from typing import Any, Callable, Dict, List, Optional
 
+import numpy as np
 import pandas as pd
 import torch
 from lightning.pytorch import LightningDataModule
@@ -36,7 +37,7 @@ class IDRRetrievalMoleculeDataset(Dataset):
             self.compound_transform.compound_str_type = "smiles"
 
     def __len__(self):
-        return len(self.selected_compounds)
+        return len(self.compound_groups)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(n_groups={len(self.compound_groups)})"
@@ -55,8 +56,11 @@ class IDRRetrievalMoleculeDataset(Dataset):
         else:
             transformed_compounds = smiles
 
+        str_to_int = {"A": 1, "N": 0}
+        tr_targets = np.array([str_to_int[i] for i in targets])
+
         output = {
-            "activity_flag": targets,  # List of 0s and 1s
+            "activity_flag": tr_targets,  # List of 0s and 1s
             "compound": transformed_compounds,  # Batch of compounds (120 compounds)  -> use batch_size=1 and squeeze
         }
 
@@ -132,7 +136,6 @@ class IDRRetrievalDataModule(LightningDataModule):
     ):
         super().__init__()
 
-        # self.selected_compounds_path = selected_compounds_path
         self.image_metadata_path = image_metadata_path
         self.selected_group_path = selected_group_path
         self.excape_db_path = excape_db_path  # ../cpjump1/excape-db/processed_groups.json
@@ -163,7 +166,6 @@ class IDRRetrievalDataModule(LightningDataModule):
 
         self.compound_groups: Optional[pd.DataFrame] = None
         self.excape_db: Optional[pd.DataFrame] = None
-        # self.selected_compounds: Optional[pd.DataFrame] = None
         self.image_metadata: Optional[pd.DataFrame] = None
         self.genes: Optional[List[str]] = None
 
@@ -270,10 +272,4 @@ class IDRRetrievalDataModule(LightningDataModule):
         pass
 
     def __repr__(self):
-        if self.selected_compounds is None or self.image_metadata is None:
-            return f"{self.__class__.__name__}()"
-
-        return f"""{self.__class__.__name__}(
-    n_compounds={len(self.selected_compounds)},
-    n_images={len(self.image_metadata)}
-)"""
+        return f"{self.__class__.__name__}()"

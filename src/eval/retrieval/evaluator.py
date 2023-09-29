@@ -45,19 +45,15 @@ class IDRRetrievalEvaluator(Evaluator):
 
         predict_loaders = self.datamodule.predict_dataloader()
 
-        out_metrics = defaultdict(lambda: defaultdict(lambda: 0))
+        out_metrics = defaultdict(lambda: defaultdict(list))
         for gene in predict_loaders:
             # List of the embeddings of each group -> Ng x 120 x E
             compound_embs = self.trainer.predict(self.model, predict_loaders[gene]["molecule"])
-
-            # activities = concat_from_list_of_dict(compound_emb, "activity_flag")
-            # compound_emb = concat_from_list_of_dict(compound_emb, "compound")
 
             image_emb = self.trainer.predict(self.model, predict_loaders[gene]["image"])
             # Only needed if more images than batch size (rare) -> Ni x E
             image_emb = concat_from_list_of_dict(image_emb, "image")
 
-            num_groups = len(compound_embs)
             for group in compound_embs:
                 activities = group["activity_flag"]
                 compound_emb = group["compound"]
@@ -67,29 +63,25 @@ class IDRRetrievalEvaluator(Evaluator):
                 )
 
                 for metric in gene_group_metrics:
-                    out_metrics[gene][metric] += gene_group_metrics[metric] / num_groups
+                    out_metrics[gene][metric].append(gene_group_metrics[metric])
 
-        out_metrics = dict(out_metrics)
+        aggregate_metrics = {}
+        for gene in out_metrics:
+            for metric in out_metrics[gene]:
+                aggregate_metrics[f"{gene}/{metric}_mean"] = out_metrics[gene][metric].mean()
+                aggregate_metrics[f"{gene}/{metric}_std"] = out_metrics[gene][metric].std()
+                aggregate_metrics[f"Average/{metric}"] = 0
 
-        mean_metrics = defaultdict(lambda: 0)
         num_genes = len(out_metrics)
         for gene in out_metrics:
             for metric in out_metrics[gene]:
-                mean_metrics[metric] += out_metrics[gene][metric] / num_genes
-        mean_metrics = dict(mean_metrics)
-
-        out_metrics["Average"] = mean_metrics
-
-        unfold_metrics = {}
-        for gene in out_metrics:
-            for metric in out_metrics[gene]:
-                unfold_metrics[f"{gene}/{metric}"] = out_metrics[gene][metric]
+                aggregate_metrics[f"Average/{metric}"] += aggregate_metrics[f"{gene}/{metric}_mean"] / num_genes
 
         for logger in self.trainer.loggers:
-            logger.log_metrics(unfold_metrics)
+            logger.log_metrics(aggregate_metrics)
             logger.save()
 
-        return unfold_metrics
+        return aggregate_metrics
 
     def visualize(self, outs, **kwargs):
         pass

@@ -24,21 +24,21 @@ class IDRRetrievalModule(LightningModule):
     retrieval_metrics = MetricCollection(
         {
             "RetrievalMRR": RetrievalMRR(),
-            "RetrievalHitRate_top_1": RetrievalHitRate(top_k=1),
-            "RetrievalHitRate_top_3": RetrievalHitRate(top_k=3),
-            "RetrievalHitRate_top_5": RetrievalHitRate(top_k=5),
+            "RetrievalHitRate_top_01": RetrievalHitRate(top_k=1),
+            "RetrievalHitRate_top_03": RetrievalHitRate(top_k=3),
+            "RetrievalHitRate_top_05": RetrievalHitRate(top_k=5),
             "RetrievalHitRate_top_10": RetrievalHitRate(top_k=10),
-            "RetrievalFallOut_top_1": RetrievalFallOut(top_k=1),
-            "RetrievalFallOut_top_5": RetrievalFallOut(top_k=5),
-            "RetrievalMAP_top_1": RetrievalMAP(top_k=1),
-            "RetrievalMAP_top_5": RetrievalMAP(top_k=5),
-            "RetrievalPrecision_top_1": RetrievalPrecision(top_k=1),
-            "RetrievalPrecision_top_3": RetrievalPrecision(top_k=3),
-            "RetrievalPrecision_top_5": RetrievalPrecision(top_k=5),
+            "RetrievalFallOut_top_01": RetrievalFallOut(top_k=1),
+            "RetrievalFallOut_top_05": RetrievalFallOut(top_k=5),
+            "RetrievalMAP_top_01": RetrievalMAP(top_k=1),
+            "RetrievalMAP_top_05": RetrievalMAP(top_k=5),
+            "RetrievalPrecision_top_01": RetrievalPrecision(top_k=1),
+            "RetrievalPrecision_top_03": RetrievalPrecision(top_k=3),
+            "RetrievalPrecision_top_05": RetrievalPrecision(top_k=5),
             "RetrievalPrecision_top_10": RetrievalPrecision(top_k=10),
-            "RetrievalRecall_top_1": RetrievalRecall(top_k=1),
-            "RetrievalRecall_top_3": RetrievalRecall(top_k=3),
-            "RetrievalRecall_top_5": RetrievalRecall(top_k=5),
+            "RetrievalRecall_top_01": RetrievalRecall(top_k=1),
+            "RetrievalRecall_top_03": RetrievalRecall(top_k=3),
+            "RetrievalRecall_top_05": RetrievalRecall(top_k=5),
             "RetrievalRecall_top_10": RetrievalRecall(top_k=10),
             "RetrievalNormalizedDCG": RetrievalNormalizedDCG(),
         }
@@ -107,11 +107,11 @@ class IDRRetrievalModule(LightningModule):
             with contextlib.suppress(Exception):
                 compound = compound.squeeze()
 
-            output["compound"] = self.molecule_encoder(compound)
+            output["compound"] = self.molecule_projection_head(self.molecule_encoder(compound))
             output["activity_flag"] = batch["activity_flag"].squeeze()
 
         if "image" in batch:
-            output["image"] = self.image_encoder(batch["image"])
+            output["image"] = self.image_projection_head(self.image_encoder(batch["image"]))
 
         return output
 

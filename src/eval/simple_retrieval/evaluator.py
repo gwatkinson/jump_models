@@ -161,6 +161,7 @@ class SimpleRetrievalEvaluator(Evaluator):
             py_logger.warning(f"Could not compute 1:1000 retrieval metrics: {e}")
 
     def retrieval_1_to_100(self, predictions, log=True, save=True):
+        print("retrieval_1_to_100")
         predictions = copy.deepcopy(predictions)
         result_dict = defaultdict(list)
 
@@ -215,9 +216,12 @@ class SimpleRetrievalEvaluator(Evaluator):
         if save:
             self.save_metrics(result_dict, name="metrics_1_to_100.json")
 
+        print("Done")
+
         return result_dict
 
     def retrieval_1_to_1000(self, predictions, log=True, save=True):
+        print("retrieval_1_to_1000")
         predictions = copy.deepcopy(predictions)
         result_dict = defaultdict(list)
         keys = predictions[0].keys()
@@ -275,6 +279,8 @@ class SimpleRetrievalEvaluator(Evaluator):
         if save:
             self.save_metrics(result_dict, name="metrics_1_to_1000.json")
 
+        print("Done")
+
         return result_dict
 
     def visualize_similarity_dist(self, predictions, log=True, save=True):
@@ -323,6 +329,10 @@ class SimpleRetrievalEvaluator(Evaluator):
 
         if log:
             self.log_visualization(fig)
+
+        print("Done")
+
+        return fig
 
     def visualize_embeddings(self, predictions, log=True, save=True):
         predictions = copy.deepcopy(predictions)
@@ -380,6 +390,8 @@ class SimpleRetrievalEvaluator(Evaluator):
 
         if log:
             self.log_visualization(fig)
+
+        print("Done")
 
         return fig
 
