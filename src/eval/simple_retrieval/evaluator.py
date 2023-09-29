@@ -328,7 +328,7 @@ class SimpleRetrievalEvaluator(Evaluator):
             self.save_sns_visualization(fig, name="sim_dist.png")
 
         if log:
-            self.log_visualization(fig)
+            self.log_visualization(fig, "sim_dist")
 
         print("Done")
 
@@ -389,7 +389,7 @@ class SimpleRetrievalEvaluator(Evaluator):
             self.save_visualization(fig, name="embedding_viz.html")
 
         if log:
-            self.log_visualization(fig)
+            self.log_visualization(fig, "embedding_viz")
 
         print("Done")
 
@@ -438,10 +438,10 @@ class SimpleRetrievalEvaluator(Evaluator):
         except Exception as e:
             py_logger.warning(f"Could not save visualization: {e}")
 
-    def log_visualization(self, fig):
+    def log_visualization(self, fig, key="retrieval/visualization"):
         for logger in self.trainer.loggers:
             try:
-                logger.experiment.log({"visualization": fig})
+                logger.experiment.log({key: fig})
                 logger.save()
             except Exception as e:
                 py_logger.warning(f"Could not log visualization to {logger}: {e}")

@@ -5,6 +5,7 @@ import os.path as osp
 import shutil
 from typing import Any, Callable, Dict, List, Optional
 
+import numpy as np
 import pandas as pd
 import torch
 from lightning import LightningDataModule
@@ -69,17 +70,7 @@ class OGBDataset(Dataset):
                 self.cached_smiles[compound] = tr_compound
             return tr_compound
 
-    def __getitem__(self, idx: int):
-        """Returns the data at the given index.
-
-        Args:
-            idx (int):
-                The index of the data to return.
-
-        Returns:
-            Tuple[str, torch.Tensor]:
-                The smile and the classes.
-        """
+    def getitem(self, idx):
         id_ = self.ids[idx]
 
         smile = self.mapping.loc[id_, self.smiles_col]
@@ -93,6 +84,18 @@ class OGBDataset(Dataset):
         y = torch.FloatTensor(y)
 
         return {"compound": tr_compound, "label": y}
+
+    def __getitem__(self, idx: int):
+        for t in range(10):
+            try:
+                return self.getitem(idx)
+            except Exception as e:
+                logger.warning(f"Error in getitem: {e}")
+                logger.warning(f"Retrying {t+1}/10")
+                idx = np.random.randint(0, len(self))
+                continue
+
+        raise RuntimeError("Failed to get item after 10 retries")
 
     def get_default_collate_fn(self):
         return label_graph_collate_function
