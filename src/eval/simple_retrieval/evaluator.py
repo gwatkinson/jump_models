@@ -145,6 +145,11 @@ class SimpleRetrievalEvaluator(Evaluator):
             py_logger.warning(f"Could not visualize: {e}")
 
         try:
+            self.visualize_similarity_dist(predictions, log=True, save=True)
+        except Exception as e:
+            py_logger.warning(f"Could not visualize similarity distribution: {e}")
+
+        try:
             self.retrieval_1_to_100(predictions, log=True, save=True)
         except Exception as e:
             py_logger.warning(f"Could not compute 1:100 retrieval metrics: {e}")
@@ -356,6 +361,7 @@ class SimpleRetrievalEvaluator(Evaluator):
         proj_df = pd.DataFrame(proj_dict)
         proj_df["pos_sim"] = 1 + proj_df["sim"]
 
+        print("Plotting...")
         fig = px.scatter(
             proj_df,
             x="x",
@@ -384,11 +390,12 @@ class SimpleRetrievalEvaluator(Evaluator):
 
     def save_metrics(self, metrics, name="metrics.json"):
         try:
-            json_metrics = {k: v.numpy().tolist() for k, v in metrics.items()}
+            json_metrics = {k: np.array(v).tolist() for k, v in metrics.items()}
             out = Path(self.trainer.default_root_dir) / name
             if not out.parent.exists():
                 print("Creating parent directory")
                 out.parent.mkdir(parents=True)
+            print(f"Saving metrics to {out}")
             with open(out, "w") as f:
                 json.dump(json_metrics, f)
         except Exception as e:
@@ -400,6 +407,7 @@ class SimpleRetrievalEvaluator(Evaluator):
             if not out.parent.exists():
                 print("Creating parent directory")
                 out.parent.mkdir(parents=True)
+            print(f"Saving visualization to {out}")
             fig.write_html(out)
         except Exception as e:
             py_logger.warning(f"Could not save visualization: {e}")
@@ -410,6 +418,7 @@ class SimpleRetrievalEvaluator(Evaluator):
             if not out.parent.exists():
                 print("Creating parent directory")
                 out.parent.mkdir(parents=True)
+            print(f"Saving visualization to {out}")
             fig.savefig(out)
         except Exception as e:
             py_logger.warning(f"Could not save visualization: {e}")
