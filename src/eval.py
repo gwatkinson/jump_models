@@ -154,7 +154,8 @@ def main(ckpt_path: str, eval_cfg, devices, test, strict) -> None:
     cfg.strict = strict
     cfg.task = "eval"
 
-    cfg.logger.wandb.group += "_eval"
+    cfg.logger.wandb.project = "evaluation"
+    cfg.logger.wandb.group = None
     cfg.logger.wandb.name += f"_eval_{eval_cfg}" if eval_cfg else "_eval"
     cfg.logger.wandb.job_type = "eval"
 

@@ -13,7 +13,8 @@ from lightning import LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers.wandb import WandbLogger
 from scikitplot.metrics import plot_confusion_matrix, plot_precision_recall, plot_roc
 from sklearn.linear_model import LogisticRegression
-from sklearn.manifold import TSNE
+
+# from sklearn.manifold import TSNE
 from sklearn.metrics import (
     accuracy_score,
     balanced_accuracy_score,
@@ -26,6 +27,7 @@ from sklearn.metrics import (
 )
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import LabelEncoder
+from umap import UMAP
 
 from src.eval import Evaluator
 from src.eval.batch_effect.spherize import ZCA_corr
@@ -419,19 +421,21 @@ class BatchEffectEvaluator(Evaluator):
             raise ValueError("embeddings_df is None, please run get_embeddings first")
 
         print("Fitting t-SNE...")
-        tsne = TSNE(n_components=2, random_state=0)
+        tsne = UMAP(n_components=2, random_state=0, metric="cosine")
         embeddings = tsne.fit_transform(np.array(self.embeddings_df[self.embedding_col].tolist()))
 
         self.embeddings_df = self.embeddings_df.assign(x=embeddings[:, 0], y=embeddings[:, 1]).sample(frac=1)
 
+        print("Plotting t-SNE...")
         images = [
-            self.plot_tsne("label", f"{key}/t-SNE colored by labels"),
-            self.plot_tsne("batch", f"{key}/t-SNE colored by batch", remove_legend=True),
-            self.plot_tsne("plate", f"{key}/t-SNE colored by plate", remove_legend=True),
-            self.plot_tsne("well", f"{key}/t-SNE colored by well", remove_legend=True),
-            self.plot_tsne("source", f"{key}/t-SNE colored by source"),
+            self.plot_tsne("label", f"{key}/UMAP colored by labels"),
+            self.plot_tsne("batch", f"{key}/UMAP colored by batch", remove_legend=True),
+            self.plot_tsne("plate", f"{key}/UMAP colored by plate", remove_legend=True),
+            self.plot_tsne("well", f"{key}/UMAP colored by well", remove_legend=True),
+            self.plot_tsne("source", f"{key}/UMAP colored by source"),
         ]
 
+        print("Saving t-SNE plots...")
         # Log plots to WandB
         try:
             if self.logger:
@@ -440,6 +444,9 @@ class BatchEffectEvaluator(Evaluator):
                 self.logger.save()
         except Exception as e:
             print(f"Error while logging t-SNE plots: {e}")
+
+        print("Done")
+        return images
 
     def get_metric_dict(self, cls, X_test, y_test, key, log=True, save=True):
         # Metrics

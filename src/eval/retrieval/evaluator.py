@@ -43,10 +43,12 @@ class IDRRetrievalEvaluator(Evaluator):
         pass
 
     def run(self):
+        print("Preparing the data...")
         self.datamodule.prepare_data()
         self.datamodule.setup(stage="predict")
         self.model.eval()
 
+        print("Getting the embeddings for the compounds and images...")
         predict_loaders = self.datamodule.predict_dataloader()
 
         out_metrics = defaultdict(lambda: defaultdict(list))
@@ -69,6 +71,7 @@ class IDRRetrievalEvaluator(Evaluator):
                 for metric in gene_group_metrics:
                     out_metrics[gene][metric].append(gene_group_metrics[metric])
 
+        print("Aggregating the metrics...")
         aggregate_metrics = defaultdict(lambda: 0)
         for gene in out_metrics:
             for metric in out_metrics[gene]:
@@ -82,8 +85,10 @@ class IDRRetrievalEvaluator(Evaluator):
 
         aggregate_metrics = dict(aggregate_metrics)
 
+        print("Logging the metrics...")
         for logger in self.trainer.loggers:
             logger.log_metrics(aggregate_metrics)
             logger.save()
 
+        print("Done!")
         return aggregate_metrics

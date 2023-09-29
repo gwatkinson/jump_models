@@ -10,4 +10,4 @@ defaults:
   - hint/phaseIII@_here_
   - retrieval/idr_graph_retrieval@_here_
   - batch_effect/default@_here_
-  - batch_effect/plate_normalized@_here_
+  # - batch_effect/plate_normalized@_here_

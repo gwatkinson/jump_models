@@ -19,7 +19,7 @@ hydra-colorlog = "^1.0"
 wandb = "^0.15.4"
 pyrootutils = "^1.0.4"
 rich = "^13.4.2"
-pydantic = "<2.0"
+# pydantic = "<2.0"
 hydra-optuna-sweeper = "^1.2.0"
 tables = "^3.8.0"
 # omero-upload = "^0.4.0"
@@ -27,6 +27,9 @@ colorlog = "^6.7.0"
 kneed = "^0.8.5"
 imblearn = "^0.0"
 scikit-plot = "^0.3.7"
+pytorch-warmup = "^0.1.1"
+ema-pytorch = "^0.2.3"
+dalle2-pytorch = "^1.15.1"
 
 
 [tool.poetry.group.torch.dependencies]
