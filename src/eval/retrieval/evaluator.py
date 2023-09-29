@@ -1,6 +1,7 @@
 from collections import defaultdict
 from typing import Optional
 
+import numpy as np
 import torch
 from lightning import LightningDataModule, LightningModule, Trainer
 
@@ -38,7 +39,10 @@ class IDRRetrievalEvaluator(Evaluator):
         # No finetuning for retrieval tasks
         pass
 
-    def evaluate(self):
+    def visualize(self, outs, **kwargs):
+        pass
+
+    def run(self):
         self.datamodule.prepare_data()
         self.datamodule.setup(stage="predict")
         self.model.eval()
@@ -65,23 +69,21 @@ class IDRRetrievalEvaluator(Evaluator):
                 for metric in gene_group_metrics:
                     out_metrics[gene][metric].append(gene_group_metrics[metric])
 
-        aggregate_metrics = {}
+        aggregate_metrics = defaultdict(lambda: 0)
         for gene in out_metrics:
             for metric in out_metrics[gene]:
-                aggregate_metrics[f"{gene}/{metric}_mean"] = out_metrics[gene][metric].mean()
-                aggregate_metrics[f"{gene}/{metric}_std"] = out_metrics[gene][metric].std()
-                aggregate_metrics[f"Average/{metric}"] = 0
+                aggregate_metrics[f"{gene}/{metric}_mean"] = np.mean(out_metrics[gene][metric])
+                aggregate_metrics[f"{gene}/{metric}_std"] = np.std(out_metrics[gene][metric])
 
         num_genes = len(out_metrics)
         for gene in out_metrics:
             for metric in out_metrics[gene]:
                 aggregate_metrics[f"Average/{metric}"] += aggregate_metrics[f"{gene}/{metric}_mean"] / num_genes
 
+        aggregate_metrics = dict(aggregate_metrics)
+
         for logger in self.trainer.loggers:
             logger.log_metrics(aggregate_metrics)
             logger.save()
 
         return aggregate_metrics
-
-    def visualize(self, outs, **kwargs):
-        pass
