@@ -116,6 +116,7 @@ class SimpleRetrievalEvaluator(Evaluator):
         self.datamodule = datamodule
         self.trainer = trainer
 
+        self.metric_str = distance_metric
         if distance_metric is None or distance_metric == "cosine":
             self.distance_metric = pairwise_cosine_similarity
             self.one_to_one = F.cosine_similarity
@@ -313,6 +314,7 @@ class SimpleRetrievalEvaluator(Evaluator):
             x="sim",
             hue="label",
             common_norm=False,
+            cut=0,
         )
         fig = dist_plot.get_figure()
 
@@ -345,7 +347,7 @@ class SimpleRetrievalEvaluator(Evaluator):
         print(f"{len(total_emb)} items to plot")
 
         print("Computing UMAP...")
-        pca = UMAP(n_components=2)
+        pca = UMAP(n_components=2, metric=self.metric_str)
         proj = pca.fit_transform(total_emb)
 
         proj_dict = {
@@ -360,6 +362,7 @@ class SimpleRetrievalEvaluator(Evaluator):
 
         proj_df = pd.DataFrame(proj_dict)
         proj_df["pos_sim"] = 1 + proj_df["sim"]
+        proj_df = proj_df.sample(frac=1)
 
         print("Plotting...")
         fig = px.scatter(
@@ -367,8 +370,8 @@ class SimpleRetrievalEvaluator(Evaluator):
             x="x",
             y="y",
             color="source",
-            size="pos_sim",
-            symbol="type",
+            # size="pos_sim",
+            # symbol="type",
             hover_data=["labels", "pair_id", "sim"],
         )
 
