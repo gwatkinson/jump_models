@@ -105,12 +105,15 @@ class IDRRetrievalEvaluator(Evaluator):
             mol_loader = predict_loaders[gene]["molecule"]
             img_loader = predict_loaders[gene]["image"]
             # List of the embeddings of each group -> Ng x 120 x E
+            print("Getting the embeddings for the compounds...")
             compound_embs = self.trainer.predict(self.model, mol_loader)
 
+            print("Getting the embeddings for the images...")
             image_emb = self.trainer.predict(self.model, img_loader)
             # Only needed if more images than batch size (rare) -> Ni x E
             image_emb = concat_from_list_of_dict(image_emb, "image")
 
+            print("Calculating the metrics...")
             for group in compound_embs:
                 activities = group["activity_flag"]
                 compound_emb = group["compound"]
