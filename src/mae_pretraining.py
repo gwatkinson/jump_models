@@ -110,7 +110,7 @@ def main():
         strategy="auto",
         devices=[0, 1, 2],
         max_epochs=50,
-        precision="16-mixed",
+        # precision="16-mixed",
         sync_batchnorm=True,
         detect_anomaly=True,
         check_val_every_n_epoch=1,

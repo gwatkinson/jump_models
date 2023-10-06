@@ -367,23 +367,10 @@ class MAEModule(LightningModule):
 
         loss = res.loss
 
-        losses = self.all_gather(loss, sync_grads=True)
-        mean_loss = torch.mean(losses)
-
         self.log(
             f"{stage}/loss",
-            mean_loss,
-            prog_bar=True,
-            on_step=(stage == "train"),
-            on_epoch=True,
-            logger=True,
-            sync_dist=True,
-        )
-
-        self.log(
-            f"{stage}/pix_loss",
             loss,
-            prog_bar=False,
+            prog_bar=True,
             on_step=(stage == "train"),
             on_epoch=True,
             logger=True,
@@ -398,11 +385,11 @@ class MAEModule(LightningModule):
                 print(f"Could not plot example prediction: {e}")
                 self.failed_once = True
 
-        if not torch.isfinite(mean_loss):
-            py_logger.error(f"Loss of batch {batch_idx} is not finite: {mean_loss}")
+        if not torch.isfinite(loss):
+            py_logger.error(f"Loss of batch {batch_idx} is not finite: {loss}")
             return None
 
-        return mean_loss
+        return loss
 
     def training_step(self, batch, batch_idx):
         return self.model_step(batch, batch_idx, stage="train")
