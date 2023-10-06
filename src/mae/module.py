@@ -221,6 +221,8 @@ class MAEModule(LightningModule):
         total_train_batch_size = self.batch_size * self.world_size
         self.lr = self.base_lr * total_train_batch_size / 256
 
+        self.failed_once = False
+
     def prepare_jump(self) -> None:
         out_path = Path(self.mae_dir) / "jump.pickle"
         if out_path.exists():
@@ -367,22 +369,23 @@ class MAEModule(LightningModule):
 
         self.log(f"{stage}/loss", loss, prog_bar=True, on_step=(stage == "train"), on_epoch=True, logger=True)
 
-        failed_once = False
-        if batch_idx == 0 and not failed_once:
+        if batch_idx == 0 and not self.failed_once:
             try:
                 all_batch = self.all_gather(batch)
-                all_batch = all_batch.view(-1, batch.size(1), batch.size(2))
-                all_mask = self.all_gather(res.mask)
-                all_mask = all_mask.view(-1, res.mask.size(1), res.mask.size(2))
-                all_logits = self.all_gather(res.logits)
-                all_logits = all_logits.view(-1, res.logits.size(1), res.logits.size(2))
+                print(all_batch.size())
+                #     all_batch = self.all_gather(batch)
+                #     all_batch = all_batch.view(-1, batch.size(1), batch.size(2))
+                #     all_mask = self.all_gather(res.mask)
+                #     all_mask = all_mask.view(-1, res.mask.size(1), res.mask.size(2))
+                #     all_logits = self.all_gather(res.logits)
+                #     all_logits = all_logits.view(-1, res.logits.size(1), res.logits.size(2))
 
                 # plot a example prediction
-                fig = self.plot_example_pred(all_batch, all_logits, all_mask)
+                fig = self.plot_example_pred(batch, res.logits, res.mask)
                 self.logger.experiment.log({f"{stage}/example_pred": fig})
             except Exception as e:
                 print(f"Could not plot example prediction: {e}")
-                failed_once = True
+                self.failed_once = True
 
         return loss
 

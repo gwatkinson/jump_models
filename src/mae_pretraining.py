@@ -44,7 +44,7 @@ def main():
 
     data_config = MAEDatasetConfig(
         train_test_val_split=(0.8, 0.1, 0.1),
-        batch_size=8,
+        batch_size=32,
         transform=transform,
         prefetch_factor=2,
         pin_memory=True,
@@ -115,6 +115,7 @@ def main():
         logger=logger,
         callbacks=callbacks,
         num_sanity_val_steps=1,
+        log_every_n_steps=1,
         overfit_batches=3,
     )
 
