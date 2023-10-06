@@ -99,8 +99,8 @@ def main():
 
     trainer = Trainer(
         accelerator="gpu",
-        strategy="ddp",
-        devices=[0, 1, 2],
+        strategy="auto",
+        devices=[1],
         max_epochs=50,
         precision="16-mixed",
         sync_batchnorm=True,
@@ -109,6 +109,8 @@ def main():
         logger=logger,
         callbacks=callbacks,
         num_sanity_val_steps=1,
+        fast_dev_run=True,
+        overfit_batches=3,
     )
 
     trainer.fit(module)

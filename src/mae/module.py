@@ -32,6 +32,59 @@ def jump_to_img_paths(load_df, channels=default_channels):
     return img_paths
 
 
+def plot_example(ex):
+    if ex.dtype == torch.float32:
+        ex = (ex.numpy() * 255).astype(np.uint8)
+
+    fig, axs = plt.subplots(2, 3, figsize=(10, 6))
+    for i, ax in enumerate(axs.flatten()):
+        if i < 5:
+            ax.imshow(ex[i])
+            ax.axis("off")
+        elif i == 5:
+            ch1 = ex[0]
+            ch2 = ((ex[1] + ex[3]) / 2).astype(np.uint8)
+            ch3 = ((ex[2] + ex[4]) / 2).astype(np.uint8)
+            new = np.stack([ch2, ch1, ch3], axis=-1, dtype=np.uint8)
+            ax.imshow(new)
+            ax.axis("off")
+
+    fig.tight_layout()
+
+    return fig
+
+
+def plot_example_pred(real, masked, pred):
+    fig, axs = plt.subplots(6, 3, figsize=(12, 18))
+
+    titles = ["Masked", "Reconstructed", "Real"]
+    tensors = [masked, pred, real]
+
+    for j in range(3):
+        ex = tensors[j].detach().cpu()
+
+        if ex.dtype == torch.float32:
+            ex = (ex.numpy() * 255).astype(np.uint8)
+
+        for i in range(6):
+            ax = axs[i, j]
+            if i == 0:
+                ch1 = ex[0]
+                ch2 = ((ex[1] + ex[3]) / 2).astype(np.uint8)
+                ch3 = ((ex[2] + ex[4]) / 2).astype(np.uint8)
+                new = np.stack([ch2, ch1, ch3], axis=-1, dtype=np.uint8)
+                ax.imshow(new)
+                ax.axis("off")
+                ax.set(title=titles[j])
+            else:
+                ax.imshow(ex[i - 1])
+                ax.axis("off")
+
+    fig.tight_layout()
+
+    return fig
+
+
 def rxrx_to_img_paths(load_df, order=default_order):
     img_paths = []
     for i, row in load_df.iterrows():
@@ -84,23 +137,9 @@ class DiverseImageDataset(Dataset):
 
         return image
 
-    def plot_example(self, idx):
+    def plot_idx(self, idx):
         ex = self[idx]
-        fig, axs = plt.subplots(2, 3, figsize=(14, 8))
-        for i, ax in enumerate(axs.flatten()):
-            if i < 5:
-                ax.imshow(ex[i])
-                ax.axis("off")
-            elif i == 5:
-                ch1 = ex[0]
-                ch2 = ((ex[1] + ex[3]) / 2).astype(np.uint8)
-                ch3 = ((ex[2] + ex[4]) / 2).astype(np.uint8)
-                new = np.stack([ch2, ch1, ch3], axis=-1, dtype=np.uint8)
-                ax.imshow(new)
-                ax.axis("off")
-
-        fig.tight_layout()
-
+        fig = plot_example(ex)
         return fig
 
 
@@ -174,7 +213,7 @@ class MAEModule(LightningModule):
 
         try:
             self.world_size = self.trainer.world_size
-        except AttributeError:
+        except Exception:
             self.world_size = 1
 
         total_train_batch_size = self.batch_size * self.world_size
@@ -300,12 +339,36 @@ class MAEModule(LightningModule):
         # x shape: (B, 5, 512, 512)
         return self.vit_mae_for_pretraining(x, **kwargs)
 
+    def plot_example_pred(self, batch, res):
+        idx = 0
+        model = self.vit_mae_for_pretraining
+
+        with torch.no_grad():
+            real_image = batch[idx].cpu()
+
+            prediction = res.logits
+            pred_image = model.unpatchify(prediction)[idx].detach().cpu()
+
+            patches = model.patchify(batch)
+            masks = res.mask.unsqueeze(-1).expand_as(patches)
+            masked_patches = patches * masks
+            masked_images = model.unpatchify(masked_patches)[idx].detach().cpu()
+
+            fig = plot_example_pred(real_image, masked_images, pred_image)
+
+        return fig
+
     def model_step(self, batch, batch_idx, stage=None):
         res = self(batch)
 
         loss = res.loss
 
-        self.log(f"{stage}_loss", loss, prog_bar=True, on_step=(stage == "train"), on_epoch=True, logger=True)
+        self.log(f"{stage}/loss", loss, prog_bar=True, on_step=(stage == "train"), on_epoch=True, logger=True)
+
+        if batch_idx == 0:
+            # plot a example prediction
+            fig = self.plot_example_pred(batch, res)
+            self.logger.experiment.log({f"{stage}/example_pred": fig})
 
         return loss
 
