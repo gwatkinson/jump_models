@@ -65,7 +65,7 @@ def plot_example_pred(real, masked, pred):
     for j in range(3):
         ex = tensors[j].detach().cpu().numpy()
 
-        if ex.dtype == np.float32:
+        if ex.dtype != np.uint8:
             ex = (ex * 255).astype(np.uint8)
 
         for i in range(6):
@@ -341,18 +341,18 @@ class MAEModule(LightningModule):
         # x shape: (B, 5, 512, 512)
         return self.vit_mae_for_pretraining(x, **kwargs)
 
-    def plot_example_pred(self, batch, res):
+    def plot_example_pred(self, batch, logits, mask):
         idx = 0
         model = self.vit_mae_for_pretraining
 
         with torch.no_grad():
             real_image = batch[idx].cpu()
 
-            prediction = res.logits
+            prediction = logits
             pred_image = model.unpatchify(prediction)[idx].detach().cpu()
 
             patches = model.patchify(batch)
-            masks = res.mask.unsqueeze(-1).expand_as(patches)
+            masks = mask.unsqueeze(-1).expand_as(patches)
             masked_patches = patches * masks
             masked_images = model.unpatchify(masked_patches)[idx].detach().cpu()
 
@@ -367,13 +367,22 @@ class MAEModule(LightningModule):
 
         self.log(f"{stage}/loss", loss, prog_bar=True, on_step=(stage == "train"), on_epoch=True, logger=True)
 
-        if batch_idx == 0:
+        failed_once = False
+        if batch_idx == 0 and not failed_once:
             try:
+                all_batch = self.all_gather(batch)
+                all_batch = all_batch.view(-1, batch.size(1), batch.size(2))
+                all_mask = self.all_gather(res.mask)
+                all_mask = all_mask.view(-1, res.mask.size(1), res.mask.size(2))
+                all_logits = self.all_gather(res.logits)
+                all_logits = all_logits.view(-1, res.logits.size(1), res.logits.size(2))
+
                 # plot a example prediction
-                fig = self.plot_example_pred(batch, res)
+                fig = self.plot_example_pred(all_batch, all_logits, all_mask)
                 self.logger.experiment.log({f"{stage}/example_pred": fig})
             except Exception as e:
                 print(f"Could not plot example prediction: {e}")
+                failed_once = True
 
         return loss
 
