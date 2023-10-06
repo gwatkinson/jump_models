@@ -30,6 +30,7 @@ scikit-plot = "^0.3.7"
 pytorch-warmup = "^0.1.1"
 ema-pytorch = "^0.2.3"
 dalle2-pytorch = "^1.15.1"
+lion-pytorch = "^0.1.2"
 
 
 [tool.poetry.group.torch.dependencies]

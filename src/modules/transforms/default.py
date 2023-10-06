@@ -1,5 +1,5 @@
 import torch
-import torchvision.transforms.v2 as T
+import torchvision.transforms as T
 
 from src.modules.transforms.color_jitter import ColorJitterPerChannel
 from src.modules.transforms.drop_channel import DropTransform
@@ -46,14 +46,14 @@ class NormalizeBeforeCrop(torch.nn.Module):
 
 
 class SimpleTransform(T.Compose):
-    def __init__(self, size=256):
+    def __init__(self, size=256, p=0.5):
         super().__init__(
             (
-                T.RandomHorizontalFlip(),
-                T.RandomVerticalFlip(),
+                T.Lambda(lambda x: x.transpose(1, 2, 0) if x.shape[0] == 5 else x),
+                T.ToTensor(),
+                T.RandomHorizontalFlip(p=p),
+                T.RandomVerticalFlip(p=p),
                 T.RandomCrop(size, pad_if_needed=True),
-                T.ToImageTensor(),
-                T.ConvertImageDtype(),
                 FillNaNs(nan=0.0, posinf=None, neginf=None),
             )
         )
@@ -62,7 +62,7 @@ class SimpleTransform(T.Compose):
 class ComplexTransform(T.Compose):
     def __init__(
         self,
-        size=256,
+        size=512,
         flip_p=0.3,
         drop_p=0.3,
         resize_p=0.3,
@@ -73,18 +73,18 @@ class ComplexTransform(T.Compose):
         sigma=(1.0, 3.0),
         intensity=0.3,
         brightness=0.5,
-        use_flip=True,
-        use_blur=True,
-        use_color_jitter=True,
-        use_drop=True,
-        use_resized_crop=True,
-        fill_nan=True,
+        use_flip=False,
+        use_blur=False,
+        use_color_jitter=False,
+        use_drop=False,
+        use_resized_crop=False,
+        fill_nan=False,
     ):
-        transforms = [
-            T.ToImageTensor(),
-            T.ConvertImageDtype(),
-        ]
         sigma = (float(sigma[0]), float(sigma[1]))
+        transforms = [
+            T.Lambda(lambda x: x.transpose(1, 2, 0) if x.shape[0] == 5 else x),
+            T.ToTensor(),
+        ]
 
         if use_flip:
             transforms.append(T.RandomHorizontalFlip(p=flip_p))
@@ -124,7 +124,7 @@ class ComplexTransform(T.Compose):
                 )
             )
         else:
-            transforms.append(T.RandomCrop(size, pad_if_needed=True))
+            transforms.append(T.RandomCrop(size, pad_if_needed=False))
 
         if use_drop:
             transforms.append(DropTransform(p=drop_p))
