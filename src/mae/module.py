@@ -203,8 +203,8 @@ class MAEModule(LightningModule):
         self.persistent_workers = data_config.persistent_workers
 
         # optimizer setup
-        self.optimizer_partial = optimizer_config.optimizer
-        self.scheduler_partial = optimizer_config.scheduler
+        self.optimizer = optimizer_config.optimizer
+        self.scheduler = optimizer_config.scheduler
         self.monitor = optimizer_config.monitor
         self.interval = optimizer_config.interval
         self.frequency = optimizer_config.frequency

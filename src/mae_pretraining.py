@@ -1,6 +1,7 @@
 import logging
 from functools import partial
 
+import dotenv
 from lightning.pytorch import Trainer
 from lightning.pytorch.callbacks import (
     EarlyStopping,
@@ -15,6 +16,8 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 
 from src.mae.module import MAEDatasetConfig, MAEModule, MAEOptimizerConfig, ViTMAEConfig
 from src.modules.transforms import SimpleTransform
+
+dotenv.load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 
