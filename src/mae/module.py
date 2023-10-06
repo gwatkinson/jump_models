@@ -33,7 +33,9 @@ def jump_to_img_paths(load_df, channels=default_channels):
 
 
 def plot_example(ex):
-    if ex.dtype == torch.float32:
+    ex = ex.detach().cpu().numpy()
+
+    if ex.dtype == np.float32:
         ex = (ex.numpy() * 255).astype(np.uint8)
 
     fig, axs = plt.subplots(2, 3, figsize=(10, 6))
@@ -61,10 +63,10 @@ def plot_example_pred(real, masked, pred):
     tensors = [masked, pred, real]
 
     for j in range(3):
-        ex = tensors[j].detach().cpu()
+        ex = tensors[j].detach().cpu().numpy()
 
-        if ex.dtype == torch.float32:
-            ex = (ex.numpy() * 255).astype(np.uint8)
+        if ex.dtype == np.float32:
+            ex = (ex * 255).astype(np.uint8)
 
         for i in range(6):
             ax = axs[i, j]
@@ -366,9 +368,12 @@ class MAEModule(LightningModule):
         self.log(f"{stage}/loss", loss, prog_bar=True, on_step=(stage == "train"), on_epoch=True, logger=True)
 
         if batch_idx == 0:
-            # plot a example prediction
-            fig = self.plot_example_pred(batch, res)
-            self.logger.experiment.log({f"{stage}/example_pred": fig})
+            try:
+                # plot a example prediction
+                fig = self.plot_example_pred(batch, res)
+                self.logger.experiment.log({f"{stage}/example_pred": fig})
+            except Exception as e:
+                print(f"Could not plot example prediction: {e}")
 
         return loss
 
