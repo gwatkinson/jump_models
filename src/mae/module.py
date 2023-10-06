@@ -371,8 +371,8 @@ class MAEModule(LightningModule):
 
         if batch_idx == 0 and not self.failed_once:
             try:
-                all_batch = self.all_gather(batch)
-                print(all_batch.size())
+                # all_batch = self.all_gather(batch)
+                # print(all_batch.size())
                 #     all_batch = self.all_gather(batch)
                 #     all_batch = all_batch.view(-1, batch.size(1), batch.size(2))
                 #     all_mask = self.all_gather(res.mask)

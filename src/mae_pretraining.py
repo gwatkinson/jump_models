@@ -58,9 +58,9 @@ def main():
 
     vit_config = ViTMAEConfig(
         image_size=512,
-        patch_size=16,
+        patch_size=32,
         num_channels=5,
-        mask_ratio=0.75,
+        mask_ratio=0.25,
         norm_pix_loss=True,
         hidden_size=768,
         num_hidden_layers=12,
@@ -86,7 +86,7 @@ def main():
 
     callbacks = [
         RichProgressBar(),
-        RichModelSummary(max_depth=1),
+        RichModelSummary(max_depth=2),
         EarlyStopping(
             monitor="val/loss",
             patience=10,
@@ -116,7 +116,7 @@ def main():
         callbacks=callbacks,
         num_sanity_val_steps=1,
         log_every_n_steps=1,
-        overfit_batches=3,
+        # overfit_batches=3,
     )
 
     trainer.fit(module)
