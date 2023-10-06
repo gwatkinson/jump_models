@@ -369,7 +369,7 @@ class MAEModule(LightningModule):
 
         self.log(f"{stage}/loss", loss, prog_bar=True, on_step=(stage == "train"), on_epoch=True, logger=True)
 
-        if batch_idx == 0 and not self.failed_once:
+        if (batch_idx % 1000) == 0 and not self.failed_once:
             try:
                 # all_batch = self.all_gather(batch)
                 # print(all_batch.size())
@@ -411,7 +411,7 @@ class MAEModule(LightningModule):
                 "interval": self.interval,
                 "frequency": self.frequency,
                 "strict": True,
-                "name": "mae/lr",
+                "name": "pretraining/lr",
             }
 
             return {
