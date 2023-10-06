@@ -44,10 +44,11 @@ def main():
 
     data_config = MAEDatasetConfig(
         train_test_val_split=(0.8, 0.1, 0.1),
-        batch_size=128,
+        batch_size=144,
         transform=transform,
         prefetch_factor=2,
         pin_memory=True,
+        persistent_workers=True,
         num_workers=10,
         mae_dir="/projects/cpjump1/mae",
         use_jump=True,
