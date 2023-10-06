@@ -48,7 +48,7 @@ def main():
         transform=transform,
         prefetch_factor=2,
         pin_memory=True,
-        num_workers=12,
+        num_workers=10,
         mae_dir="/projects/cpjump1/mae",
         use_jump=True,
         use_rxrx1=True,
@@ -99,6 +99,7 @@ def main():
             save_last=True,
             save_top_k=1,
             mode="min",
+            every_n_train_steps=1000,
         ),
         LearningRateMonitor(),
     ]
