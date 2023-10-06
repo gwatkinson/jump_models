@@ -48,7 +48,7 @@ def main():
         transform=transform,
         prefetch_factor=2,
         pin_memory=True,
-        num_workers=16,
+        num_workers=12,
         mae_dir="/projects/cpjump1/mae",
         use_jump=True,
         use_rxrx1=True,
