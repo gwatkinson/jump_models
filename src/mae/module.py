@@ -162,12 +162,12 @@ class MAEDatasetConfig:
 
 @dataclass
 class MAEOptimizerConfig:
-    optimizer = None
-    scheduler = None
-    lr = 1e-4
-    monitor = "val/loss"
-    interval = "epoch"
-    frequency = 1
+    optimizer: Optional[Callable] = None
+    scheduler: Optional[Callable] = None
+    lr: float = 1e-4
+    monitor: str = "val/loss"
+    interval: str = "epoch"
+    frequency: int = 1
 
 
 class MAEModule(LightningModule):

@@ -1,3 +1,4 @@
+import logging
 from functools import partial
 
 from lightning.pytorch import Trainer
@@ -14,6 +15,8 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 
 from src.mae.module import MAEDatasetConfig, MAEModule, MAEOptimizerConfig, ViTMAEConfig
 from src.modules.transforms import SimpleTransform
+
+logging.basicConfig(level=logging.INFO)
 
 
 def main():
@@ -100,7 +103,7 @@ def main():
     trainer = Trainer(
         accelerator="gpu",
         strategy="auto",
-        devices=[1],
+        devices=[0, 1, 2],
         max_epochs=50,
         precision="16-mixed",
         sync_batchnorm=True,
