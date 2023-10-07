@@ -63,7 +63,7 @@ def plot_example_pred(real, masked, pred):
     tensors = [masked, pred, real]
 
     for j in range(3):
-        ex = tensors[j].detach().cpu().numpy()
+        ex = tensors[j]
 
         if ex.dtype != np.uint8:
             ex = (ex * 255).astype(np.uint8)
@@ -94,6 +94,20 @@ def rxrx_to_img_paths(load_df, order=default_order):
         img_paths.append(tmp)
 
     return img_paths
+
+
+def normalize_channel(img):
+    img = img.astype(np.float32)
+    img = (img - np.min(img)) / (np.max(img) - np.min(img) + np.finfo(float).eps)
+    img = np.clip(img, 0, 1)
+
+    img = (img * 255).astype(np.uint8)
+    return img
+
+
+def normalize_5_channel(img):
+    new = np.stack([normalize_channel(x) for x in img], axis=0)
+    return new
 
 
 def robust_convert_to_8bit(img, percentile=1.0):
@@ -357,17 +371,19 @@ class MAEModule(LightningModule):
         model = self.vit_mae_for_pretraining
 
         with torch.no_grad():
-            real_image = batch[idx].cpu()
+            real_image = batch[idx].detach().cpu().numpy()
+            n_real_image = normalize_5_channel(real_image)
 
             prediction = logits
-            pred_image = model.unpatchify(prediction)[idx].detach().cpu()
+            pred_image = model.unpatchify(prediction)[idx].detach().cpu().numpy()
+            n_pred_image = normalize_5_channel(pred_image)
 
-            patches = model.patchify(batch)
-            masks = mask.unsqueeze(-1).expand_as(patches)
-            masked_patches = patches * masks
-            masked_images = model.unpatchify(masked_patches)[idx].detach().cpu()
+            patches = model.patchify(n_real_image.unsqueeze(0))  # 1, 1024, 1280
+            masks = mask[idx].unsqueeze(0).unsqueeze(-1).expand_as(patches)  # 1024 -> 1, 1024, 1280
+            masked_patches = patches * masks  # 1, 1024, 1280
+            masked_images = model.unpatchify(masked_patches)[idx].detach().cpu().numpy()  # 5, 512, 512
 
-            fig = plot_example_pred(real_image, masked_images, pred_image)
+            fig = plot_example_pred(n_real_image, n_pred_image, masked_images)
 
         return fig
 
@@ -375,10 +391,14 @@ class MAEModule(LightningModule):
         res = self(batch)
 
         loss = res.loss
+        mean_loss = loss
+
+        # losses = self.all_gather(loss)
+        # mean_loss = torch.mean(losses)
 
         self.log(
             f"{stage}/loss",
-            loss,
+            mean_loss,
             prog_bar=True,
             on_step=(stage == "train"),
             on_epoch=True,
@@ -395,11 +415,11 @@ class MAEModule(LightningModule):
                 print(f"Could not plot example prediction: {e}")
                 self.failed_once = True
 
-        if not torch.isfinite(loss):
-            py_logger.error(f"Loss of batch {batch_idx} is not finite: {loss}")
+        if not torch.isfinite(mean_loss):
+            py_logger.error(f"Loss of batch {batch_idx} is not finite: {mean_loss}")
             return None
 
-        return loss
+        return mean_loss
 
     def training_step(self, batch, batch_idx):
         return self.model_step(batch, batch_idx, stage="train")
