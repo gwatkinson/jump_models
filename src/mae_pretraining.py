@@ -1,6 +1,7 @@
 import logging
 from functools import partial
 
+import click
 import dotenv
 from lightning.pytorch import Trainer
 from lightning.pytorch.callbacks import (
@@ -22,7 +23,9 @@ dotenv.load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 
-def main():
+@click.command()
+@click.option("--ckpt_path", type=str, default=None)
+def main(ckpt_path):
     transform = SimpleTransform(
         size=512,
         p=0.5,
@@ -126,7 +129,9 @@ def main():
 
     print(f"Output directory: {trainer.log_dir}")
 
-    trainer.fit(module, ckpt_path="/workspaces/biocomp/watkinso/jump_models/mae/o0mrc54l/checkpoints/last.ckpt")
+    ckpt_path = ckpt_path or "/workspaces/biocomp/watkinso/jump_models/mae/dz2cqbbz/checkpoints/last.ckpt"
+
+    trainer.fit(module, ckpt_path=ckpt_path)
 
 
 if __name__ == "__main__":
