@@ -123,7 +123,6 @@ def main(ckpt_path):
         callbacks=callbacks,
         num_sanity_val_steps=1,
         log_every_n_steps=1,
-        detect_anomaly=True,
         # overfit_batches=3,
     )
 
