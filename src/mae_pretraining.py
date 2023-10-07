@@ -128,7 +128,7 @@ def main(ckpt_path):
 
     print(f"Output directory: {trainer.log_dir}")
 
-    ckpt_path = ckpt_path or "/workspaces/biocomp/watkinso/jump_models/mae/dz2cqbbz/checkpoints/last.ckpt"
+    ckpt_path = ckpt_path or "/workspaces/biocomp/watkinso/jump_models/mae/lv61nw2u/checkpoints/last.ckpt"
 
     trainer.fit(module, ckpt_path=ckpt_path)
 
