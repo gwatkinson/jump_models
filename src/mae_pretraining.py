@@ -107,7 +107,7 @@ def main():
     ]
 
     trainer = Trainer(
-        default_root_dir="/projects/cpjump1/mae/logs",
+        #     default_root_dir="/projects/cpjump1/mae/logs",
         accelerator="gpu",
         strategy="auto",
         devices=[0, 1, 2],
@@ -120,6 +120,7 @@ def main():
         callbacks=callbacks,
         num_sanity_val_steps=1,
         log_every_n_steps=1,
+        detect_anomaly=True,
         # overfit_batches=3,
     )
 

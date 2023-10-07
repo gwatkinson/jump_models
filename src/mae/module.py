@@ -204,7 +204,7 @@ class MAEModule(LightningModule):
     ):
         super().__init__()
 
-        self.save_hyperparameters(logger=False)
+        self.save_hyperparameters(logger=True)
 
         # model setup
         self.vit_config = vit_config
@@ -245,6 +245,7 @@ class MAEModule(LightningModule):
         self.lr = self.base_lr * total_train_batch_size / 256
 
         self.failed_once = False
+        self.failed_once_normed = False
 
     def prepare_jump(self) -> None:
         out_path = Path(self.mae_dir) / "jump.pickle"
@@ -372,6 +373,25 @@ class MAEModule(LightningModule):
 
         with torch.no_grad():
             real_image = batch[idx].detach().cpu().numpy()
+
+            prediction = logits
+            pred_image = model.unpatchify(prediction)[idx].detach().cpu().numpy()
+
+            patches = model.patchify(batch)
+            masks = mask[idx].unsqueeze(-1).expand_as(patches)
+            masked_patches = patches * masks
+            masked_images = model.unpatchify(masked_patches)[idx].detach().cpu().numpy()
+
+            fig = plot_example_pred(real_image, pred_image, masked_images)
+
+        return fig
+
+    def plot_example_pred_normed(self, batch, logits, mask):
+        idx = 0
+        model = self.vit_mae_for_pretraining
+
+        with torch.no_grad():
+            real_image = batch[idx].detach().cpu().numpy()
             n_real_image = normalize_5_channel(real_image)
 
             prediction = logits
@@ -410,10 +430,19 @@ class MAEModule(LightningModule):
             try:
                 fig = self.plot_example_pred(batch, res.logits, res.mask)
                 self.logger.experiment.log({f"{stage}/example_pred": fig})
+                # plt.close(fig)
+            except Exception as e:
+                py_logger.warning(f"Could not plot example prediction: {e}")
+                self.failed_once = True
+
+        if (batch_idx % 250) == 0 and not self.failed_once_normed:
+            try:
+                fig = self.plot_example_pred_normed(batch, res.logits, res.mask)
+                self.logger.experiment.log({f"{stage}/example_pred_normed": fig})
                 plt.close(fig)
             except Exception as e:
-                print(f"Could not plot example prediction: {e}")
-                self.failed_once = True
+                py_logger.warning(f"Could not plot example prediction: {e}")
+                self.failed_once_normed = True
 
         if not torch.isfinite(mean_loss):
             py_logger.error(f"Loss of batch {batch_idx} is not finite: {mean_loss}")
