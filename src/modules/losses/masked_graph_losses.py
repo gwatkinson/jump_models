@@ -76,11 +76,14 @@ def cycle_index(num, shift):
 def do_ContextPred(
     batch,
     criterion,
-    args,
     molecule_substruct_model,
     molecule_context_model,
     molecule_readout_func,
+    contextpred_neg_samples,
+    use_image=True,
     molecule_img_repr=None,
+    mol_img_projection_head=None,
+    normalize=True,
 ):
     # creating substructure representation
     substruct_repr = molecule_substruct_model(batch.x_substruct, batch.edge_index_substruct, batch.edge_attr_substruct)[
@@ -97,21 +100,23 @@ def do_ContextPred(
     context_repr = molecule_readout_func(overlapped_node_repr, batch.batch_overlapped_context)
 
     # Use image embedding
-    if molecule_img_repr is not None and args.use_image:
-        # context_repr = torch.cat([context_repr, molecule_img_repr], dim=1)
+    if molecule_img_repr is not None and use_image:
+        if normalize:
+            context_repr = F.normalize(context_repr, dim=-1)
+            molecule_img_repr = F.normalize(molecule_img_repr, dim=-1)
 
-        # if args.normalize:
-        #     context_repr = F.normalize(context_repr, dim=-1)
-        #     molecule_img_repr = F.normalize(molecule_img_repr, dim=-1)
-        context_repr = 0.8 * context_repr + 0.2 * molecule_img_repr
+        context_repr = torch.cat([context_repr, molecule_img_repr], dim=1)
+        context_repr = mol_img_projection_head(context_repr)  # reproject to the same dim as context_repr
+
+        # context_repr = 0.8 * context_repr + 0.2 * molecule_img_repr
 
     # negative contexts are obtained by shifting
     # the indices of context embeddings
     neg_context_repr = torch.cat(
-        [context_repr[cycle_index(len(context_repr), i + 1)] for i in range(args.contextpred_neg_samples)], dim=0
+        [context_repr[cycle_index(len(context_repr), i + 1)] for i in range(contextpred_neg_samples)], dim=0
     )
 
-    num_neg = args.contextpred_neg_samples
+    num_neg = contextpred_neg_samples
     pred_pos = torch.sum(substruct_repr * context_repr, dim=1)
     pred_neg = torch.sum(substruct_repr.repeat((num_neg, 1)) * neg_context_repr, dim=1)
 

@@ -13,6 +13,7 @@ from lightning.pytorch.callbacks import (
 )
 from lightning.pytorch.loggers import WandbLogger
 from lion_pytorch import Lion
+from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
 from src.mae.module import MAEDatasetConfig, MAEModule, MAEOptimizerConfig, ViTMAEConfig
@@ -32,14 +33,15 @@ def main(ckpt_path):
     )
 
     optimizer_config = MAEOptimizerConfig(
-        optimizer=partial(Lion, weight_decay=0.05, betas=(0.95, 0.9)),
+        # optimizer=partial(Lion, weight_decay=0.05, betas=(0.95, 0.9)),
+        optimizer=partial(AdamW, weight_decay=0.05, betas=(0.95, 0.9)),
         scheduler=partial(
             CosineAnnealingLR,
             T_max=50,
             eta_min=0.0,
             last_epoch=-1,
         ),
-        lr=1e-4,
+        lr=3e-4,
         monitor="val/loss",
         interval="epoch",
         frequency=1,
@@ -51,7 +53,7 @@ def main(ckpt_path):
         prefetch_factor=None,
         pin_memory=True,
         persistent_workers=False,
-        num_workers=10,
+        num_workers=8,
         mae_dir="/projects/cpjump1/mae",
         use_jump=True,
         use_rxrx1=True,
@@ -64,7 +66,7 @@ def main(ckpt_path):
         patch_size=32,
         num_channels=5,
         mask_ratio=0.25,
-        norm_pix_loss=True,
+        norm_pix_loss=False,
         hidden_size=768,
         num_hidden_layers=12,
         num_attention_heads=12,
@@ -116,8 +118,9 @@ def main(ckpt_path):
         devices=[0, 1, 2],
         max_epochs=50,
         # precision="16-mixed",
-        sync_batchnorm=True,
-        detect_anomaly=True,
+        sync_batchnorm=False,
+        # sync_batchnorm=True,
+        # detect_anomaly=True,
         check_val_every_n_epoch=1,
         logger=logger,
         callbacks=callbacks,
