@@ -94,6 +94,7 @@ def main():
             verbose=False,
             mode="min",
             check_finite=True,
+            strict=False,
         ),
         ModelCheckpoint(
             monitor="val/loss",
