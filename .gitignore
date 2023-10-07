@@ -12,6 +12,7 @@ src/pyidr
 /.hydra/
 /jump_moa/
 src/eval/bbbc
+local_dataset/
 
 
 # Lightning-Hydra-Template

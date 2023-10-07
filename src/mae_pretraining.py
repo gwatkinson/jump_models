@@ -48,7 +48,6 @@ def main(ckpt_path):
     data_config = MAEDatasetConfig(
         train_test_val_split=(0.8, 0.1, 0.1),
         batch_size=128,
-        transform=transform,
         prefetch_factor=1,
         pin_memory=False,
         persistent_workers=False,
@@ -82,6 +81,7 @@ def main(ckpt_path):
         vit_config=vit_config,
         data_config=data_config,
         optimizer_config=optimizer_config,
+        transform=transform,
     )
 
     logger = [

@@ -72,14 +72,21 @@ def plot_example_pred(real, masked, pred):
             ax = axs[i, j]
             if i == 0:
                 ch1 = ex[0]
-                ch2 = ((ex[1] + ex[3]) / 2).astype(np.uint8)
-                ch3 = ((ex[2] + ex[4]) / 2).astype(np.uint8)
-                new = np.stack([ch2, ch1, ch3], axis=-1, dtype=np.uint8)
-                ax.imshow(new)
+                ch1 = normalize_channel(ch1)
+                ch2 = (ex[1] + ex[3]) / 2
+                ch2 = normalize_channel(ch2)
+                ch3 = (ex[2] + ex[4]) / 2
+                ch3 = normalize_channel(ch3)
+
+                rgb = np.stack([ch2, ch1, ch3], axis=-1, dtype=np.uint8)
+
+                ax.imshow(rgb)
                 ax.axis("off")
                 ax.set(title=titles[j])
             else:
-                ax.imshow(ex[i - 1])
+                ch = ex[i - 1]
+                ch = normalize_channel(ch)
+                ax.imshow(ch, cmap="gray", vmin=0, vmax=255)
                 ax.axis("off")
 
     fig.tight_layout()
@@ -89,7 +96,7 @@ def plot_example_pred(real, masked, pred):
 
 def rxrx_to_img_paths(load_df, order=default_order):
     img_paths = []
-    for i, row in load_df.iterrows():
+    for _, row in load_df.iterrows():
         tmp = [row[f"w{i}"] for i in order]
         img_paths.append(tmp)
 
@@ -201,6 +208,7 @@ class MAEModule(LightningModule):
         vit_config: ViTMAEConfig,
         data_config: MAEDatasetConfig,
         optimizer_config: MAEOptimizerConfig,
+        transform: Optional[Callable] = None,
     ):
         super().__init__()
 
@@ -218,7 +226,7 @@ class MAEModule(LightningModule):
         self.rxrx1_load_df_path = data_config.rxrx1_load_df_path
         self.img_paths = None
         self.train_dataset = None
-        self.transform = data_config.transform
+        self.transform = transform
         self.train_test_val_split = data_config.train_test_val_split
         self.batch_size = data_config.batch_size
         self.prefetch_factor = data_config.prefetch_factor
@@ -382,7 +390,7 @@ class MAEModule(LightningModule):
             masked_patches = patches * masks
             masked_images = model.unpatchify(masked_patches)[idx].detach().cpu().numpy()
 
-            fig = plot_example_pred(real_image, pred_image, masked_images)
+            fig = plot_example_pred(real_image, masked_images, pred_image)
 
         return fig
 
@@ -398,12 +406,12 @@ class MAEModule(LightningModule):
             pred_image = model.unpatchify(prediction)[idx].detach().cpu().numpy()
             n_pred_image = normalize_5_channel(pred_image)
 
-            patches = model.patchify(torch.Tensor(n_real_image).unsqueeze(0))  # 1, 1024, 1280
+            patches = model.patchify(torch.Tensor(n_real_image, device=mask.device).unsqueeze(0))  # 1, 1024, 1280
             masks = mask[idx].unsqueeze(0).unsqueeze(-1).expand_as(patches)  # 1024 -> 1, 1024, 1280
             masked_patches = patches * masks  # 1, 1024, 1280
             masked_images = model.unpatchify(masked_patches)[idx].detach().cpu().numpy()  # 5, 512, 512
 
-            fig = plot_example_pred(n_real_image, n_pred_image, masked_images)
+            fig = plot_example_pred(n_real_image, masked_images, n_pred_image)
 
         return fig
 
@@ -430,19 +438,19 @@ class MAEModule(LightningModule):
             try:
                 fig = self.plot_example_pred(batch, res.logits, res.mask)
                 self.logger.experiment.log({f"{stage}/example_pred": fig})
-                # plt.close(fig)
+                plt.close(fig)
             except Exception as e:
                 py_logger.warning(f"Could not plot example prediction: {e}")
                 self.failed_once = True
 
-        if (batch_idx % 250) == 0 and not self.failed_once_normed:
-            try:
-                fig = self.plot_example_pred_normed(batch, res.logits, res.mask)
-                self.logger.experiment.log({f"{stage}/example_pred_normed": fig})
-                plt.close(fig)
-            except Exception as e:
-                py_logger.warning(f"Could not plot example prediction: {e}")
-                self.failed_once_normed = True
+        # if (batch_idx % 250) == 0 and not self.failed_once_normed:
+        #     try:
+        #         fig = self.plot_example_pred_normed(batch, res.logits, res.mask)
+        #         self.logger.experiment.log({f"{stage}/example_pred_normed": fig})
+        #         plt.close(fig)
+        #     except Exception as e:
+        #         py_logger.warning(f"Could not plot example prediction: {e}")
+        #         self.failed_once_normed = True
 
         if not torch.isfinite(mean_loss):
             py_logger.error(f"Loss of batch {batch_idx} is not finite: {mean_loss}")
