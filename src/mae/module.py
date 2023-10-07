@@ -398,7 +398,7 @@ class MAEModule(LightningModule):
             pred_image = model.unpatchify(prediction)[idx].detach().cpu().numpy()
             n_pred_image = normalize_5_channel(pred_image)
 
-            patches = model.patchify(n_real_image.unsqueeze(0))  # 1, 1024, 1280
+            patches = model.patchify(torch.Tensor(n_real_image).unsqueeze(0))  # 1, 1024, 1280
             masks = mask[idx].unsqueeze(0).unsqueeze(-1).expand_as(patches)  # 1024 -> 1, 1024, 1280
             masked_patches = patches * masks  # 1, 1024, 1280
             masked_images = model.unpatchify(masked_patches)[idx].detach().cpu().numpy()  # 5, 512, 512
