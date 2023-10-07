@@ -126,7 +126,7 @@ class DiverseImageDataset(Dataset):
     def __len__(self):
         return len(self.image_paths)
 
-    def __getitem__(self, idx):
+    def getitem(self, idx):
         image_path = self.image_paths[idx]
 
         image = load_image_paths_to_array(image_path)  # a 5*h*w array
@@ -138,6 +138,15 @@ class DiverseImageDataset(Dataset):
             image = self.transform_fn(image)
 
         return image
+
+    def __getitem__(self, idx):
+        for t in range(10):
+            try:
+                return self.getitem(idx)
+            except Exception as e:
+                py_logger.error(f"Failed to get item {idx} with error: {e} (attempt {t})")
+                idx = np.random.randint(0, len(self.image_paths))
+        raise RuntimeError(f"Failed to get item {idx} after 10 attempts")
 
     def plot_idx(self, idx):
         ex = self[idx]
@@ -381,6 +390,7 @@ class MAEModule(LightningModule):
             try:
                 fig = self.plot_example_pred(batch, res.logits, res.mask)
                 self.logger.experiment.log({f"{stage}/example_pred": fig})
+                plt.close(fig)
             except Exception as e:
                 print(f"Could not plot example prediction: {e}")
                 self.failed_once = True

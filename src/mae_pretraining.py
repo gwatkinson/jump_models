@@ -44,7 +44,7 @@ def main():
 
     data_config = MAEDatasetConfig(
         train_test_val_split=(0.8, 0.1, 0.1),
-        batch_size=96,
+        batch_size=128,
         transform=transform,
         prefetch_factor=2,
         pin_memory=True,
@@ -106,6 +106,7 @@ def main():
     ]
 
     trainer = Trainer(
+        default_root_dir="/projects/cpjump1/mae/logs",
         accelerator="gpu",
         strategy="auto",
         devices=[0, 1, 2],
@@ -121,7 +122,9 @@ def main():
         # overfit_batches=3,
     )
 
-    trainer.fit(module)
+    print(f"Output directory: {trainer.log_dir}")
+
+    trainer.fit(module, ckpt_path="/workspaces/biocomp/watkinso/jump_models/mae/o0mrc54l/checkpoints/last.ckpt")
 
 
 if __name__ == "__main__":
