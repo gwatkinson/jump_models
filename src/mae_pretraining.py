@@ -48,10 +48,10 @@ def main(ckpt_path):
     data_config = MAEDatasetConfig(
         train_test_val_split=(0.8, 0.1, 0.1),
         batch_size=128,
-        prefetch_factor=0,
+        prefetch_factor=None,
         pin_memory=True,
         persistent_workers=False,
-        num_workers=12,
+        num_workers=10,
         mae_dir="/projects/cpjump1/mae",
         use_jump=True,
         use_rxrx1=True,
