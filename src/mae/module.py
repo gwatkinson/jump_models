@@ -392,6 +392,8 @@ class MAEModule(LightningModule):
 
             fig = plot_example_pred(real_image, masked_images, pred_image)
 
+        del real_image, pred_image, patches, masks, masked_patches, masked_images
+
         return fig
 
     def plot_example_pred_normed(self, batch, logits, mask):
@@ -412,6 +414,18 @@ class MAEModule(LightningModule):
             masked_images = model.unpatchify(masked_patches)[idx].detach().cpu().numpy()  # 5, 512, 512
 
             fig = plot_example_pred(n_real_image, masked_images, n_pred_image)
+
+        del (
+            n_real_image,
+            n_pred_image,
+            masked_images,
+            masked_patches,
+            masks,
+            patches,
+            prediction,
+            real_image,
+            pred_image,
+        )
 
         return fig
 

@@ -48,8 +48,8 @@ def main(ckpt_path):
     data_config = MAEDatasetConfig(
         train_test_val_split=(0.8, 0.1, 0.1),
         batch_size=128,
-        prefetch_factor=1,
-        pin_memory=False,
+        prefetch_factor=0,
+        pin_memory=True,
         persistent_workers=False,
         num_workers=12,
         mae_dir="/projects/cpjump1/mae",
@@ -128,7 +128,7 @@ def main(ckpt_path):
 
     print(f"Output directory: {trainer.log_dir}")
 
-    ckpt_path = ckpt_path or "/workspaces/biocomp/watkinso/jump_models/mae/lv61nw2u/checkpoints/last.ckpt"
+    ckpt_path = ckpt_path or "/workspaces/biocomp/watkinso/jump_models/mae/q3d8xtm8/checkpoints/last.ckpt"
 
     trainer.fit(module, ckpt_path=ckpt_path)
 
