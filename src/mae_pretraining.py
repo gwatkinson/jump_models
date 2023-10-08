@@ -51,9 +51,9 @@ def main(ckpt_path):
     data_config = MAEDatasetConfig(
         train_test_val_split=(0.98, 0.01, 0.01),
         batch_size={"train": 128, "val": 32, "test": 32},
-        num_workers={"train": 12, "val": 4, "test": 4},
+        num_workers={"train": 14, "val": 4, "test": 4},
         prefetch_factor=1,
-        pin_memory=False,
+        pin_memory=True,
         persistent_workers=False,
         drop_last=True,
         mae_dir="/projects/cpjump1/mae",
@@ -116,11 +116,11 @@ def main(ckpt_path):
     trainer = Trainer(
         #     default_root_dir="/projects/cpjump1/mae/logs",
         accelerator="gpu",
-        strategy="auto",
+        strategy="auto",  # try fsdp ?
         devices=[0, 1, 2],
         max_epochs=50,
         # precision="16-mixed",
-        sync_batchnorm=False,
+        sync_batchnorm=True,
         # sync_batchnorm=True,
         # detect_anomaly=True,
         check_val_every_n_epoch=1,

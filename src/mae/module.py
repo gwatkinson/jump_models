@@ -430,8 +430,8 @@ class MAEModule(LightningModule):
             f"{stage}/loss",
             loss.item(),
             prog_bar=True,
-            on_step=True,
-            on_epoch=True,
+            on_step=(stage == "train"),
+            on_epoch=(stage != "train"),
             logger=True,
             sync_dist=True,
         )
