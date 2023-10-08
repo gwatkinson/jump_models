@@ -249,7 +249,7 @@ class MAEModule(LightningModule):
         except Exception:
             self.world_size = 1
 
-        total_train_batch_size = self.batch_size * self.world_size
+        total_train_batch_size = self.batch_size["train"] * self.world_size
         self.lr = self.base_lr * total_train_batch_size / 256
 
         self.failed_once = False
