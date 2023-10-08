@@ -398,9 +398,9 @@ class MAEModule(LightningModule):
 
     def plot_example_pred_normed(self, batch, logits, mask):
         idx = 0
-        model = self.vit_mae_for_pretraining
 
         with torch.no_grad():
+            model = self.vit_mae_for_pretraining
             real_image = batch[idx].detach().cpu().numpy()
             n_real_image = normalize_5_channel(real_image)
 
