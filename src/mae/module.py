@@ -428,7 +428,7 @@ class MAEModule(LightningModule):
 
         self.log(
             f"{stage}/loss",
-            loss,
+            loss.item(),
             prog_bar=True,
             on_step=True,
             on_epoch=False,
@@ -436,14 +436,14 @@ class MAEModule(LightningModule):
             sync_dist=True,
         )
 
-        # if (batch_idx % 250) == 0 and not self.failed_once:
-        #     try:
-        #         fig = self.plot_example_pred(batch, res.logits, res.mask)
-        #         self.logger.log_image(f"{stage}/example_pred", [fig])
-        #         plt.close(fig)
-        #     except Exception as e:
-        #         py_logger.warning(f"Could not plot example prediction: {e}")
-        #         self.failed_once = True
+        if (batch_idx % 250) == 0 and not self.failed_once:
+            try:
+                fig = self.plot_example_pred(batch, res.logits, res.mask)
+                self.logger.log_image(f"{stage}/example_pred", [fig])
+                plt.close(fig)
+            except Exception as e:
+                py_logger.warning(f"Could not plot example prediction: {e}")
+                self.failed_once = True
 
         if not torch.isfinite(loss):
             py_logger.error(f"Loss of batch {batch_idx} is not finite: {loss}")
