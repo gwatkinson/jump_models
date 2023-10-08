@@ -1,5 +1,6 @@
 """Module to define our MAE pretrained model."""
 
+import gc
 import pickle
 from dataclasses import dataclass
 from pathlib import Path
@@ -184,11 +185,11 @@ class MAEDatasetConfig:
     rxrx1_load_df_path: str = "/projects/cpjump1/rxrx1/load_df.csv"
     transform: Optional[Callable] = None
     train_test_val_split: List[float] = (0.8, 0.1, 0.1)
-    batch_size: int = 32
-    prefetch_factor: int = 2
+    batch_size: dict[str, int] = {"train": 32, "val": 32, "test": 32}
+    prefetch_factor: int = 1
     pin_memory: bool = True
-    num_workers: int = 4
-    drop_last: bool = False
+    num_workers: dict[str, int] = {"train": 12, "val": 12, "test": 12}
+    drop_last: bool = True
     persistent_workers: bool = False
 
 
@@ -347,8 +348,8 @@ class MAEModule(LightningModule):
 
     def stage_dataloader(self, stage="train", **kwargs):
         dl_args = {
-            "batch_size": self.batch_size,
-            "num_workers": self.num_workers,
+            "batch_size": self.batch_size[stage],
+            "num_workers": self.num_workers[stage],
             "pin_memory": self.pin_memory,
             "drop_last": self.drop_last,
             "prefetch_factor": self.prefetch_factor,
@@ -415,18 +416,6 @@ class MAEModule(LightningModule):
 
             fig = plot_example_pred(n_real_image, masked_images, n_pred_image)
 
-        del (
-            n_real_image,
-            n_pred_image,
-            masked_images,
-            masked_patches,
-            masks,
-            patches,
-            prediction,
-            real_image,
-            pred_image,
-        )
-
         return fig
 
     def model_step(self, batch, batch_idx, stage=None):
@@ -451,24 +440,19 @@ class MAEModule(LightningModule):
         if (batch_idx % 250) == 0 and not self.failed_once:
             try:
                 fig = self.plot_example_pred(batch, res.logits, res.mask)
-                self.logger.experiment.log({f"{stage}/example_pred": fig})
+                self.logger.log_image(f"{stage}/example_pred", [fig])
                 plt.close(fig)
             except Exception as e:
                 py_logger.warning(f"Could not plot example prediction: {e}")
                 self.failed_once = True
 
-        # if (batch_idx % 250) == 0 and not self.failed_once_normed:
-        #     try:
-        #         fig = self.plot_example_pred_normed(batch, res.logits, res.mask)
-        #         self.logger.experiment.log({f"{stage}/example_pred_normed": fig})
-        #         plt.close(fig)
-        #     except Exception as e:
-        #         py_logger.warning(f"Could not plot example prediction: {e}")
-        #         self.failed_once_normed = True
-
         if not torch.isfinite(loss):
             py_logger.error(f"Loss of batch {batch_idx} is not finite: {loss}")
             return None
+
+        gc.collect()
+        torch.cuda.empty_cache()
+        gc.collect()
 
         return loss
 

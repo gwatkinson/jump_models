@@ -13,7 +13,8 @@ from lightning.pytorch.callbacks import (
 )
 from lightning.pytorch.loggers import WandbLogger
 from lion_pytorch import Lion
-from torch.optim import AdamW
+
+# from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
 from src.mae.module import MAEDatasetConfig, MAEModule, MAEOptimizerConfig, ViTMAEConfig
@@ -48,12 +49,13 @@ def main(ckpt_path):
     )
 
     data_config = MAEDatasetConfig(
-        train_test_val_split=(0.8, 0.1, 0.1),
-        batch_size=128,
-        prefetch_factor=None,
-        pin_memory=True,
+        train_test_val_split=(0.98, 0.01, 0.01),
+        batch_size={"train": 96, "val": 32, "test": 32},
+        num_workers={"train": 12, "val": 4, "test": 4},
+        prefetch_factor=1,
+        pin_memory=False,
         persistent_workers=False,
-        num_workers=8,
+        drop_last=True,
         mae_dir="/projects/cpjump1/mae",
         use_jump=True,
         use_rxrx1=True,
