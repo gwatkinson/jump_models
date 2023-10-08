@@ -2,7 +2,7 @@
 
 import gc
 import pickle
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, List, Optional
 
@@ -183,12 +183,11 @@ class MAEDatasetConfig:
     use_rxrx1: bool = True
     jump_load_df_path: str = "/projects/cpjump1/jump/load_data/final"
     rxrx1_load_df_path: str = "/projects/cpjump1/rxrx1/load_df.csv"
-    transform: Optional[Callable] = None
-    train_test_val_split: List[float] = (0.8, 0.1, 0.1)
-    batch_size: dict[str, int] = {"train": 32, "val": 32, "test": 32}
+    train_test_val_split: List[float] = (0.98, 0.01, 0.01)
+    batch_size: dict[str, int] = field(default_factory={"train": 32, "val": 32, "test": 32})
+    num_workers: dict[str, int] = field(default_factory={"train": 12, "val": 12, "test": 12})
     prefetch_factor: int = 1
-    pin_memory: bool = True
-    num_workers: dict[str, int] = {"train": 12, "val": 12, "test": 12}
+    pin_memory: bool = False
     drop_last: bool = True
     persistent_workers: bool = False
 
