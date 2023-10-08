@@ -104,6 +104,7 @@ def main(ckpt_path):
             strict=False,
         ),
         ModelCheckpoint(
+            # dirpath="/workspaces/biocomp/watkinso/jump_models/mae/main_run/checkpoints",
             monitor="val/loss",
             save_last=True,
             save_top_k=1,
@@ -114,7 +115,7 @@ def main(ckpt_path):
     ]
 
     trainer = Trainer(
-        #     default_root_dir="/projects/cpjump1/mae/logs",
+        default_root_dir="/workspaces/biocomp/watkinso/jump_models/mae/main_run",
         accelerator="gpu",
         strategy="auto",  # try fsdp ?
         devices=[0, 1, 2],
@@ -134,8 +135,8 @@ def main(ckpt_path):
     print(f"Output directory: {trainer.log_dir}")
 
     # lv61nw2u -> 22k
-    # km1efwom -> 22.9k (end of epoch ?)
-    ckpt_path = ckpt_path or "/workspaces/biocomp/watkinso/jump_models/mae/lv61nw2u/checkpoints/last.ckpt"
+    # q9btfdym -> 34k
+    ckpt_path = ckpt_path or "/workspaces/biocomp/watkinso/jump_models/mae/q9btfdym/checkpoints/last.ckpt"
 
     trainer.fit(module, ckpt_path=ckpt_path)
 
