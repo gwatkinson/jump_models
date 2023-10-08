@@ -1,6 +1,6 @@
 """Module to define our MAE pretrained model."""
 
-import gc
+# import gc
 import pickle
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -430,28 +430,28 @@ class MAEModule(LightningModule):
             f"{stage}/loss",
             loss,
             prog_bar=True,
-            on_step=(stage == "train"),
-            on_epoch=True,
+            on_step=True,
+            on_epoch=False,
             logger=True,
             sync_dist=True,
         )
 
-        if (batch_idx % 250) == 0 and not self.failed_once:
-            try:
-                fig = self.plot_example_pred(batch, res.logits, res.mask)
-                self.logger.log_image(f"{stage}/example_pred", [fig])
-                plt.close(fig)
-            except Exception as e:
-                py_logger.warning(f"Could not plot example prediction: {e}")
-                self.failed_once = True
+        # if (batch_idx % 250) == 0 and not self.failed_once:
+        #     try:
+        #         fig = self.plot_example_pred(batch, res.logits, res.mask)
+        #         self.logger.log_image(f"{stage}/example_pred", [fig])
+        #         plt.close(fig)
+        #     except Exception as e:
+        #         py_logger.warning(f"Could not plot example prediction: {e}")
+        #         self.failed_once = True
 
         if not torch.isfinite(loss):
             py_logger.error(f"Loss of batch {batch_idx} is not finite: {loss}")
             return None
 
-        gc.collect()
-        torch.cuda.empty_cache()
-        gc.collect()
+        # gc.collect()
+        # torch.cuda.empty_cache()
+        # gc.collect()
 
         return loss
 
