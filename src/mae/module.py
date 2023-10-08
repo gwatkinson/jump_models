@@ -431,7 +431,7 @@ class MAEModule(LightningModule):
             loss.item(),
             prog_bar=True,
             on_step=True,
-            on_epoch=False,
+            on_epoch=True,
             logger=True,
             sync_dist=True,
         )
