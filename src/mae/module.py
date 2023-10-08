@@ -432,8 +432,6 @@ class MAEModule(LightningModule):
             prog_bar=True,
             on_step=(stage == "train"),
             on_epoch=(stage != "train"),
-            logger=True,
-            sync_dist=True,
         )
 
         if (batch_idx % 250) == 0 and not self.failed_once:

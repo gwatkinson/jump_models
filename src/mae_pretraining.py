@@ -4,13 +4,9 @@ from functools import partial
 import click
 import dotenv
 from lightning.pytorch import Trainer
-from lightning.pytorch.callbacks import (
-    EarlyStopping,
-    LearningRateMonitor,
-    ModelCheckpoint,
-    RichModelSummary,
-    RichProgressBar,
-)
+from lightning.pytorch.callbacks import EarlyStopping  # noqa: F401
+from lightning.pytorch.callbacks import LearningRateMonitor  # noqa: F401
+from lightning.pytorch.callbacks import ModelCheckpoint, RichModelSummary, RichProgressBar
 from lightning.pytorch.loggers import WandbLogger
 from lion_pytorch import Lion
 
@@ -95,29 +91,29 @@ def main(ckpt_path):
     callbacks = [
         RichProgressBar(),
         RichModelSummary(max_depth=2),
-        EarlyStopping(
-            monitor="val/loss",
-            patience=10,
-            verbose=False,
-            mode="min",
-            check_finite=True,
-            strict=False,
-        ),
+        # EarlyStopping(
+        #     monitor="val/loss",
+        #     patience=10,
+        #     verbose=False,
+        #     mode="min",
+        #     check_finite=True,
+        #     strict=False,
+        # ),
         ModelCheckpoint(
-            # dirpath="/workspaces/biocomp/watkinso/jump_models/mae/main_run/checkpoints",
+            dirpath="/workspaces/biocomp/watkinso/jump_models/mae/main_run/checkpoints",
             monitor="val/loss",
             save_last=True,
             save_top_k=1,
             mode="min",
             every_n_train_steps=1000,
         ),
-        LearningRateMonitor(),
+        # LearningRateMonitor(),
     ]
 
     trainer = Trainer(
         default_root_dir="/workspaces/biocomp/watkinso/jump_models/mae/main_run",
         accelerator="gpu",
-        strategy="auto",  # try fsdp ?
+        strategy="ddp",  # try fsdp ?
         devices=[0, 1, 2],
         max_epochs=50,
         # precision="16-mixed",
@@ -128,7 +124,7 @@ def main(ckpt_path):
         logger=logger,
         callbacks=callbacks,
         num_sanity_val_steps=1,
-        log_every_n_steps=1,
+        log_every_n_steps=10,
         # overfit_batches=3,
     )
 
