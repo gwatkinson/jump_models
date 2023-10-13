@@ -63,8 +63,8 @@ data:
     fill_nan: True
     use_flip: True
     use_blur: False
-    use_color_jitter: True
-    use_drop: True
+    use_color_jitter: False
+    use_drop: False
     use_resized_crop: True
 
   splitter:

@@ -1,48 +1,9 @@
-import torch
+import numpy as np
 import torchvision.transforms as T
 
 from src.modules.transforms.color_jitter import ColorJitterPerChannel
 from src.modules.transforms.drop_channel import DropTransform
 from src.modules.transforms.fill_nans import FillNaNs
-from src.modules.transforms.image_normalization import ImageNormalization
-
-
-class SimpleWithNormalize(torch.nn.Module):
-    def __init__(self, size=256, dim=(-2, -1)):
-        super().__init__()
-        self.size = size
-        self.dim = dim
-        self.transform = torch.nn.Sequential(
-            T.RandomHorizontalFlip(),
-            T.RandomVerticalFlip(),
-            T.RandomCrop(size, pad_if_needed=True),
-            T.ToImageTensor(),
-            T.ConvertImageDtype(),
-            ImageNormalization(dim=dim),
-            FillNaNs(nan=0.0, posinf=None, neginf=None),
-        )
-
-    def forward(self, inpt: torch.Tensor) -> torch.Tensor:
-        return self.transform(inpt)
-
-
-class NormalizeBeforeCrop(torch.nn.Module):
-    def __init__(self, size=256, dim=(-2, -1)):
-        super().__init__()
-        self.size = size
-        self.dim = dim
-        self.transform = torch.nn.Sequential(
-            T.ToImageTensor(),
-            T.ConvertImageDtype(),
-            T.RandomHorizontalFlip(),
-            T.RandomVerticalFlip(),
-            ImageNormalization(dim=dim),
-            T.RandomCrop(size, pad_if_needed=True),
-            FillNaNs(nan=0.0, posinf=None, neginf=None),
-        )
-
-    def forward(self, inpt: torch.Tensor) -> torch.Tensor:
-        return self.transform(inpt)
 
 
 class SimpleTransform(T.Compose):
@@ -82,7 +43,7 @@ class ComplexTransform(T.Compose):
     ):
         sigma = (float(sigma[0]), float(sigma[1]))
         transforms = [
-            T.Lambda(lambda x: x.transpose(1, 2, 0) if x.shape[0] == 5 else x),
+            T.Lambda(lambda x: x.transpose(1, 2, 0) if (x.shape[0] == 5 and isinstance(x, np.array)) else x),
             T.ToTensor(),
         ]
 
