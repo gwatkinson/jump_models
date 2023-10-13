@@ -43,7 +43,9 @@ class ComplexTransform(T.Compose):
     ):
         sigma = (float(sigma[0]), float(sigma[1]))
         transforms = [
-            T.Lambda(lambda x: x.transpose(1, 2, 0) if (x.shape[0] == 5 and isinstance(x, np.array)) else x),
+            T.Lambda(
+                lambda x: x.transpose(1, 2, 0) if (x.shape[0] == 5 and isinstance(x, (np.ndarray, np.generic))) else x
+            ),
             T.ToTensor(),
         ]
 
