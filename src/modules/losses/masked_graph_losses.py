@@ -7,22 +7,21 @@ from torch.nn import functional as F
 
 from src.modules.losses.base_losses import LossWithTemperature, RegWithTemperatureLoss
 
+# def from_dgl(
+#     g: Any,
+# ) -> "torch_geometric.data.Data":
+#     import dgl
+#     from torch_geometric.data import Data
 
-def from_dgl(
-    g: Any,
-) -> "torch_geometric.data.Data":
-    import dgl
-    from torch_geometric.data import Data
+#     data = Data()
+#     data.edge_index = torch.stack(g.edges(), dim=0)
 
-    data = Data()
-    data.edge_index = torch.stack(g.edges(), dim=0)
+#     for attr, value in g.ndata.items():
+#         data[f"n_{attr}"] = value
+#     for attr, value in g.edata.items():
+#         data[f"e_{attr}"] = value
 
-    for attr, value in g.ndata.items():
-        data[f"n_{attr}"] = value
-    for attr, value in g.edata.items():
-        data[f"e_{attr}"] = value
-
-    return data
+#     return data
 
 
 # elif args.MGM_mode == 'MGM':

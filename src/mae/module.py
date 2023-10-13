@@ -57,7 +57,7 @@ def plot_example(ex):
     return fig
 
 
-def plot_example_pred(real, masked, pred):
+def plot_example_pred(real, masked, pred, normalize=True, percentile=1.0):
     fig, axs = plt.subplots(6, 3, figsize=(12, 18))
 
     titles = ["Masked", "Reconstructed", "Real"]
@@ -73,21 +73,27 @@ def plot_example_pred(real, masked, pred):
             ax = axs[i, j]
             if i == 0:
                 ch1 = ex[0]
-                ch1 = normalize_channel(ch1)
                 ch2 = (ex[1] + ex[3]) / 2
-                ch2 = normalize_channel(ch2)
                 ch3 = (ex[2] + ex[4]) / 2
-                ch3 = normalize_channel(ch3)
 
-                rgb = np.stack([ch2, ch1, ch3], axis=-1, dtype=np.uint8)
+                if normalize:
+                    ch1 = robust_convert_to_8bit(ch1, percentile=percentile)
+                    ch2 = robust_convert_to_8bit(ch2, percentile=percentile)
+                    ch3 = robust_convert_to_8bit(ch3, percentile=percentile)
+
+                rgb = np.stack([ch3, ch2, ch1], axis=-1)
 
                 ax.imshow(rgb)
                 ax.axis("off")
                 ax.set(title=titles[j])
             else:
                 ch = ex[i - 1]
-                ch = normalize_channel(ch)
-                ax.imshow(ch, cmap="gray", vmin=0, vmax=255)
+                kwargs = {}
+                if normalize:
+                    ch = robust_convert_to_8bit(ch, percentile=percentile)
+                    kwargs = {"vmin": 0, "vmax": 255}
+
+                ax.imshow(ch, cmap="gray", **kwargs)
                 ax.axis("off")
 
     fig.tight_layout()
@@ -385,6 +391,11 @@ class MAEModule(LightningModule):
             prediction = logits
             pred_image = model.unpatchify(prediction)[idx].detach().cpu().numpy()
 
+            if self.vit_config.norm_pix_loss:
+                mean = real_image.mean(dim=-1, keepdim=True)
+                var = real_image.var(dim=-1, keepdim=True)
+                pred_image = pred_image * ((var + 1.0e-6) ** 0.5) + mean
+
             patches = model.patchify(batch)
             masks = mask[idx].unsqueeze(-1).expand_as(patches)
             masked_patches = patches * masks
@@ -393,27 +404,6 @@ class MAEModule(LightningModule):
             fig = plot_example_pred(real_image, masked_images, pred_image)
 
         del real_image, pred_image, patches, masks, masked_patches, masked_images
-
-        return fig
-
-    def plot_example_pred_normed(self, batch, logits, mask):
-        idx = 0
-
-        with torch.no_grad():
-            model = self.vit_mae_for_pretraining
-            real_image = batch[idx].detach().cpu().numpy()
-            n_real_image = normalize_5_channel(real_image)
-
-            prediction = logits
-            pred_image = model.unpatchify(prediction)[idx].detach().cpu().numpy()
-            n_pred_image = normalize_5_channel(pred_image)
-
-            patches = model.patchify(torch.Tensor(n_real_image, device=mask.device).unsqueeze(0))  # 1, 1024, 1280
-            masks = mask[idx].unsqueeze(0).unsqueeze(-1).expand_as(patches)  # 1024 -> 1, 1024, 1280
-            masked_patches = patches * masks  # 1, 1024, 1280
-            masked_images = model.unpatchify(masked_patches)[idx].detach().cpu().numpy()  # 5, 512, 512
-
-            fig = plot_example_pred(n_real_image, masked_images, n_pred_image)
 
         return fig
 

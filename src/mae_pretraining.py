@@ -30,8 +30,8 @@ def main(ckpt_path):
     )
 
     optimizer_config = MAEOptimizerConfig(
-        optimizer=partial(Lion, weight_decay=0.05, betas=(0.95, 0.9)),
-        # optimizer=partial(AdamW, weight_decay=0.05, betas=(0.95, 0.9)),
+        optimizer=partial(Lion, weight_decay=0.05, betas=(0.9, 0.95)),
+        # optimizer=partial(AdamW, weight_decay=0.05, betas=(0.9, 0.95)),
         scheduler=partial(
             CosineAnnealingLR,
             T_max=50,
