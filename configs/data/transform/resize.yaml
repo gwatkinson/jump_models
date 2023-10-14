@@ -1,0 +1,3 @@
+_target_: src.modules.transforms.ResizeTransform
+_convert_: object
+size: ???

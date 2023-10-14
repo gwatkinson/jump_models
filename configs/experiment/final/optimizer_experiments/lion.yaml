@@ -4,6 +4,9 @@ defaults:
   - /experiment/final/optimizer_experiments/default.yaml@_global_
   - override /model/optimizer: lion.yaml
 
+model:
+  lr: 1e-4
+
 trainer:
   devices: ???
 

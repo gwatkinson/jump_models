@@ -19,6 +19,20 @@ class SimpleTransform(T.Compose):
         )
 
 
+class ResizeTransform(T.Compose):
+    def __init__(self, size=256, p=0.5):
+        super().__init__(
+            (
+                T.Lambda(lambda x: x.transpose(1, 2, 0) if x.shape[0] == 5 else x),
+                T.ToTensor(),
+                T.RandomHorizontalFlip(p=p),
+                T.RandomVerticalFlip(p=p),
+                T.Resize(size),
+                FillNaNs(nan=0.0, posinf=None, neginf=None),
+            )
+        )
+
+
 class ComplexTransform(T.Compose):
     def __init__(
         self,
