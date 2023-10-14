@@ -2,6 +2,6 @@
 
 import torchvision
 
-from src.modules.transforms.default import ComplexTransform, SimpleTransform
+from src.modules.transforms.default import ComplexTransform, ResizeTransform, SimpleTransform
 
 torchvision.disable_beta_transforms_warning()
