@@ -90,7 +90,7 @@ logger:
   wandb:
     tags: ${tags}
     project: final_experiments
-    name: ???
+    name: med_small_resize
     group: optimizer_experiment
     job_type: pretrain
     log_model: True
