@@ -64,18 +64,21 @@ def main(ckpt_path):
         patch_size=32,
         num_channels=5,
         mask_ratio=0.75,
-        norm_pix_loss=False,
+        norm_pix_loss=True,
         hidden_size=768,
         num_hidden_layers=12,
         num_attention_heads=12,
         intermediate_size=3072,
-        decoder_num_attention_heads=8,
+        decoder_num_attention_heads=16,
         decoder_hidden_size=512,
-        decoder_num_hidden_layers=4,
+        decoder_num_hidden_layers=8,
         decoder_intermediate_size=2048,
         hidden_dropout_prob=0.0,
         attention_probs_dropout_prob=0.0,
     )
+
+    print("Setting up MAE module...")
+    print(vit_config)
 
     module = MAEModule(
         vit_config=vit_config,
