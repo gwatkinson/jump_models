@@ -135,7 +135,7 @@ def main(ckpt_path):
 
     # lv61nw2u -> 22k
     # q9btfdym -> 34k
-    ckpt_path = ckpt_path or "/workspaces/biocomp/watkinso/jump_models/mae/8uxu8s4s/checkpoints/last.ckpt"
+    # ckpt_path = ckpt_path or "/workspaces/biocomp/watkinso/jump_models/mae/8uxu8s4s/checkpoints/last.ckpt"
 
     trainer.fit(module, ckpt_path=ckpt_path)
 
