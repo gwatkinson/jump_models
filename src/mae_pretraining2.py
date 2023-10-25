@@ -46,7 +46,7 @@ def main(ckpt_path):
 
     data_config = MAEDatasetConfig(
         train_test_val_split=(0.98, 0.01, 0.01),
-        batch_size={"train": 196, "val": 32, "test": 32},
+        batch_size={"train": 128, "val": 32, "test": 32},
         num_workers={"train": 12, "val": 4, "test": 4},
         prefetch_factor=1,
         pin_memory=False,
