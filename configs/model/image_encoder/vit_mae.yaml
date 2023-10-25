@@ -1,0 +1,4 @@
+_target_: transformers.models.vit.ViTModel
+
+config:
+  _target_: ViTMAEConfig

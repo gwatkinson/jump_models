@@ -1,0 +1,5 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/optimizer_experiments/lion.yaml@_global_
+  - override /model/image_encoder: resnet50.yaml
