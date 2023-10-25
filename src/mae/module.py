@@ -398,13 +398,13 @@ class MAEModule(LightningModule):
             pred_image = np.clip(pred_image, 0, 1)
 
             if self.vit_config.norm_pix_loss:
-                mean = real_image.mean(dim=-1, keepdim=True)
-                var = real_image.var(dim=-1, keepdim=True)
+                mean = np.mean(real_image, axis=(1, 2), keepdims=True)
+                var = np.var(real_image, axis=(1, 2), keepdims=True)
                 pred_image = pred_image * ((var + 1.0e-6) ** 0.5) + mean
 
             patches = model.patchify(batch)
-            masks = (1 - mask[idx]).unsqueeze(-1).expand_as(patches)
-            masked_patches = patches * masks
+            masks = mask[idx].unsqueeze(-1).expand_as(patches)
+            masked_patches = torch.max(patches, masks) - masks * 0.9
             masked_images = model.unpatchify(masked_patches)[idx].detach().cpu().numpy()
 
             fig = plot_example_pred(real_image, masked_images, pred_image)

@@ -46,7 +46,7 @@ def main(ckpt_path):
 
     data_config = MAEDatasetConfig(
         train_test_val_split=(0.98, 0.01, 0.01),
-        batch_size={"train": 128, "val": 32, "test": 32},
+        batch_size={"train": 196, "val": 32, "test": 32},
         num_workers={"train": 12, "val": 4, "test": 4},
         prefetch_factor=1,
         pin_memory=False,
@@ -135,7 +135,7 @@ def main(ckpt_path):
 
     # lv61nw2u -> 22k
     # q9btfdym -> 34k
-    # ckpt_path = ckpt_path or "/workspaces/biocomp/watkinso/jump_models/mae/q9btfdym/checkpoints/last.ckpt"
+    ckpt_path = ckpt_path or "/workspaces/biocomp/watkinso/jump_models/mae/8uxu8s4s/checkpoints/last.ckpt"
 
     trainer.fit(module, ckpt_path=ckpt_path)
 
