@@ -69,9 +69,9 @@ def main(ckpt_path):
         num_hidden_layers=12,
         num_attention_heads=12,
         intermediate_size=3072,
-        decoder_num_attention_heads=16,
+        decoder_num_attention_heads=8,
         decoder_hidden_size=512,
-        decoder_num_hidden_layers=8,
+        decoder_num_hidden_layers=4,
         decoder_intermediate_size=2048,
         hidden_dropout_prob=0.0,
         attention_probs_dropout_prob=0.0,
@@ -135,7 +135,7 @@ def main(ckpt_path):
 
     # lv61nw2u -> 22k
     # q9btfdym -> 34k
-    # ckpt_path = ckpt_path or "/workspaces/biocomp/watkinso/jump_models/mae/8uxu8s4s/checkpoints/last.ckpt"
+    ckpt_path = ckpt_path or "/workspaces/biocomp/watkinso/jump_models/mae/8uxu8s4s/checkpoints/last.ckpt"
 
     trainer.fit(module, ckpt_path=ckpt_path)
 
