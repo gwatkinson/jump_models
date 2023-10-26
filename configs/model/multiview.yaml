@@ -11,7 +11,7 @@ defaults:
 embedding_dim: ???
 lr: ???
 batch_size: ${data.batch_size}
-dropout: 0.1
+dropout: 0.
 
 optimizer:
   lr: ${model.lr}

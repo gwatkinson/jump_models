@@ -12,11 +12,6 @@ data:
     _convert_: object
     size: 512
     flip_p: 0.5
-    resize_p: 0.3
-    color_p: 0.2
-    resize_min_ratio: 0.9
-    intensity: 0.2
-    brightness: 0.1
     fill_nan: True
     use_flip: True
     use_blur: False

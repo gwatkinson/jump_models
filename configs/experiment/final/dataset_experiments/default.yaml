@@ -34,13 +34,7 @@ model:
 
   model:
     criterion:
-      temperature: 0.7
-
-  molecule_encoder:
-    dropout: 0.
-
-  image_encoder:
-    dropout: 0.
+      temperature: 1
 
   scheduler:
     warmup_epochs: 10

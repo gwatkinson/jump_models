@@ -16,11 +16,10 @@ data:
 model:
   embedding_dim: 1024
   lr: 1e-4
-  dropout: 0.2
+  dropout: 0.
 
   criterion:
-    temperature: 0.3
-    temperature_requires_grad: True
+    temperature: 1
     lambda_image: 0.5
 
 
@@ -32,6 +31,6 @@ trainer:
 
 logger:
   wandb:
-    name: big_dataset_multiview_no_intra
+    name: big_EMM
     group: multiview
     project: big_dataset_multiview
