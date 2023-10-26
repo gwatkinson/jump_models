@@ -49,6 +49,15 @@ data:
   prefetch_factor: null
   drop_last: True
 
+  dataloader_config:
+    train:
+      num_workers: 12
+    val:
+      num_workers: 6
+    test:
+      num_workers: 6
+
+
   transform:
     _target_: src.modules.transforms.ComplexTransform
     _convert_: object
