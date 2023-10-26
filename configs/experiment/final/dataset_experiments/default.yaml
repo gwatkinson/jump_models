@@ -50,8 +50,6 @@ data:
   drop_last: True
 
   dataloader_config:
-    train:
-      num_workers: 12
     val:
       num_workers: 6
     test:
