@@ -1,0 +1,19 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/dataset_experiments/multiview_default.yaml@_global_
+
+data:
+  splitter:
+    train: 4096
+
+  batch_size: 64
+
+  train_ids_name: train_small
+
+trainer:
+  devices: ???
+
+logger:
+  wandb:
+    name: small_dataset_multiview

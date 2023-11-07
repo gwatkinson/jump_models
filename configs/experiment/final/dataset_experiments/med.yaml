@@ -1,0 +1,19 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/dataset_experiments/default.yaml@_global_
+
+data:
+  splitter:
+    train: 32_768
+
+  batch_size: 196
+
+  train_ids_name: train_med
+
+trainer:
+  devices: ???
+
+logger:
+  wandb:
+    name: med_dataset

@@ -1,0 +1,35 @@
+defaults:
+  - override /data/compound_transform@_global_.data.compound_transform: pna.yaml
+
+_target_: src.modules.molecules.pna.PNA
+
+ckpt_path: ${paths.projects_dir}/cpjump1/jump/s3_cache/best_checkpoint_35epochs.pt
+# out_dim: ${model.embedding_dim}
+target_dim: 256
+hidden_dim: 200
+mid_batch_norm: True
+last_batch_norm: True
+readout_batchnorm: True
+# e^(log(forgetfulness ~0.001)/number of steps per epoch) = batch_norm_momentum   =>  e^(log(0.001)/100) = 0.970
+batch_norm_momentum: 0.93
+readout_hidden_dim: 200
+readout_layers: 2
+dropout: 0.0  # was 0.0
+mlp_dropout: 0.05
+propagation_depth: 7
+aggregators:
+  - mean
+  - max
+  - min
+  - std
+scalers:
+  - identity
+  - amplification
+  - attenuation
+readout_aggregators:
+  - min
+  - max
+  - mean
+pretrans_layers: 2
+posttrans_layers: 1
+residual: True

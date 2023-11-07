@@ -1,0 +1,85 @@
+defaults:
+  - /model/optimizer/adamw.yaml@all_moa.model.optimizer
+  - /model/scheduler/cosine_annealing_with_warmup.yaml@all_moa.model.scheduler
+  - /trainer/gpu.yaml@all_moa.trainer
+  - /callbacks/eval/moa.yaml@all_moa.callbacks  #! This adds the callbacks
+
+all_moa:
+  model:
+    _target_: src.eval.moa.module.JumpMOAImageModule
+
+    lr: 1e-4
+    num_classes: 26  # when min is set to 500, else 26
+
+    scheduler:
+      warmup_epochs: 5
+      max_epochs: ${eval.all_moa.trainer.max_epochs}
+
+    example_input_path: ${model.example_input_path}
+
+    split_lr_in_groups: False
+
+  datamodule:
+    _target_: src.eval.moa.datamodule.JumpMOADataModule
+
+
+    batch_size: 128
+    num_workers: 16
+    pin_memory: False
+    prefetch_factor: 2
+
+    transform: ${data.transform}
+
+    metadata_dir: ${paths.raw_metadata_path}
+    load_data_dir: ${paths.load_data_path}
+    data_root_dir: null
+
+    splitter:
+      _target_: src.splitters.StratifiedSplitter
+      train: 0.7
+      val: 0.15
+      test: 0.15
+
+    split_path: ${paths.data_root_dir}/jump/models/eval/moa/image_task/splits/all_moa2/
+    moa_load_df_path: ${paths.data_root_dir}/jump/models/eval/moa/image_task/all_moa2.csv
+
+
+    max_obs_per_class: 1024
+    min_obs_per_class: 0
+    # max_obs_per_class: 1024
+    # min_obs_per_class: 500
+
+    target_col: moa
+    return_image: True
+    smiles_col: smiles
+    return_compound: False
+
+    compound_transform: null
+
+    # collate_fn: null
+
+    use_cache: False
+    force_split: False
+    # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
+
+
+  trainer:
+    default_root_dir: ${paths.output_dir}/eval/moa
+    devices: ${trainer.devices}
+    min_epochs: 0
+    max_epochs: 50
+    log_every_n_steps: 1
+    # gradient_clip_val: 0.5
+    num_sanity_val_steps: 1
+    check_val_every_n_epoch: 1
+
+
+  evaluator:
+    _target_: src.eval.evaluators.Evaluator
+    name: JumpMOAImageModule
+    visualize_kwargs: null
+
+
+  callbacks:
+    model_checkpoint:
+      dirpath: ${eval.all_moa.trainer.default_root_dir}/checkpoints

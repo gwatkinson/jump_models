@@ -1,0 +1,9 @@
+# https://lightning.ai/docs/pytorch/stable/advanced/training_tricks.html#stochastic-weight-averaging
+
+swa:
+  _target_: lightning.pytorch.callbacks.StochasticWeightAveraging
+  swa_lrs: ${model.lr}
+  swa_epoch_start: 0.8
+  annealing_epochs: 10
+  annealing_strategy: cos
+

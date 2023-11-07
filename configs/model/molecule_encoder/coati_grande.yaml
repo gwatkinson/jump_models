@@ -1,0 +1,11 @@
+# This is a NLP based encoder
+
+defaults:
+  - override /data/compound_transform@_global_.data.compound_transform: coati.yaml
+
+_target_: src.modules.molecules.coati.COATI
+
+pretrained_name: grande_closed   # see https://github.com/terraytherapeutics/COATI/tree/main
+# out_dim: ${model.embedding_dim}
+padding_length: null
+model_dir: ${paths.model_dir}

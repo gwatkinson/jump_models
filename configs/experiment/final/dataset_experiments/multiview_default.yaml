@@ -1,0 +1,36 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/dataset_experiments/default.yaml@_global_
+  - override /data: multiview.yaml
+  - override /model: multiview.yaml
+  - override /model/criterion: multiview_intra.yaml
+
+data:
+  n_views: 3
+  batch_size: 64
+  transform:
+    _target_: src.modules.transforms.ComplexTransform
+    _convert_: object
+    size: 512
+    flip_p: 0.5
+    resize_p: 0.3
+    color_p: 0.2
+    drop_p: 0.1
+    resize_min_ratio: 0.9
+    intensity: 0.3
+    brightness: 0.15
+    fill_nan: True
+    use_flip: True
+    use_blur: False
+    use_color_jitter: False
+    use_drop: False
+    use_resized_crop: False
+
+tags:
+  - final_experiments
+  - pretrained
+  - ntxent
+  - multi_view
+  - resnet34
+  - pna

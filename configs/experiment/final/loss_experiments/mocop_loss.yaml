@@ -1,0 +1,26 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/loss_experiments/default.yaml
+  - override /model/criterion: mocop_clip.yaml
+
+tags:
+  - final_experiments
+  - pretrained
+  - loss_experiments
+  - single_view
+  - med_data
+  - resnet34
+  - pna
+  - mocop_clip
+
+trainer:
+  devices: ???
+
+model:
+  criterion:
+    temperature: 0.5
+
+logger:
+  wandb:
+    name: med_mocop_clip_loss

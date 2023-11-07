@@ -1,0 +1,6 @@
+defaults:
+  - default.yaml
+
+accelerator: gpu
+sync_batchnorm: False
+devices: ??? # list of devices to use for training

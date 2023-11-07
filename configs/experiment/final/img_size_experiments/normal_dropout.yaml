@@ -1,0 +1,24 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/img_size_experiments/default.yaml@_global_
+
+data:
+  transform:
+    size: 512
+
+model:
+  embedding_dim: 512
+
+  molecule_encoder:
+    dropout: 0.05
+
+  image_encoder:
+    dropout: 0.0
+
+trainer:
+  devices: ???
+
+logger:
+  wandb:
+    name: med_normal_dropout

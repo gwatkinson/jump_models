@@ -1,0 +1,15 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/img_size_experiments/default.yaml@_global_
+
+data:
+  transform:
+    size: 768
+
+trainer:
+  devices: ???
+
+logger:
+  wandb:
+    name: med_img_size_768

@@ -1,0 +1,12 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/molecule_encoder_experiments/default.yaml@_global_
+  - override /model/molecule_encoder: gin_context_pred.yaml
+
+trainer:
+  devices: ???
+
+logger:
+  wandb:
+    name: med_gin_context_pred

@@ -14,6 +14,3 @@ wandb:
   group: ""
   tags: []
   job_type: ""
-
-username: ${oc.env:WANDB_USERNAME}
-api_key: ${oc.env:WANDB_API_KEY}

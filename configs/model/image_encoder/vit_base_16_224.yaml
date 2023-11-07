@@ -1,0 +1,9 @@
+# https://huggingface.co/timm
+
+_target_: src.modules.images.timm_pretrained.CNNEncoder
+instance_model_name: vit_base_patch16_224.augreg2_in21k_ft_in1k
+# target_num: ${model.embedding_dim}
+n_channels: 5
+pretrained: True
+
+

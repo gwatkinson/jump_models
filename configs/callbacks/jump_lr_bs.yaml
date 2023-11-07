@@ -1,0 +1,3 @@
+defaults:
+  - lightning/batch_size_finder@_here_
+  - jump_lr@_here_

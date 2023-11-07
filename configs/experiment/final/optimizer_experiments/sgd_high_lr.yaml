@@ -1,0 +1,18 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/optimizer_experiments/default.yaml@_global_
+  - override /model/optimizer: sgd.yaml
+
+trainer:
+  devices: ???
+
+model:
+  lr: 1e-3
+
+  criterion:
+    temperature: 2
+
+logger:
+  wandb:
+    name: med_sgd_high_lr_temp

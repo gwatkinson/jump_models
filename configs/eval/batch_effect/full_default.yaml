@@ -1,0 +1,8 @@
+defaults:
+  - /eval/batch_effect/default.yaml@full_batch_effect
+
+full_batch_effect:
+  evaluator:
+    nruns: 1
+    out_dir: ${paths.output_dir}/eval/batch_effect/full/
+

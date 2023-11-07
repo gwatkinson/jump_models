@@ -1,0 +1,70 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/loss_experiments/default.yaml
+  - override /data: multiview.yaml
+  - override /model: multiview.yaml
+  - override /model/criterion: multiview_intra.yaml
+
+tags:
+  - final_experiments
+  - pretrained
+  - loss_experiments
+  - multiple_view
+  - med_data
+  - resnet34
+  - pna
+  - multiview_intra
+
+trainer:
+  devices: ???
+
+model:
+  embedding_dim: 1024
+
+  criterion:
+    temperature: 0.3
+
+  molecule_encoder:
+    dropout: 0.2
+
+  image_encoder:
+    dropout: 0.2
+
+data:
+  n_views: 3
+  batch_size: 64
+  num_workers: 8
+
+  transform:
+    _target_: src.modules.transforms.ComplexTransform
+    _convert_: object
+    size: 512
+    flip_p: 0.5
+    resize_p: 0.3
+    color_p: 0.2
+    resize_min_ratio: 0.9
+    intensity: 0.2
+    brightness: 0.1
+    fill_nan: True
+    use_flip: True
+    use_blur: False
+    use_color_jitter: True
+    use_drop: False
+    use_resized_crop: True
+
+  splitter:
+    _target_: src.splitters.RandomSplitter
+    train: 32_768
+    test: 8192
+    val: 4096
+    retrieval: 4096
+
+  split_path: ${paths.split_path}/random_split/
+  train_ids_name: train_med
+
+
+
+logger:
+  wandb:
+    name: med_multiview_intra_3

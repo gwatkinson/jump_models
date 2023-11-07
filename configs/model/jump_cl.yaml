@@ -1,30 +1,29 @@
-_target_: src.models.jump_module.BasicJUMPModule
+_target_: src.models.jump_cl.module.BasicJUMPModule
+
+defaults:
+  - image_encoder: ???
+  - molecule_encoder: ???
+  - criterion: info_nce.yaml
+  - optimizer: adamw.yaml
+  - scheduler: cosine_annealing_with_warmup.yaml
+  - _self_
+
+embedding_dim: ???
+lr: ???
+batch_size: ${data.batch_size}
 
 optimizer:
-  _target_: torch.optim.Adam
-  _partial_: true
-  lr: 1e-3
-
-# scheduler: null
+  lr: ${model.lr}
 
 scheduler:
-  _target_: torch.optim.lr_scheduler.ExponentialLR
-  _partial_: true
-  gamma: 0.9
+    warmup_epochs: 10
+    max_epochs: ${trainer.max_epochs}
 
-image_encoder:
-  _target_: src.images.image_encoder.CNNEncoder
-  instance_model_name: resnet50
-  target_num: 512
-  n_channels: 5
-  pretrained: True
+example_input_path: ???
 
-molecule_encoder:
-  _target_: src.models.simple_jump_cl.molecule_encoder.GINPretrainedWithLinearHead
-  pretrained_name: "gin_supervised_infomax"
-  out_dim: 512
-  pretrained_dim: 300
-  preload: True
+# args for the lr scheduler in pytorch lightning
+monitor: val/loss  # metric to monitor for some schedulers
+interval: epoch    # epoch or step
+frequency: 1       # how often to call the scheduler
 
-criterion:
-  _target_: src.losses.contrastive_loss_with_temperature.ContrastiveLossWithTemperature
+split_lr_in_groups: False

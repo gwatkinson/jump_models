@@ -1,15 +1,73 @@
-defaults:
-  - basic_jump.yaml
+_target_: src.models.jump_cl.datamodule.BasicJUMPDataModule
 
-batch_size: 32
-num_workers: 4
-pin_memory: True
-prefetch_factor: 2
+defaults:
+  - compound_transform: ???
+  - transform: simple
+  # - collate_fn: default.yaml
+  - _self_
+
+batch_size: ???
+num_workers: ???
+pin_memory: null
+prefetch_factor: null
+drop_last: null
+
+
+# transform:
+#   _target_: src.modules.transforms.SimpleTransform
+#   _convert_: object
+#   size: ???
+  # dim: [-2, -1] # for normalizing
+
+force_split: False
 
 splitter:
-  _target_: src.data.splits.ScaffoldSplitter
-  train: 800
-  test: 200
-  val: 100
+  _target_: src.splitters.ScaffoldSplitter
+  train: ???
+  test: ???
+  val: ???
+  retrieval: 0
 
-split_path: ${paths.split_path}/jump_cl/
+
+use_compond_cache: False
+
+# example: ${paths.split_path}/small_test/
+data_root_dir: ${paths.projects_dir}/
+split_path: ???
+
+dataloader_config:
+  train:
+    batch_size: ${data.batch_size}
+    num_workers: ${data.num_workers}
+    pin_memory: ${data.pin_memory}
+    prefetch_factor: ${data.prefetch_factor}
+    drop_last: ${data.drop_last}
+    shuffle: True
+  val:
+    batch_size: ${data.batch_size}
+    num_workers: ${data.num_workers}
+    pin_memory: ${data.pin_memory}
+    prefetch_factor: ${data.prefetch_factor}
+    drop_last: ${data.drop_last}
+    shuffle: False
+  test:
+    batch_size: 100  # Always use 100 for test (for retrieval metrics)
+    num_workers: ${data.num_workers}
+    pin_memory: ${data.pin_memory}
+    prefetch_factor: ${data.prefetch_factor}
+    drop_last: ${data.drop_last}
+    shuffle: False
+
+
+image_metadata_path: ${paths.metadata_path}/images_metadata.parquet
+compound_metadata_path: ${paths.metadata_path}/compound_dict.json
+compound_col: Metadata_InChI
+image_sampler: null
+metadata_dir: ${paths.raw_metadata_path}/complete_metadata.csv
+local_load_data_dir: ${paths.load_data_path}/final/
+
+index_str: "{Metadata_Source}__{Metadata_Batch}__{Metadata_Plate}__{Metadata_Well}__{Metadata_Site}"
+channels: [DNA,AGP,ER,Mito,RNA]
+col_fstring: "FileName_Orig{channel}"
+id_cols: [Metadata_Source,Metadata_Batch,Metadata_Plate,Metadata_Well]
+extra_cols: [Metadata_PlateType,Metadata_Site]

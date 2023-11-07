@@ -1,0 +1,6 @@
+# https://optuna.readthedocs.io/en/stable/reference/generated/optuna.integration.PyTorchLightningPruningCallback.html
+
+optuna_pruning:
+  _target_: optuna.integration.PyTorchLightningPruningCallback
+  trial: ???  # given by hydra ?
+  monitor: val/loss_min

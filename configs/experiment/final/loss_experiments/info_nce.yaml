@@ -1,0 +1,26 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/loss_experiments/default.yaml@_global_
+  - override /model/criterion: info_nce.yaml
+
+tags:
+  - final_experiments
+  - pretrained
+  - loss_experiments
+  - single_view
+  - med_data
+  - resnet34
+  - pna
+  - info_nce
+
+trainer:
+  devices: ???
+
+model:
+  criterion:
+    temperature: 0.5
+
+logger:
+  wandb:
+    name: med_info_nce_loss

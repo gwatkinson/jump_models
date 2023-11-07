@@ -1,0 +1,57 @@
+_target_: src.models.multiview_cl.datamodule.MultiviewDataModule
+
+defaults:
+  - compound_transform: ???
+  - transform: simple.yaml
+  - _self_
+
+
+# example: ${paths.split_path}/small_test/
+split_path: ???
+train_ids_name: ???
+
+n_views: 3
+
+
+batch_size: ???
+num_workers: ???
+pin_memory: null
+prefetch_factor: null
+drop_last: null
+collate_fn: null
+
+
+# transform:
+#   _target_: src.modules.transforms.SimpleTransform
+#   _convert_: object
+#   size: ???
+  # dim: [-2, -1] # for normalizing
+
+
+dataloader_config:
+  train:
+    batch_size: ${data.batch_size}
+    num_workers: ${data.num_workers}
+    pin_memory: ${data.pin_memory}
+    prefetch_factor: ${data.prefetch_factor}
+    drop_last: ${data.drop_last}
+    shuffle: True
+  val:
+    batch_size: ${data.batch_size}
+    num_workers: ${data.num_workers}
+    pin_memory: ${data.pin_memory}
+    prefetch_factor: ${data.prefetch_factor}
+    drop_last: ${data.drop_last}
+    shuffle: False
+  test:
+    batch_size: 100  # Always use 100 for test (for retrieval metrics)
+    num_workers: ${data.num_workers}
+    pin_memory: ${data.pin_memory}
+    prefetch_factor: ${data.prefetch_factor}
+    drop_last: True
+    shuffle: False
+
+
+data_root_dir: ${paths.projects_dir}/
+channels: [DNA,AGP,ER,Mito,RNA]
+col_fstring: "FileName_Orig{channel}"

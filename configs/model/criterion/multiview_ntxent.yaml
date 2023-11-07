@@ -1,0 +1,9 @@
+_target_: src.modules.losses.multiview_losses.NTXentMultiplePositives
+norm: True
+temperature: 0.5
+return_rank: True
+
+temperature_requires_grad: False  # If True, temperature is learned
+
+temperature_min: 0      # Not used if requires_grad is False
+temperature_max: 100

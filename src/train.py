@@ -1,5 +1,4 @@
 import logging
-from multiprocessing import util
 from typing import List, Optional, Tuple
 
 import hydra
@@ -11,6 +10,8 @@ from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
 
 from src import utils
+
+# from src.eval import EvaluatorList
 
 pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 # ------------------------------------------------------------------------------------ #
@@ -61,6 +62,15 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     log.info(f"Instantiating model <{cfg.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(cfg.model)
 
+    example_input = None
+    if cfg.get("load_first_bacth"):
+        log.info("Loading first batch...")
+        datamodule.prepare_data()
+        datamodule.setup("fit")
+        dl = datamodule.train_dataloader(batch_size=2)
+        example_input = next(iter(dl))
+        model.example_input_array = example_input
+
     log.info("Instantiating callbacks...")
     callbacks: List[Callback] = utils.instantiate_callbacks(cfg.get("callbacks"))
 
@@ -69,8 +79,6 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
     trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=callbacks, logger=logger)
-
-    log.info(f"Current multiprocessor temp dir: {util.get_temp_dir()}")
 
     object_dict = {
         "cfg": cfg,
@@ -95,16 +103,47 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
     train_metrics = trainer.callback_metrics
 
+    ckpt_path = trainer.checkpoint_callback.best_model_path
+    if ckpt_path == "":
+        log.warning("Best ckpt not found! Using current weights for testing...")
+        ckpt_path = cfg.get("ckpt_path")
+    else:
+        utils.log_ckpt_path(ckpt_path, logger)
+
     if cfg.get("test"):
         log.info("Starting testing!")
-        ckpt_path = trainer.checkpoint_callback.best_model_path
-        if ckpt_path == "":
-            log.warning("Best ckpt not found! Using current weights for testing...")
-            ckpt_path = None
         trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
         log.info(f"Best ckpt path: {ckpt_path}")
 
     test_metrics = trainer.callback_metrics
+
+    if cfg.get("evaluate"):
+        log.info("Starting evaluation!")
+
+        for key in cfg.eval:
+            evaluator = utils.instantiate_evaluator(
+                cfg.eval[key],
+                model_cfg=cfg.model,
+                logger=logger,
+                example_input=example_input,
+                ckpt_path=cfg.ckpt_path,
+            )
+
+            try:
+                evaluator.run()
+            except Exception as e:
+                log.error(f"Error while running {evaluator}: {e}")
+
+        # log.info("Instantiating evaluators ...")
+        # evaluator_list: Optional[EvaluatorList] = utils.instantiate_evaluator_list(
+        #     cfg.get("eval"),
+        #     model_cfg=cfg.model,
+        #     logger=logger,
+        #     ckpt_path=ckpt_path,
+        # )
+
+        # if evaluator_list is not None:
+        # evaluator_list.run()
 
     # merge train and test metrics
     metric_dict = {**train_metrics, **test_metrics}

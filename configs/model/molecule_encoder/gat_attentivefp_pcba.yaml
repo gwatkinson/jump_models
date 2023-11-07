@@ -1,0 +1,11 @@
+# https://lifesci.dgl.ai/api/model.pretrain.html
+
+defaults:
+  - override /data/compound_transform@_global_.data.compound_transform: dgllife_gat.yaml
+  # - override /data/collate_fn@_global_.data.collate_fn: image_graph.yaml
+
+_target_: src.modules.molecules.dgllife_gat.GATPretrainedWithLinearHead
+pretrained_name: "GAT_canonical_PCBA"
+# out_dim: ${model.embedding_dim}
+pooling: mean
+preload: True

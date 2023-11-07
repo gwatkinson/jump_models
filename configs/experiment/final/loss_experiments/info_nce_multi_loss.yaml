@@ -1,0 +1,24 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/loss_experiments/default.yaml@_global_
+  - override /model/criterion: info_nce_ve_gim.yaml
+
+tags:
+  - final_experiments
+  - pretrained
+  - loss_experiments
+  - single_view
+  - med_data
+  - resnet34
+  - pna
+  - multi_loss
+
+trainer:
+  devices: ???
+
+logger:
+  wandb:
+    name: med_info_nce_multi_loss
+
+

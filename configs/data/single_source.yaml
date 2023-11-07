@@ -1,0 +1,19 @@
+defaults:
+  - /data/jump_cl.yaml@_here_
+
+_target_: src.models.jump_cl.datamodule.SingleSourceDataModule
+
+splitter:
+    _target_: src.splitters.RandomSplitter
+    train: 32_768
+    test: 8192
+    val: 4096
+    retrieval: 4096
+
+split_path: ${paths.split_path}/single_source_split/
+train_ids_name: med
+
+data_root_dir: null
+
+image_metadata_path: ${paths.metadata_path}/images_metadata_source_1.parquet
+compound_metadata_path: ${paths.metadata_path}/compound_dict_source_1.json

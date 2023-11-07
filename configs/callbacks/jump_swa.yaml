@@ -1,0 +1,8 @@
+defaults:
+  - lightning/swa@_here_
+  - jump@_here_
+
+swa:
+  swa_lrs: ${model.lr}
+  swa_epoch_start: 12
+  annealing_epochs: 3

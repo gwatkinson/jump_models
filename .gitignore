@@ -4,12 +4,23 @@ tmp/
 old/
 /mnt/
 ignored/
-debug.py
+# debug.py
+/models/
+/*.pth
+/scripts/list_*.zsh
+src/pyidr
+/.hydra/
+/jump_moa/
+src/eval/bbbc
+local_dataset/
+
 
 # Lightning-Hydra-Template
 configs/local/default.yaml
 /data/
 /logs/
+/wandb/
+/lightning_logs/
 .env
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks,git,latex

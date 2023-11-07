@@ -1,0 +1,12 @@
+defaults:
+  - /eval/batch_effect/default.yaml@plate_normalized
+
+plate_normalized:
+
+  evaluator:
+    _target_: src.eval.batch_effect.evaluator.BatchEffectEvaluator
+
+    dmso_normalize: plate
+    normalize_cls:
+      _target_: src.eval.batch_effect.spherize.ZCA_corr
+      _partial_: true

@@ -1,0 +1,2 @@
+_target_: src.modules.compound_transforms.pna.PNATransform
+compound_str_type: inchi

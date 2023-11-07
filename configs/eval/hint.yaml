@@ -1,0 +1,4 @@
+defaults:
+  - hint/phaseI@_here_
+  - hint/phaseII@_here_
+  - hint/phaseIII@_here_

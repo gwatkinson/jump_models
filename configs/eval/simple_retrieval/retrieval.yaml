@@ -1,0 +1,42 @@
+defaults:
+  - /trainer/gpu.yaml@simple_retrieval.trainer
+
+simple_retrieval:
+
+  evaluator:
+    _target_: src.eval.simple_retrieval.evaluator.SimpleRetrievalEvaluator
+    name: IDRRetrieval
+    visualize_kwargs: null
+    distance_metric: cosine
+
+
+  model:
+    _target_: src.eval.simple_retrieval.module.SimpleRetrievalModule
+    example_input_path: null
+
+
+  datamodule:
+    _target_: src.eval.simple_retrieval.datamodule.SimpleRetrievalDataModule
+
+    compound_transform: ${data.compound_transform}
+    transform: ${data.transform}
+
+    batch_size: 100
+    num_workers: 12
+    pin_memory: null
+    prefetch_factor: null
+    drop_last: True
+
+    use_compond_cache: False
+
+    data_root_dir: ${paths.projects_dir}/
+    split_path: ${data.split_path}
+
+    channels: [DNA,AGP,ER,Mito,RNA]
+
+
+  trainer:
+    default_root_dir: ${paths.output_dir}/eval/simple_retrieval/
+    devices: ${trainer.devices}
+
+  callbacks: null

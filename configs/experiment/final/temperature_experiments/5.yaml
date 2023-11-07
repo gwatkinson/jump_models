@@ -1,0 +1,15 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/temperature_experiments/default.yaml@_global_
+
+model:
+  criterion:
+    temperature: 5
+
+trainer:
+  devices: ???
+
+logger:
+  wandb:
+    name: med_temperature_5

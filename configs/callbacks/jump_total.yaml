@@ -1,0 +1,4 @@
+defaults:
+  - lightning/device_monitor@_here_
+  - jump_lr_bs@_here_
+  - jump_swa@_here_

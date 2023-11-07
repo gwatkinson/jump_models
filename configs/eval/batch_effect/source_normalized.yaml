@@ -1,0 +1,12 @@
+defaults:
+  - /eval/batch_effect/default.yaml@source_normalized
+
+source_normalized:
+
+  evaluator:
+    _target_: src.eval.batch_effect.evaluator.BatchEffectEvaluator
+
+    dmso_normalize: source
+    normalize_cls:
+      _target_: src.eval.batch_effect.spherize.ZCA_corr
+      _partial_: true

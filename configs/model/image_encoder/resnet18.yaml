@@ -1,0 +1,8 @@
+# https://huggingface.co/timm
+
+_target_: src.modules.images.timm_pretrained.CNNEncoder
+instance_model_name: resnet18
+# target_num: ${model.embedding_dim}
+n_channels: 5
+pretrained: True
+dropout: 0.

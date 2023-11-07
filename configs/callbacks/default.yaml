@@ -1,23 +1,27 @@
 defaults:
-  - model_checkpoint.yaml
-  - early_stopping.yaml
-  - model_summary.yaml
-  - rich_progress_bar.yaml
-  - lr_monitor.yaml
-  - _self_
+  - lightning/rich_progress_bar@_here_
+  - lightning/model_summary@_here_
+  - lightning/model_checkpoint@_here_
+  - lightning/early_stopping@_here_
+  - lightning/timer@_here_
+  # - custom/nan_loss@_here_
+  - custom/wandb_watcher@_here_
+  - custom/temperature_log@_here_
+  - lightning/lr_monitor@_here_
 
 model_checkpoint:
   dirpath: ${paths.output_dir}/checkpoints
   filename: "epoch_{epoch:03d}"
   monitor: "val/loss"
-  mode: "max"
+  mode: "min"
   save_last: True
   auto_insert_metric_name: False
 
 early_stopping:
   monitor: "val/loss"
-  patience: 100
-  mode: "max"
+  patience: 25
+  min_delta: 0
+  mode: "min"
 
 model_summary:
-  max_depth: -1
+  max_depth: 2

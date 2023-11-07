@@ -1,0 +1,23 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/img_size_experiments/default.yaml@_global_
+
+data:
+  transform:
+    _target_: src.modules.transforms.ComplexTransform
+    _convert_: object
+    size: 512
+    flip_p: 0.5
+    use_flip: False
+    use_blur: False
+    use_color_jitter: False
+    use_drop: False
+    use_resized_crop: True
+
+trainer:
+  devices: ???
+
+logger:
+  wandb:
+    name: med_random_resize

@@ -1,0 +1,31 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/dataset_experiments/default.yaml@_global_
+
+data:
+  splitter:
+    train: -1
+
+  transform:
+    _target_: src.modules.transforms.ComplexTransform
+    _convert_: object
+    size: 512
+    flip_p: 0.5
+    fill_nan: True
+    use_flip: True
+    use_blur: False
+    use_color_jitter: False
+    use_drop: False
+    use_resized_crop: False
+
+  batch_size: 196
+
+  train_ids_name: train_big
+
+trainer:
+  devices: ???
+
+logger:
+  wandb:
+    name: big_dataset

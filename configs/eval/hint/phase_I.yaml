@@ -1,0 +1,65 @@
+defaults:
+  - /model/optimizer/adamw.yaml@phase_I.model.optimizer
+  - /model/scheduler/cosine_annealing_with_warmup.yaml@phase_I.model.scheduler
+  - /trainer/gpu.yaml@phase_I.trainer
+  - /callbacks/eval/hint.yaml@phase_I.callbacks
+
+phase_I:
+  model:
+    _target_: src.eval.clinical_prediction.module.HintClinicalModulePhaseI
+
+    lr: 1e-4
+
+    compound_transform: ${data.compound_transform}
+
+    scheduler:
+      warmup_epochs: 5
+      max_epochs: ${eval.phase_I.trainer.max_epochs}
+
+    example_input_path: ${model.example_input_path}
+    # example_input_path: ${paths.data_root_dir}/jump/models/eval/test/example.pt
+
+    split_lr_in_groups: False
+
+
+  datamodule:
+    _target_: src.eval.clinical_prediction.datamodule.HintClinicalDataModulePhaseI
+
+    hint_dir: ${paths.data_root_dir}/hint-clinical-trial-outcome-prediction/data
+
+    smiless_col: smiless
+    label_col: label
+    batch_size: 256
+    num_workers: 16
+    pin_memory: False
+    prefetch_factor: 2
+    drop_last: False
+
+
+  trainer:
+    default_root_dir: ${paths.output_dir}/eval/hint/phase_I
+    devices: ${trainer.devices}
+    min_epochs: 0
+    max_epochs: 50
+    log_every_n_steps: 1
+    num_sanity_val_steps: 1
+    check_val_every_n_epoch: 1
+
+
+  evaluator:
+    _target_: src.eval.evaluators.Evaluator
+    name: Phase_I
+    visualize_kwargs: null
+
+
+  callbacks:
+    early_stopping:
+      monitor: hint/phase_I/val/loss
+
+    model_checkpoint:
+      monitor: hint/phase_I/val/loss
+      dirpath: ${eval.phase_I.trainer.default_root_dir}/checkpoints
+
+    wandb_plotter:
+      prefix: hint/phase_I
+

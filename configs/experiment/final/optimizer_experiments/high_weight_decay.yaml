@@ -1,0 +1,20 @@
+# @package _global_
+
+defaults:
+  - /experiment/final/optimizer_experiments/default.yaml@_global_
+  - override /model/optimizer: adamw.yaml
+
+
+trainer:
+  devices: ???
+
+model:
+  criterion:
+    temperature: 0.5
+
+  optimizer:
+    weight_decay: 0.1
+
+logger:
+  wandb:
+    name: med_high_weight_decay

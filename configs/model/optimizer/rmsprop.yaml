@@ -1,0 +1,7 @@
+_target_: torch.optim.RMSprop
+_partial_: true
+alpha: 0.99
+eps: 1e-08
+weight_decay: 0
+momentum: 0
+centered: false

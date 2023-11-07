@@ -4,6 +4,6 @@ defaults:
 strategy: ddp
 
 accelerator: gpu
-devices: 2
 num_nodes: 1
 sync_batchnorm: True
+devices: ??? # list of devices to use for training

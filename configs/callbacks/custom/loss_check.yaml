@@ -1,0 +1,3 @@
+loss_check:
+  _target_: src.callbacks.loss_check.LossCheckCallback
+  image_dir: ${paths.output_dir}/loss_check

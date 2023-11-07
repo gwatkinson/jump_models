@@ -1,0 +1,35 @@
+_target_: src.modules.losses.base_losses.CombinationLoss
+norm: True
+weights: [1, 0.05, 0.025, 0.025]
+
+losses:
+  InfoNCE:
+    _target_: src.modules.losses.contrastive_losses.InfoNCE
+    norm: False
+    temperature: 0.5
+    return_rank: True
+    temperature_requires_grad: False
+    temperature_min: 0
+    temperature_max: 100
+
+  gim:
+    _target_: src.modules.losses.matching_losses.GraphImageMatchingLoss
+    norm: False
+    embedding_dim: ${model.embedding_dim}
+    fusion_layer: concat
+
+  ve_i2g:
+    _target_: src.modules.losses.autoencoder_losses.ImageGraphVariatonalEncoderLoss
+    emb_dim: ${model.embedding_dim}
+    similarity: l2
+    detach_target: False
+    beta: 1
+    norm: False
+
+  ve_g2i:
+    _target_: src.modules.losses.autoencoder_losses.GraphImageVariatonalEncoderLoss
+    emb_dim: ${model.embedding_dim}
+    similarity: l2
+    detach_target: False
+    beta: 1
+    norm: False

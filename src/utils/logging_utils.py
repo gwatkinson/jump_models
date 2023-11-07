@@ -28,18 +28,16 @@ def log_hyperparameters(object_dict: dict) -> None:
 
     # save number of model parameters
     hparams["model/params/total"] = sum(p.numel() for p in model.parameters())
-    hparams["model/params/trainable"] = sum(
-        p.numel() for p in model.parameters() if p.requires_grad
-    )
-    hparams["model/params/non_trainable"] = sum(
-        p.numel() for p in model.parameters() if not p.requires_grad
-    )
+    hparams["model/params/trainable"] = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    hparams["model/params/non_trainable"] = sum(p.numel() for p in model.parameters() if not p.requires_grad)
 
     hparams["data"] = cfg["data"]
     hparams["trainer"] = cfg["trainer"]
 
     hparams["callbacks"] = cfg.get("callbacks")
     hparams["extras"] = cfg.get("extras")
+
+    hparams["eval"] = cfg.get("eval")
 
     hparams["task_name"] = cfg.get("task_name")
     hparams["tags"] = cfg.get("tags")
@@ -48,4 +46,13 @@ def log_hyperparameters(object_dict: dict) -> None:
 
     # send hparams to all loggers
     for logger in trainer.loggers:
+        logger.log_hyperparams(hparams)
+
+
+@rank_zero_only
+def log_ckpt_path(cfg_path: str, loggers) -> None:
+    hparams = {"ckpt_path": cfg_path}
+
+    # send hparams to all loggers
+    for logger in loggers:
         logger.log_hyperparams(hparams)

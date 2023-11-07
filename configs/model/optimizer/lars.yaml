@@ -1,0 +1,7 @@
+_target_: src.modules.lr_schedulers.lars.LARS
+_partial_: true
+momentum: 0
+dampening: 0
+weight_decay: 5e-3
+nesterov: false
+trust_coefficient: 1e-3

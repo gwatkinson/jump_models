@@ -19,15 +19,17 @@ log = pylogger.get_pylogger(__name__)
 def print_config_tree(
     cfg: DictConfig,
     print_order: Sequence[str] = (
-        "data",
-        "model",
+        "eval",
         "callbacks",
         "logger",
-        "trainer",
-        "paths",
         "extras",
+        "paths",
+        "trainer",
+        "data",
+        "model",
     ),
-    resolve: bool = False,
+    print_eval: bool = False,
+    resolve: bool = True,
     save_to_file: bool = False,
 ) -> None:
     """Prints content of DictConfig using Rich library and its tree structure.
@@ -39,12 +41,14 @@ def print_config_tree(
         save_to_file (bool, optional): Whether to export config to the hydra output folder.
     """
 
-    if cfg.extras.style.target is not None:
-        style = instantiate(cfg.extras.style)
-    elif isinstance(cfg.extras.style, str):
-        style = cfg.extras.style
-    else:
+    style = cfg.extras.get("style")
+
+    if style is None:
         style = "dim"
+    elif isinstance(style, str):
+        pass
+    else:
+        style = instantiate(style)
 
     tree = rich.tree.Tree("CONFIG", style=style, guide_style=style)
 
@@ -63,6 +67,9 @@ def print_config_tree(
 
     # generate config tree from queue
     for field in queue:
+        if field == "eval" and not print_eval:
+            continue
+
         branch = tree.add(field, style=style, guide_style=style)
 
         config_group = cfg[field]

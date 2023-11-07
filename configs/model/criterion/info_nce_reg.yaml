@@ -1,0 +1,19 @@
+_target_: src.modules.losses.base_losses.CombinationLoss
+norm: True
+weights: [1, 0.05]
+
+losses:
+  InfoNCE:
+    _target_: src.modules.losses.contrastive_losses.InfoNCE
+    norm: False
+    temperature: 0.5
+    return_rank: True
+    temperature_requires_grad: False
+
+  regularization:
+    _target_: src.modules.losses.base_losses.RegularizationLoss
+    mse_reg: 0.5
+    l1_reg: 0
+    uniformity_reg: 0
+    variance_reg: 1
+    covariance_reg: 0.5

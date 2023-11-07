@@ -1,0 +1,31 @@
+defaults:
+  - /eval/hint/default.yaml@phaseI
+
+phaseI:
+  model:
+    phase: I  # "I", "II", "III"
+
+    compound_transform: ${data.compound_transform}
+
+    scheduler:
+      max_epochs: ${eval.phaseI.trainer.max_epochs}
+
+
+  datamodule:
+    phase: I  # "I", "II", "III"
+
+
+  evaluator:
+    name: hint/phase_I
+
+  callbacks:
+    early_stopping:
+      monitor: hint/phase_I/val/loss
+
+    model_checkpoint:
+      monitor: hint/phase_I/val/loss
+      dirpath: ${eval.phaseI.trainer.default_root_dir}/checkpoints
+
+    wandb_plotter:
+      prefix: hint/phase_I
+

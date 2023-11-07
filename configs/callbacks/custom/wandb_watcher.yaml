@@ -1,0 +1,6 @@
+wandb_watcher:
+  _target_: src.callbacks.wandb.WandbTrainingCallback
+  watch: True
+  watch_log: all # or "gradients", "parameters", "all"
+  log_freq: ???
+  log_graph: False
